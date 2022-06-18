@@ -4,16 +4,16 @@ in_a_row = 4
 move_amount = game_dimensions[1]
 
 # Main loop
-loop_iterations = 5
+loop_iterations = 10
 
 # Self-playing network
-game_amount_self_playing = 2
-MCTSSims = 50
+game_amount_self_playing = 50
+MCTSSims = 25
 depth = 1
 turns_until_tau = 10
 
 # Retraining network
-training_iterations = 1
+training_iterations = 15
 batch_size = 32
 epochs = 1
 validation_split = 0.2
@@ -26,5 +26,5 @@ residual_layer = {"amount": 5, "filter_amount": 75, "kernel_size": (4, 4)}
 dense_value_head = 64
 
 # Evaluating network
-game_amount_evaluation = 1
+game_amount_evaluation = 25
 winning_threshold = 1.2

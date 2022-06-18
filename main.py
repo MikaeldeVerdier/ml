@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import copy
+import datetime
 import config
 import game
 from agent import Agent
@@ -24,7 +25,8 @@ def self_play(agents, games, tau):
     outcomes = [0, 0, 0]
     game_count = 0
     turn = 0
-    root = agents[1].mcts
+    starts = 1
+    root = agents[starts].mcts
     while game_count < games:
         if turn == config.turns_until_tau:
             tau == 10e-45
@@ -34,6 +36,7 @@ def self_play(agents, games, tau):
 
         training_set[-1].append([game.generate_game_state(root), pi])
 
+        print(f"It's {-root.player}'s turn")
         print(f"Action values are: \n {game.print_values(np.round(pi, 3))}")
         print(f"Move to make is: {action}")
         print(f"Position is now: \n {game.print_board(root.s)}")
@@ -46,7 +49,8 @@ def self_play(agents, games, tau):
             game_count += 1
             print(f"Game outcome was: {outcome}")
             print(f"Amount of games played is now: {game_count} \n")
-            root = agents[-outcome if outcome != 0 else -1].mcts
+            starts *= -1
+            root = agents[starts].mcts
             [Set.append(outcome) for Set in training_set[-1]]
             training_set.append([])
             outcomes[outcome] += 1
@@ -64,7 +68,7 @@ def retrain_network(agent, batch, best_agent):
 
         agent.nn.train(x, y)
         agent.nn.save_progress(best_agent)
-    agent.nn.plot_losses()
+    # agent.nn.plot_losses()
 
     return (x, y)
 
@@ -117,6 +121,7 @@ def log(results, best_agent):
     file = open("/Users/mikaeldeverdier/ai/try 2/binary/reinforcement/probs_move_amount -100/log.txt", "w")
     file.write(f"Results are: {results}\n The best_agent is now {best_agent}\n")
     file.close()
+    open("log.txt", "a").write(f"{datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')}: Results are: {results}\nBest_agent is now: {best_agent}\n")
 
 for _ in range(config.loop_iterations):
     [agent.reset_mcts() for agent in agents[1:]]
@@ -128,6 +133,9 @@ for _ in range(config.loop_iterations):
     play_test(agents[best_agent], 5)
 
 
+
+for agent in agents: agent.nn.plot_losses()
+while True: exec(input("do something: "))
 
 
 

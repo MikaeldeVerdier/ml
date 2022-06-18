@@ -99,22 +99,22 @@ class NeuralNetwork:
 
     def save_progress(self, best_agent):
         fi = "save" if self.load else "empty_save"
-        file = open(f"/Users/mikaeldeverdier/ai/try 2/binary/reinforcement/probs_move_amount -100/{fi}.json", "r")
+        file = open(f"probs_move_amount -100\{fi}.json", "r")
         loaded = json.loads(file.read())
         """loaded = self.metrics
         if self.load:
-            file = open("/Users/mikaeldeverdier/ai/try 2/binary/reinforcement/probs_move_amount -100/save.json", "r")
+            file = open("probs_move_amount -100\save.json", "r")
             loaded = json.loads(file.read())"""
         loaded["best_agent"] = best_agent
         loaded[f"agent_{self.name}"]["iterations"].append(config.training_iterations * config.epochs)
         for i in self.metrics: loaded[f"agent_{self.name}"]["metrics"][i] += (self.metrics[i])
         file.close()
-        file = open("/Users/mikaeldeverdier/ai/try 2/binary/reinforcement/probs_move_amount -100/save.json", "w")
+        file = open("probs_move_amount -100\save.json", "w")
         file.write(json.dumps(loaded))
         file.close()
 
     def plot_losses(self):
-        file = open("/Users/mikaeldeverdier/ai/try 2/binary/reinforcement/probs_move_amount -100/save.json", "r")
+        file = open("probs_move_amount -100\save.json", "r")
         loaded = json.loads(file.read())[f"agent_{self.name}"]
         self.metrics = loaded["metrics"]
         saves = loaded["iterations"]
