@@ -24,7 +24,7 @@ class Node:
         self.tau = 1 if not comp else 10e-15
         self.cpuct = np.sqrt(2)
 
-    def run(self, tau):
+    def play_turn(self, tau):
         for _ in range(config.MCTSSims):
             self.selection()
 
@@ -76,16 +76,6 @@ class Node:
             outcome = game.check_game_over(current_state)
         return outcome
 
-    def choose_action(self, pi, values, tau):
-        if tau == 0: action = np.argmax(pi)
-        else:
-            actions = np.random.multinomial(1, pi)
-            action = np.where(actions==1)[0][0]
-
-        value = values[action]
-
-        return action, value
-
     def getAV(self, tau):
         pi = np.zeros(np.prod(config.game_dimensions))
         values = np.zeros(np.prod(config.game_dimensions))
@@ -99,22 +89,9 @@ class Node:
 
         return pi, values
 
-    def backfill(self, result):
-        self.n += 1
-        self.results[result] += 1
-
-        self.v = self.nn.test(game.generate_game_state(self))[0]
-        if self.parent:
-            self.parent.w += self.v
-            self.parent.q = self.parent.w/self.parent.n
-            if self.n == config.turns_until_tau: self.tau = 10e-15
-            self.parent.backfill(result)
-        # self.theta_backpropogate(result, self.v, self.probabilities(), res[1:])
-
     def probabilities(self):
         pi = np.zeros(np.prod(config.game_dimensions))
-        for child in self.children:
-            pi[child.parent_action] = child.q + child.u()
+        for child in self.children: pi[child.parent_action] = child.q + child.u()
         
         mask = np.full(np.prod(config.game_dimensions), True)
         mask[game.get_legal_moves(self.s)] = False
@@ -124,3 +101,24 @@ class Node:
         probs = odds / np.sum(odds)
         return probs
         # return [child.q + child.u() for child in self.children]
+
+    def choose_action(self, pi, values, tau):
+        if tau == 0: action = np.argmax(pi)
+        else:
+            actions = np.random.multinomial(1, pi)
+            action = np.where(actions==1)[0][0]
+
+        value = values[action]
+
+        return action, value
+
+    def backfill(self, result):
+        self.n += 1
+        self.results[result] += 1
+
+        self.v = self.nn.test(game.generate_game_state(self))[0]
+        if self.parent:
+            self.parent.w += self.v
+            self.parent.q = self.parent.w/self.parent.n
+            self.parent.backfill(result)
+        # self.theta_backpropogate(result, self.v, self.probabilities(), res[1:])

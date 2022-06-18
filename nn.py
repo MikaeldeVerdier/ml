@@ -35,8 +35,7 @@ class NeuralNetwork:
             self.model.load_weights(checkpoint_path)
         else:
             try:
-                pass
-                    # plot_model(self.model, to_file="model.png", show_shapes=True, show_layer_names=True)
+                plot_model(self.model, to_file="model.png", show_shapes=True, show_layer_names=True)
             except ImportError:
                 print("You need to download pydot and graphviz to plot model.")
 
@@ -96,24 +95,27 @@ class NeuralNetwork:
             if metric not in self.metrics: self.metrics[metric] = []
             [self.metrics[metric].append(fit.history[metric][i]) for i in range(config.epochs)]
 
-    def plot_losses(self):
-        saves = [config.training_iterations * config.epochs]
-        loaded_info = []
+    def save_progress(self, best_agent):
+        fi = "save" if self.load else "empty_save"
+        file = open(f"probs_move_amount -100\{fi}.json", "r")
+        loaded = json.loads(file.read())
+        """loaded = self.metrics
         if self.load:
-            for file_name in [f"metrics{self.name}.txt", f"saves{self.name}.txt"]:
-                file = open(file_name, "r")
-                loaded_info.append(json.loads(file.read().replace("'", '"')))
-                file.close()
-            self.metrics = {x: loaded_info[0].get(x, 0) + self.metrics.get(x, 0) for x in set(loaded_info[0]).union(self.metrics)}
-            [saves.insert(i, item) for item, i in zip(loaded_info[1], range(len(loaded_info[1])))]
+            file = open("probs_move_amount -100\save.json", "r")
+            loaded = json.loads(file.read())"""
+        loaded["best_agent"] = best_agent
+        loaded[f"agent_{self.name}"]["iterations"].append(config.training_iterations * config.epochs)
+        for i in self.metrics: loaded[f"agent_{self.name}"]["metrics"][i] += (self.metrics[i])
+        file.close()
+        file = open("probs_move_amount -100\save.json", "w")
+        file.write(json.dumps(loaded))
+        file.close()
 
-        for file_name, info in zip([f"metrics{self.name}.txt", f"saves{self.name}.txt"], [self.metrics, saves]):
-            file = open(file_name, "w")
-            file.truncate(0)
-            file.close()
-            file = open(file_name, "a")
-            file.write(str(info))
-            file.close()
+    def plot_losses(self):
+        file = open("probs_move_amount -100\save.json", "r")
+        loaded = json.loads(file.read())[f"agent_{self.name}"]
+        self.metrics = loaded["metrics"]
+        saves = loaded["iterations"]
 
         _, axs = plt.subplots(3, sharex=True)
         plt.xlabel("Training Iteration")
