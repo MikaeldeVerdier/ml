@@ -1,13 +1,15 @@
 import numpy as np
 import random
+import json
 import copy
 import datetime
 import config
 import game
 from agent import Agent
 
-agents = [None, Agent(False, 1), Agent(False, 2)]
-best_agent = 1
+load = [False, False, False]
+agents = [None, Agent(load[0], 1), Agent(load[1], 2)]
+best_agent = json.loads(open("save.json", "r").read())["best_agent"]
 # current_agent = -best_agent
 
 def reset_all_mcts(agents):
@@ -28,15 +30,15 @@ def self_play(agents, games, tau):
     starts = 1
     root = agents[starts].mcts
     while game_count < games:
-        if turn == config.turns_until_tau:
-            tau == 10e-45
+        if turn > config.turns_until_tau and not tau:
+            tau = True
             print("Tau is now 0")
-        root, action, pi, mcts_value, nn_value = root.play_turn(tau)
+        root, action, pi, mcts_value, nn_value = root.play_turn(10e-45)
         turn += 1
 
         training_set[-1].append([game.generate_game_state(root), pi])
 
-        print(f"It's {-root.player}'s turn")
+        print(f"It's {[None, 'O', 'X'][root.player]}'s turn")
         print(f"Action values are: \n {game.print_values(np.round(pi, 3))}")
         print(f"Move to make is: {action}")
         print(f"Position is now: \n {game.print_board(root.s)}")
@@ -68,13 +70,13 @@ def retrain_network(agent, batch, best_agent):
         y = {"value_head": np.array([batch[2] for batch in minibatch]), "policy_head": np.array([batch[1] for batch in minibatch])}
 
         agent.nn.train(x, y)
-        agent.nn.save_progress(best_agent)
-    agent.nn.plot_losses(False)
+        agent.nn.save_progress()
+    agent.nn.plot_losses(True)
 
     return (x, y)
 
 def evaluate_network(agents, best_agent):
-    results = self_play(agents, config.game_amount_evaluation, 10e-45)[1]
+    results = self_play(agents, config.game_amount_evaluation, True)[1]
     print(f"The results were: {results}")
     if results[-best_agent]/(results[best_agent] if results[best_agent] != 0 else 0.1) > config.winning_threshold:
         best_agent *= -1
@@ -94,7 +96,7 @@ def play_test(agent, games):
             root, action, pi, mcts_value, nn_value = root.play_turn(10e-45)
             player_turn = True
 
-            print(f"It's {-root.player}'s turn")
+            print(f"It's {[None, 'O', 'X'][root.player]}'s turn")
             print(f"Action values are: \n {game.print_values(np.round(pi, 3))}")
             print(f"Move to make is: {action}")
             print(f"Position is now: \n {game.print_board(root.s)}")
@@ -104,7 +106,7 @@ def play_test(agent, games):
             for _ in range(config.move_amount):
                 root.selection()
             root = root.children[int(input("Make your move: "))]
-            print(f"It's {-root.player}'s turn")
+            print(f"It's {[None, 'O', 'X'][root.player]}'s turn")
             print(f"Move to make is: {root.parent_action}")
             print(f"Position is now: \n {game.print_board(root.s)}")
             player_turn = False
@@ -128,7 +130,7 @@ for _ in range(config.loop_iterations):
     [agent.reset_mcts() for agent in agents[1:]]
     copyAgent = copy.copy(agents[best_agent])
     copyAgent.reset_mcts()
-    batch = self_play([None, agents[best_agent], copyAgent], config.game_amount_self_playing, 1)[0]
+    batch = self_play([None, agents[best_agent], copyAgent], config.game_amount_self_playing, False)[0]
     (x, y) = retrain_network(agents[-best_agent], batch, best_agent)
     evaluate_network(agents, best_agent)
     # play_test(agents[best_agent], 5)

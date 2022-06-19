@@ -97,25 +97,22 @@ class NeuralNetwork:
             if metric not in self.metrics: self.metrics[metric] = []
             [self.metrics[metric].append(fit.history[metric][i]) for i in range(config.epochs)]
 
-    def save_progress(self, best_agent):
+    def save_progress(self, best_agent = None):
         fi = "save" if self.load else "empty_save"
-        file = open(f"{fi}.json", "r")
-        loaded = json.loads(file.read())
-        loaded["best_agent"] = best_agent
-        loaded[f"agent_{self.name}"]["iterations"].append(config.training_iterations * config.epochs)
-        for i in self.metrics: loaded[f"agent_{self.name}"]["metrics"][i] += (self.metrics[i])
-        file.close()
-        file = open("save.json", "w")
-        file.write(json.dumps(loaded))
-        file.close()
+        loaded = json.loads(open(f"{fi}.json", "r").read())
+        
+        if best_agent is not None: loaded["best_agent"] = best_agent
+        else:
+            loaded[f"agent_{self.name}"]["iterations"].append(config.training_iterations * config.epochs)
+            for metric in self.metrics: loaded[f"agent_{self.name}"]["metrics"][metric] += self.metrics[metric]
+            open("save.json", "w").write(json.dumps(loaded))
 
     def plot_losses(self, plot):
-        file = open("save.json", "r")
-        loaded = json.loads(file.read())[f"agent_{self.name}"]
+        loaded = json.loads(open("save.json", "r").read())[f"agent_{self.name}"]
         self.metrics = loaded["metrics"]
         saves = loaded["iterations"]
 
-        fig, axs = plt.subplots(3, sharex=True)
+        fig, axs = plt.subplots(3, sharex=True, figsize=(10, 5))
         plt.xlabel("Training Iteration")
 
         for metric in self.metrics:
@@ -125,7 +122,9 @@ class NeuralNetwork:
         for ax, metric in zip(axs, ["Loss", "Accuracy", "Val_"]):
             ax.set_title(f"{metric} {self.name}")
             ax.set_ylabel(metric)
-            ax.legend(loc="best")
+            box = ax.get_position()
+            ax.set_position([box.x0, box.y0, box.width * .8, box.height])
+            ax.legend(loc="center left", bbox_to_anchor = (1, .5))
             [ax.axvline(np.sum(saves[:i + 1]) - 1, color="black") for i in range(len(saves))]
 
         plt.savefig("first_iteration_retraining.png", dpi=300)

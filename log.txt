@@ -4,3 +4,9 @@ Best_agent is now: 1
 Best_agent is now: -1
 19/06/2022 16:47:47: Results are: [1, 10, 14]
 Best_agent is now: -1
+19/06/2022 17:22:05: Results are: [0, 0, 1]
+Best_agent is now: -1
+19/06/2022 17:23:46: Results are: [0, 1, 0]
+Best_agent is now: 1
+19/06/2022 17:26:42: Results are: [0, 1, 0]
+Best_agent is now: 1
