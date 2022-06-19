@@ -4,7 +4,7 @@ in_a_row = 4
 move_amount = game_dimensions[1]
 
 # Main loop
-loop_iterations = 10
+loop_iterations = 5
 
 # Self-playing network
 game_amount_self_playing = 50
