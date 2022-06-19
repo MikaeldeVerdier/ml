@@ -99,27 +99,23 @@ class NeuralNetwork:
 
     def save_progress(self, best_agent):
         fi = "save" if self.load else "empty_save"
-        file = open(f"probs_move_amount -100\{fi}.json", "r")
+        file = open(f"{fi}.json", "r")
         loaded = json.loads(file.read())
-        """loaded = self.metrics
-        if self.load:
-            file = open("probs_move_amount -100\save.json", "r")
-            loaded = json.loads(file.read())"""
         loaded["best_agent"] = best_agent
         loaded[f"agent_{self.name}"]["iterations"].append(config.training_iterations * config.epochs)
         for i in self.metrics: loaded[f"agent_{self.name}"]["metrics"][i] += (self.metrics[i])
         file.close()
-        file = open("probs_move_amount -100\save.json", "w")
+        file = open("save.json", "w")
         file.write(json.dumps(loaded))
         file.close()
 
-    def plot_losses(self):
-        file = open("probs_move_amount -100\save.json", "r")
+    def plot_losses(self, plot):
+        file = open("save.json", "r")
         loaded = json.loads(file.read())[f"agent_{self.name}"]
         self.metrics = loaded["metrics"]
         saves = loaded["iterations"]
 
-        _, axs = plt.subplots(3, sharex=True)
+        fig, axs = plt.subplots(3, sharex=True)
         plt.xlabel("Training Iteration")
 
         for metric in self.metrics:
@@ -133,8 +129,8 @@ class NeuralNetwork:
             [ax.axvline(np.sum(saves[:i + 1]) - 1, color="black") for i in range(len(saves))]
 
         plt.savefig("first_iteration_retraining.png", dpi=300)
-        plt.show()
-        print("PLOTTED")
+        if not plot: plt.close(fig)
+        else: print("PLOTTED")
 
     def test(self, data):
         data = np.expand_dims(data, axis=0)

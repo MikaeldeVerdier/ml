@@ -6,6 +6,11 @@ move_amount = game_dimensions[1]
 # Main loop
 loop_iterations = 10
 
+# Network architecture
+convolutional_layer = {"filter_amount": 75, "kernel_size": (4, 4)}
+residual_layer = {"amount": 5, "filter_amount": 75, "kernel_size": (4, 4)}
+dense_value_head = 64
+
 # Self-playing network
 game_amount_self_playing = 50
 MCTSSims = 25
@@ -20,10 +25,6 @@ validation_split = 0.2
 reg_const = 0.0001
 lr = 0.1
 momentum = 0.9
-
-convolutional_layer = {"filter_amount": 75, "kernel_size": (4, 4)}
-residual_layer = {"amount": 5, "filter_amount": 75, "kernel_size": (4, 4)}
-dense_value_head = 64
 
 # Evaluating network
 game_amount_evaluation = 25

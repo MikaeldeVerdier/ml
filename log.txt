@@ -1,5 +1,6 @@
-18/06/2022 15:38:50: Results are: [4, 14, 7]
+19/06/2022 13:50:03: Results are: [1, 13, 11]
 Best_agent is now: 1
-18/06/2022 18:02:18: Results are: [8, 11, 6]
-Best_agent is now: 1
-----------------------
+19/06/2022 15:14:04: Results are: [1, 10, 14]
+Best_agent is now: -1
+19/06/2022 16:47:47: Results are: [1, 10, 14]
+Best_agent is now: -1

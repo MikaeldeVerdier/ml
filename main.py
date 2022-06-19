@@ -55,6 +55,7 @@ def self_play(agents, games, tau):
             training_set.append([])
             outcomes[outcome] += 1
     
+    print(f"Results from self_play were: {outcomes}")
     return training_set[:-1], outcomes
 
 def retrain_network(agent, batch, best_agent):
@@ -68,7 +69,7 @@ def retrain_network(agent, batch, best_agent):
 
         agent.nn.train(x, y)
         agent.nn.save_progress(best_agent)
-    # agent.nn.plot_losses()
+    agent.nn.plot_losses(False)
 
     return (x, y)
 
@@ -79,7 +80,7 @@ def evaluate_network(agents, best_agent):
         best_agent *= -1
         print(f"{best_agent} is now best player!")
         agents[1].nn.save_progress(best_agent)
-        log(results, best_agent)
+    log(results, best_agent)
     
 def play_test(agent, games):
     reset_enemy_mcts(agent)
@@ -93,6 +94,7 @@ def play_test(agent, games):
             root, action, pi, mcts_value, nn_value = root.play_turn(10e-45)
             player_turn = True
 
+            print(f"It's {-root.player}'s turn")
             print(f"Action values are: \n {game.print_values(np.round(pi, 3))}")
             print(f"Move to make is: {action}")
             print(f"Position is now: \n {game.print_board(root.s)}")
@@ -102,6 +104,7 @@ def play_test(agent, games):
             for _ in range(config.move_amount):
                 root.selection()
             root = root.children[int(input("Make your move: "))]
+            print(f"It's {-root.player}'s turn")
             print(f"Move to make is: {root.parent_action}")
             print(f"Position is now: \n {game.print_board(root.s)}")
             player_turn = False
@@ -114,13 +117,11 @@ def play_test(agent, games):
             print(f"Amount of games played is now: {game_count} \n")
             root = agents[-outcome if outcome != 0 else -1].mcts
             outcomes[outcome] += 1
-            
+    
+    print(f"Results from play_test were: {outcomes}")
     return outcomes
     
 def log(results, best_agent):
-    file = open("/Users/mikaeldeverdier/ai/try 2/binary/reinforcement/probs_move_amount -100/log.txt", "w")
-    file.write(f"Results are: {results}\n The best_agent is now {best_agent}\n")
-    file.close()
     open("log.txt", "a").write(f"{datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')}: Results are: {results}\nBest_agent is now: {best_agent}\n")
 
 for _ in range(config.loop_iterations):
@@ -130,9 +131,7 @@ for _ in range(config.loop_iterations):
     batch = self_play([None, agents[best_agent], copyAgent], config.game_amount_self_playing, 1)[0]
     (x, y) = retrain_network(agents[-best_agent], batch, best_agent)
     evaluate_network(agents, best_agent)
-    play_test(agents[best_agent], 5)
-
-
+    # play_test(agents[best_agent], 5)
 
 for agent in agents: agent.nn.plot_losses()
 while True: exec(input("do something: "))
