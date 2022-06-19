@@ -4,7 +4,7 @@ in_a_row = 4
 move_amount = game_dimensions[1]
 
 # Main loop
-loop_iterations = 10
+loop_iterations = 5
 
 # Network architecture
 convolutional_layer = {"filter_amount": 75, "kernel_size": (4, 4)}
