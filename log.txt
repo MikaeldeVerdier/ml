@@ -1,2 +1,5 @@
-Results are: [0, 0, 1]
- The best_agent is now -1
+18/06/2022 15:38:50: Results are: [4, 14, 7]
+Best_agent is now: 1
+18/06/2022 18:02:18: Results are: [8, 11, 6]
+Best_agent is now: 1
+----------------------
