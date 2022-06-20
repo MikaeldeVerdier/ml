@@ -33,24 +33,19 @@ def self_play(agents, games, tau):
         if turn > config.turns_until_tau and not tau:
             tau = True
             print("Tau is now 0")
-        root, action, pi, mcts_value, nn_value = root.play_turn(10e-45)
+        root, pi, mcts_value, nn_value = root.play_turn(10e-45)
         turn += 1
 
         training_set[-1].append([game.generate_game_state(root), pi])
 
-        print(f"It's {[None, 'O', 'X'][root.player]}'s turn")
-        print(f"Action values are: \n {game.print_values(np.round(pi, 3))}")
-        print(f"Move to make is: {action}")
-        print(f"Position is now: \n {game.print_board(root.s)}")
-        print(f"MCTS percieved value is: {np.round(mcts_value, 3)}")
-        print(f"NN percieved value is: {np.round(nn_value * 1000)/1000} \n")
+        game.print_move_info(root, pi = pi, mcts_value = mcts_value, nn_value = nn_value)
 
         outcome = game.check_game_over(root.s)
         if outcome is not None:
             reset_all_mcts(agents)
             game_count += 1
             print(f"Game outcome was: {outcome}")
-            print(f"Amount of games played is now: {game_count} \n")
+            print(f"Amount of games played is now: {game_count}\n")
             starts *= -1
             root = agents[starts].mcts
             [Set.append(outcome) for Set in training_set[-1]]
@@ -60,7 +55,7 @@ def self_play(agents, games, tau):
     print(f"Results from self_play were: {outcomes}")
     return training_set[:-1], outcomes
 
-def retrain_network(agent, batch, best_agent):
+def retrain_network(agent, batch):
     for _ in range(config.training_iterations):
         positions = []
         for position in batch: positions += position
@@ -70,7 +65,7 @@ def retrain_network(agent, batch, best_agent):
         y = {"value_head": np.array([batch[2] for batch in minibatch]), "policy_head": np.array([batch[1] for batch in minibatch])}
 
         agent.nn.train(x, y)
-        agent.nn.save_progress()
+    agent.nn.save_progress()
     agent.nn.plot_losses(True)
 
     return (x, y)
@@ -93,23 +88,17 @@ def play_test(agent, games):
     root = agent.mcts
     while game_count < games:
         if not player_turn:
-            root, action, pi, mcts_value, nn_value = root.play_turn(10e-45)
+            root, pi, mcts_value, nn_value = root.play_turn(10e-45)
             player_turn = True
 
-            print(f"It's {[None, 'O', 'X'][root.player]}'s turn")
-            print(f"Action values are: \n {game.print_values(np.round(pi, 3))}")
-            print(f"Move to make is: {action}")
-            print(f"Position is now: \n {game.print_board(root.s)}")
-            print(f"MCTS percieved value is: {np.round(mcts_value, 3)}")
-            print(f"NN percieved value is: {np.round(nn_value * 1000)/1000} \n")
+            game.print_move_info(root, pi = pi, mcts_value = mcts_value, nn_value = nn_value)
         else:
             for _ in range(config.move_amount):
                 root.selection()
             root = root.children[int(input("Make your move: "))]
-            print(f"It's {[None, 'O', 'X'][root.player]}'s turn")
-            print(f"Move to make is: {root.parent_action}")
-            print(f"Position is now: \n {game.print_board(root.s)}")
             player_turn = False
+
+            game.print_move_info(root)
 
         outcome = game.check_game_over(root.s)
         if outcome is not None:
@@ -135,7 +124,7 @@ for _ in range(config.loop_iterations):
     evaluate_network(agents, best_agent)
     # play_test(agents[best_agent], 5)
 
-for agent in agents: agent.nn.plot_losses()
+for agent in agents: agent.nn.plot_losses(True)
 while True: exec(input("do something: "))
 
 

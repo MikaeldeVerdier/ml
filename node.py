@@ -34,7 +34,7 @@ class Node:
         node = [child for child in self.children if child.parent_action == action][0]
         nn_value = -self.nn.test(game.generate_game_state(node))[0]
 
-        return (node, action, pi, value, nn_value)
+        return (node, pi, value, nn_value)
    
     def u(self):
         return (self.results[self.player]/self.n + self.cpuct * self.prior * np.sqrt(np.log(self.parent.n)/(1 + self.n))) * self.modifier

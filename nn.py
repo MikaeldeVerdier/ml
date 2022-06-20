@@ -11,14 +11,12 @@ from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.callbacks import ModelCheckpoint
 from keras.utils.vis_utils import plot_model
 
-import time
-
 class NeuralNetwork:
     def __init__(self, load, name):
         self.load = load
         self.name = name
         
-        self.main_input = Input(shape=game.game_dimensions + (config.depth * 2 + 1,), name="main_input")
+        self.main_input = Input(shape=config.game_dimensions + (config.depth * 2 + 1,), name="main_input")
 
         # x = BatchNormalization(axis=3)(main_input)
         x = self.convolutional_layer(self.main_input, config.convolutional_layer["filter_amount"], config.convolutional_layer["kernel_size"])
@@ -100,12 +98,13 @@ class NeuralNetwork:
     def save_progress(self, best_agent = None):
         fi = "save" if self.load else "empty_save"
         loaded = json.loads(open(f"{fi}.json", "r").read())
-        
+
         if best_agent is not None: loaded["best_agent"] = best_agent
         else:
             loaded[f"agent_{self.name}"]["iterations"].append(config.training_iterations * config.epochs)
-            for metric in self.metrics: loaded[f"agent_{self.name}"]["metrics"][metric] += self.metrics[metric]
-            open("save.json", "w").write(json.dumps(loaded))
+            for metric in self.metrics: loaded[f"agent_{self.name}"]["metrics"][metric] = self.metrics[metric]
+            self.load = True
+        open("save.json", "w").write(json.dumps(loaded))
 
     def plot_losses(self, plot):
         loaded = json.loads(open("save.json", "r").read())[f"agent_{self.name}"]
