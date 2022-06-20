@@ -12,14 +12,14 @@ residual_layer = {"amount": 5, "filter_amount": 75, "kernel_size": (4, 4)}
 dense_value_head = 64
 
 # Self-playing network
-game_amount_self_playing = 1
+game_amount_self_playing = 50
 MCTSSims = 25
 depth = 1
 turns_until_tau = 10
 
 # Retraining network
-training_iterations = 2
-batch_size = 2
+training_iterations = 15
+batch_size = 32
 epochs = 1
 validation_split = 0.2
 reg_const = 0.0001
@@ -27,5 +27,5 @@ lr = 0.1
 momentum = 0.9
 
 # Evaluating network
-game_amount_evaluation = 1
+game_amount_evaluation = 25
 winning_threshold = 1.2
