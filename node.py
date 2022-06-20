@@ -32,7 +32,7 @@ class Node:
         
         action, value = self.choose_action(pi, values, tau)
         node = [child for child in self.children if child.parent_action == action][0]
-        nn_value = -self.nn.test(game.generate_game_state(node))[0]
+        nn_value = self.nn.test(game.generate_game_state(node))[0]
 
         return (node, action, pi, value, nn_value)
    
@@ -48,15 +48,15 @@ class Node:
             self.backfill(reward)
         else:
             self.p = self.probabilities()
-            self.children[np.argmax(self.p) % game.move_amount].selection()
+            self.children[np.argmax(self.p) % config.move_amount].selection()
 
     def expand(self):
         action = self.untried_actions.pop(0)
         if action == -1:
-            child_node = Node(np.full(np.prod(game.game_dimensions), 2), self, action, 0, None, 1, modifier=0)
+            child_node = Node(np.full(np.prod(config.game_dimensions), 2), self, action, 0, None, 1, modifier=0)
         else:
             new_state = game.move(self.s.copy(), action, self.player, False)[0]
-            prior = self.nn.test(game.generate_game_state(self))[1][action % game.move_amount]
+            prior = self.nn.test(game.generate_game_state(self))[1][action % config.move_amount]
             child_node = Node(new_state, self, action, -self.player, self.nn, prior)
         self.children.append(child_node)
 

@@ -33,7 +33,7 @@ def self_play(agents, games, tau):
         if turn > config.turns_until_tau and not tau:
             tau = True
             print("Tau is now 0")
-        root, action, pi, mcts_value, nn_value = root.play_turn(10e-45)
+        root, action, pi, mcts_value, nn_value = root.play_turn(10e-45 if tau else 1)
         turn += 1
 
         training_set[-1].append([game.generate_game_state(root), pi])
@@ -60,7 +60,7 @@ def self_play(agents, games, tau):
     print(f"Results from self_play were: {outcomes}")
     return training_set[:-1], outcomes
 
-def retrain_network(agent, batch, best_agent):
+def retrain_network(agent, batch):
     for _ in range(config.training_iterations):
         positions = []
         for position in batch: positions += position
@@ -70,7 +70,7 @@ def retrain_network(agent, batch, best_agent):
         y = {"value_head": np.array([batch[2] for batch in minibatch]), "policy_head": np.array([batch[1] for batch in minibatch])}
 
         agent.nn.train(x, y)
-        agent.nn.save_progress()
+    agent.nn.save_progress()
     agent.nn.plot_losses(True)
 
     return (x, y)
@@ -82,7 +82,9 @@ def evaluate_network(agents, best_agent):
         best_agent *= -1
         print(f"{best_agent} is now best player!")
         agents[1].nn.save_progress(best_agent)
+
     log(results, best_agent)
+    return best_agent
     
 def play_test(agent, games):
     reset_enemy_mcts(agent)
@@ -131,8 +133,8 @@ for _ in range(config.loop_iterations):
     copyAgent = copy.copy(agents[best_agent])
     copyAgent.reset_mcts()
     batch = self_play([None, agents[best_agent], copyAgent], config.game_amount_self_playing, False)[0]
-    (x, y) = retrain_network(agents[-best_agent], batch, best_agent)
-    evaluate_network(agents, best_agent)
+    (x, y) = retrain_network(agents[-best_agent], batch)
+    best_agent = evaluate_network(agents, best_agent)
     # play_test(agents[best_agent], 5)
 
 for agent in agents: agent.nn.plot_losses()
