@@ -2,3 +2,11 @@
 Best_agent is now: -1
 21/06/2022 00:56:01: Results are: [5, 11, 9]
 Best_agent is now: 1
+21/06/2022 02:52:48: Results are: [2, 3, 20]
+Best_agent is now: -1
+21/06/2022 05:00:56: Results are: [5, 11, 9]
+Best_agent is now: 1
+21/06/2022 06:59:00: Results are: [2, 12, 11]
+Best_agent is now: 1
+21/06/2022 09:09:16: Results are: [9, 11, 5]
+Best_agent is now: 1
