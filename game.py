@@ -39,9 +39,8 @@ def check_game_over(board):
     if np.count_nonzero(board) == np.prod(config.game_dimensions):
         return 0
 
-def move(board, a, player, change_player):
+def move(board, a, player):
     board[a] = player
-    if change_player: player *= -1
     return (board, player)
 
 def print_board(board):

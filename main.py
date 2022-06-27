@@ -82,7 +82,8 @@ def play_test(agent, games):
     results = self_play([None, agent, you], games, False)
     print(f"The results were: {results}")
     if results[1] > results[2]: print("You were worse than the bot")
-    else: print("You were better than the bot")
+    elif results[2] > results[1]: print("You were better than the bot")
+    else: print("You tied with the bot")
 
 def log(results, best_agent):
     open("log.txt", "a").write(f"{datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')}: Results are: {results}\nBest_agent is now: {best_agent}\n")
