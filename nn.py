@@ -124,7 +124,7 @@ class NeuralNetwork:
             ax.set_title(f"{metric} {self.name}")
             ax.set_ylabel(metric)
             box = ax.get_position()
-            ax.set_position([box.x0, box.y0, box.width * .8, box.height])
+            ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
             ax.legend(loc="center left", bbox_to_anchor = (1, .5))
             [ax.axvline(np.sum(saves[:i + 1]) - 1, color="black") for i in range(len(saves))]
 

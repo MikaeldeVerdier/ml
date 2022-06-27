@@ -5,60 +5,51 @@ import copy
 import datetime
 import config
 import game
-from agent import Agent
+from player import *
 
 load = [False, False, False]
 agents = [None, Agent(load[0], 1), Agent(load[1], 2)]
 best_agent = json.loads(open("save.json", "r").read())["best_agent"]
-# current_agent = -best_agent
+if not load[0] and not load[1]: open("log.txt", "w").truncate(0)
 
-def reset_all_mcts(agents):
-    for agent in agents[1:]: agent.reset_mcts()
-    for i in [1, -1]: agents[i].mcts.player = i
+def assign_players(players):
+    for i in [1, -1]: players[i].root.player = i
 
-def reset_enemy_mcts(agent):
-    agent.reset_mcts()
-    agent.mcts.player = 1
-
-def self_play(agents, games, tau):
-    reset_all_mcts(agents)
-
-    training_set = [[]]
+def self_play(players, games, training):
+    if training: training_set = [[]]
     outcomes = [0, 0, 0]
     game_count = 0
-    turn = 0
     starts = 1
-    root = agents[starts].mcts
+    assign_players(players)
     while game_count < games:
-        if turn > config.turns_until_tau and not tau:
-            tau = True
-            print("Tau is now 0")
-        root, action, pi, mcts_value, nn_value = root.play_turn(10e-45 if tau else 1)
-        turn += 1
+        player_turn = starts
+        player = players[player_turn]
+        root = player.start_node
+        turn = 1
+        tau = 1 if training else 1e-10
+        outcome = None
+        while outcome is None:
+            if turn > config.turns_until_tau: tau = 1e-10
+            player = players[player_turn]
+            root, pi = player.play_turn(root, tau)
+            player_turn *= -1
+            turn += 0.5
 
-        training_set[-1].append([game.generate_game_state(root), pi])
+            outcome = game.check_game_over(root.s)
 
-        print(f"It's {[None, 'O', 'X'][root.player]}'s turn")
-        print(f"Action values are: \n {game.print_values(np.round(pi, 3))}")
-        print(f"Move to make is: {action}")
-        print(f"Position is now: \n {game.print_board(root.s)}")
-        print(f"MCTS percieved value is: {np.round(mcts_value, 3)}")
-        print(f"NN percieved value is: {np.round(nn_value * 1000)/1000} \n")
+            if training: training_set[-1].append([game.generate_game_state(root), pi])
 
-        outcome = game.check_game_over(root.s)
-        if outcome is not None:
-            reset_all_mcts(agents)
-            game_count += 1
-            print(f"Game outcome was: {outcome}")
-            print(f"Amount of games played is now: {game_count} \n")
-            starts *= -1
-            root = agents[starts].mcts
+        game_count += 1
+        starts *= -1
+        outcomes[outcome] += 1
+        print(f"Game outcome was: {outcome}")
+        print(f"Amount of games played is now: {game_count} \n")
+        if training:
             [Set.append(outcome) for Set in training_set[-1]]
             training_set.append([])
-            outcomes[outcome] += 1
     
     print(f"Results from self_play were: {outcomes}")
-    return training_set[:-1], outcomes
+    return training_set[:-1] if training else outcomes
 
 def retrain_network(agent, batch):
     for _ in range(config.training_iterations):
@@ -76,7 +67,7 @@ def retrain_network(agent, batch):
     return (x, y)
 
 def evaluate_network(agents, best_agent):
-    results = self_play(agents, config.game_amount_evaluation, True)[1]
+    results = self_play(agents, config.game_amount_evaluation, False)
     print(f"The results were: {results}")
     if results[-best_agent]/(results[best_agent] if results[best_agent] != 0 else 0.1) > config.winning_threshold:
         best_agent *= -1
@@ -87,55 +78,21 @@ def evaluate_network(agents, best_agent):
     return best_agent
     
 def play_test(agent, games):
-    reset_enemy_mcts(agent)
+    you = User()
+    results = self_play([None, agent, you], games, False)
+    print(f"The results were: {results}")
+    if results[1] > results[2]: print("You were worse than the bot")
+    else: print("You were better than the bot")
 
-    outcomes = [0, 0, 0]
-    game_count = 0
-    player_turn = False
-    root = agent.mcts
-    while game_count < games:
-        if not player_turn:
-            root, action, pi, mcts_value, nn_value = root.play_turn(10e-45)
-            player_turn = True
-
-            print(f"It's {[None, 'O', 'X'][root.player]}'s turn")
-            print(f"Action values are: \n {game.print_values(np.round(pi, 3))}")
-            print(f"Move to make is: {action}")
-            print(f"Position is now: \n {game.print_board(root.s)}")
-            print(f"MCTS percieved value is: {np.round(mcts_value, 3)}")
-            print(f"NN percieved value is: {np.round(nn_value * 1000)/1000} \n")
-        else:
-            for _ in range(config.move_amount):
-                root.selection()
-            root = root.children[int(input("Make your move: "))]
-            print(f"It's {[None, 'O', 'X'][root.player]}'s turn")
-            print(f"Move to make is: {root.parent_action}")
-            print(f"Position is now: \n {game.print_board(root.s)}")
-            player_turn = False
-
-        outcome = game.check_game_over(root.s)
-        if outcome is not None:
-            agent.reset_mcts()
-            game_count += 1
-            print(f"Game outcome was: {outcome}")
-            print(f"Amount of games played is now: {game_count} \n")
-            root = agents[-outcome if outcome != 0 else -1].mcts
-            outcomes[outcome] += 1
-    
-    print(f"Results from play_test were: {outcomes}")
-    return outcomes
-    
 def log(results, best_agent):
     open("log.txt", "a").write(f"{datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')}: Results are: {results}\nBest_agent is now: {best_agent}\n")
 
 for _ in range(config.loop_iterations):
-    [agent.reset_mcts() for agent in agents[1:]]
     copyAgent = copy.copy(agents[best_agent])
-    copyAgent.reset_mcts()
-    batch = self_play([None, agents[best_agent], copyAgent], config.game_amount_self_playing, False)[0]
+    batch = self_play([None, agents[best_agent], copyAgent], config.game_amount_self_playing, True)
     (x, y) = retrain_network(agents[-best_agent], batch)
     best_agent = evaluate_network(agents, best_agent)
-    # play_test(agents[best_agent], 5)
+    play_test(agents[best_agent], config.game_amount_play_test)
 
 for agent in agents: agent.nn.plot_losses()
 while True: exec(input("do something: "))
