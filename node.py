@@ -45,6 +45,18 @@ class Node:
 
         self.children.append(child_node)
 
+    """def expand_fully(self, nn):
+        prior = nn.test(game.generate_game_state(self))[1] if nn is not None else 0
+        
+        for action in self.untried_actions:
+            if action != -1:
+                new_state = game.move(self.s.copy(), action, self.player)[0]
+                child_node = Node(new_state, self, action, -self.player, prior[action % config.move_amount])
+            else:
+                child_node = Node(np.full(np.prod(config.game_dimensions), 2), self, action, 0, 1, modifier=0)
+
+        self.children.append(child_node)"""
+
     def probabilities(self):
         pi = np.zeros(np.prod(config.game_dimensions))
         for child in self.children: pi[child.parent_action] = child.q + child.u()

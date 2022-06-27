@@ -6,9 +6,8 @@ from node import Node
 
 class User():
     def __init__(self):
-        self.start_node = Node(np.zeros(np.prod(config.game_dimensions))[::], None, None, None, None)
-        self.root = self.start_node
-        
+        pass
+
     def play_turn(self, root, tau):
         while len(root.children) != len(game.get_legal_moves(root.s)):
             root.expand(None)
@@ -26,8 +25,6 @@ class User():
 class Agent():
     def __init__(self, load, name):
         self.nn = NeuralNetwork(load, name)
-        self.start_node = Node(np.zeros(np.prod(config.game_dimensions))[::], None, None, None, None)
-        self.root = self.start_node
 
     def play_turn(self, root, tau):
         for _ in range(config.MCTSSims):
@@ -37,7 +34,7 @@ class Agent():
         
         action, value = self.choose_action(pi, values, tau)
         root = [child for child in root.children if child.parent_action == action][0]
-        nn_value = self.nn.test(game.generate_game_state(self.root))[0]
+        nn_value = self.nn.test(game.generate_game_state(root))[0]
 
         self.print_move(root, pi, value, nn_value)
 

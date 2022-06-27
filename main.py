@@ -1,7 +1,6 @@
 import numpy as np
 import random
 import json
-import copy
 import datetime
 import config
 import game
@@ -10,21 +9,16 @@ from player import *
 load = [False, False, False]
 agents = [None, Agent(load[0], 1), Agent(load[1], 2)]
 best_agent = json.loads(open("save.json", "r").read())["best_agent"]
-if not load[0] and not load[1]: open("log.txt", "w").truncate(0)
+if not load[2]: open("log.txt", "w").truncate(0)
 
-def assign_players(players):
-    for i in [1, -1]: players[i].root.player = i
-
-def self_play(players, games, training):
+def play(players, games, training):
     if training: training_set = [[]]
     outcomes = [0, 0, 0]
     game_count = 0
     starts = 1
-    assign_players(players)
     while game_count < games:
         player_turn = starts
-        player = players[player_turn]
-        root = player.start_node
+        root = Node(np.zeros(np.prod(config.game_dimensions))[::], None, None, player_turn, None)
         turn = 1
         tau = 1 if training else 1e-10
         outcome = None
@@ -48,8 +42,13 @@ def self_play(players, games, training):
             [Set.append(outcome) for Set in training_set[-1]]
             training_set.append([])
     
-    print(f"Results from self_play were: {outcomes}")
     return training_set[:-1] if training else outcomes
+
+def self_play(agent):
+    copyAgent = Agent(agent.nn.load, agent.nn.name)
+    training_data = play([None, agent, copyAgent], config.game_amount_self_playing, True)
+    
+    return training_data
 
 def retrain_network(agent, batch):
     for _ in range(config.training_iterations):
@@ -67,7 +66,7 @@ def retrain_network(agent, batch):
     return (x, y)
 
 def evaluate_network(agents, best_agent):
-    results = self_play(agents, config.game_amount_evaluation, False)
+    results = play(agents, config.game_amount_evaluation, False)
     print(f"The results were: {results}")
     if results[-best_agent]/(results[best_agent] if results[best_agent] != 0 else 0.1) > config.winning_threshold:
         best_agent *= -1
@@ -79,7 +78,7 @@ def evaluate_network(agents, best_agent):
     
 def play_test(agent, games):
     you = User()
-    results = self_play([None, agent, you], games, False)
+    results = play([None, agent, you], games, False)
     print(f"The results were: {results}")
     if results[1] > results[2]: print("You were worse than the bot")
     elif results[2] > results[1]: print("You were better than the bot")
@@ -89,8 +88,7 @@ def log(results, best_agent):
     open("log.txt", "a").write(f"{datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')}: Results are: {results}\nBest_agent is now: {best_agent}\n")
 
 for _ in range(config.loop_iterations):
-    copyAgent = copy.copy(agents[best_agent])
-    batch = self_play([None, agents[best_agent], copyAgent], config.game_amount_self_playing, True)
+    batch = self_play(agents[best_agent])
     (x, y) = retrain_network(agents[-best_agent], batch)
     best_agent = evaluate_network(agents, best_agent)
     play_test(agents[best_agent], config.game_amount_play_test)

@@ -31,4 +31,4 @@ game_amount_evaluation = 1
 winning_threshold = 1.2
 
 # Play-test
-game_amount_play_test = 5
+game_amount_play_test = 2
