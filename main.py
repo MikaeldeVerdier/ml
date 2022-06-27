@@ -92,7 +92,7 @@ for _ in range(config.loop_iterations):
     batch = self_play([None, agents[best_agent], copyAgent], config.game_amount_self_playing, True)
     (x, y) = retrain_network(agents[-best_agent], batch)
     best_agent = evaluate_network(agents, best_agent)
-    play_test(agents[best_agent], config.game_amount_play_test)
+    # play_test(agents[best_agent], config.game_amount_play_test)
 
 for agent in agents: agent.nn.plot_losses()
 while True: exec(input("do something: "))

@@ -1,2 +1,10 @@
-27/06/2022 17:55:56: Results are: [0, 0, 1]
+27/06/2022 19:53:52: Results are: [1, 9, 5]
+Best_agent is now: 1
+27/06/2022 20:22:28: Results are: [1, 7, 7]
+Best_agent is now: 1
+27/06/2022 20:50:27: Results are: [7, 2, 6]
+Best_agent is now: -1
+27/06/2022 21:37:32: Results are: [2, 7, 6]
+Best_agent is now: -1
+27/06/2022 22:09:55: Results are: [0, 7, 8]
 Best_agent is now: -1
