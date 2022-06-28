@@ -18,7 +18,8 @@ class User():
         return root, None
 
     def print_move(self, root):
-        print(f"It's {[None, 'O', 'X'][root.player]}'s turn")
+        player_dict = {1: 'O', -1: 'X'}
+        print(f"It's {player_dict[root.player]}'s turn")
         print(f"Move to make is: {root.parent_action}")
         print(f"Position is now: \n {game.print_board(root.s)}")
 
@@ -61,7 +62,8 @@ class Agent():
         return pi, values
     
     def print_move(self, root, pi, mcts_value, nn_value):
-        print(f"It's {[None, 'O', 'X'][root.player]}'s turn")
+        player_dict = {1: 'O', -1: 'X'}
+        print(f"It's {player_dict[root.player]}'s turn")
         print(f"Action values are: \n {game.print_values(np.round(pi, 3))}")
         print(f"Move to make is: {root.parent_action}")
         print(f"Position is now: \n {game.print_board(root.s)}")

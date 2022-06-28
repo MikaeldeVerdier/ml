@@ -7,7 +7,7 @@ import game
 from player import *
 
 load = [False, False, False]
-agents = [None, Agent(load[0], 1), Agent(load[1], 2)]
+agents = {1: Agent(load[0], 1), -1: Agent(load[1], 2)}
 best_agent = json.loads(open("save.json", "r").read())["best_agent"]
 if not load[2]: open("log.txt", "w").truncate(0)
 
@@ -46,7 +46,7 @@ def play(players, games, training):
 
 def self_play(agent):
     copyAgent = Agent(agent.nn.load, agent.nn.name)
-    training_data = play([None, agent, copyAgent], config.game_amount_self_playing, True)
+    training_data = play({1: agent, -1: copyAgent}, config.game_amount_self_playing, True)
     
     return training_data
 
@@ -78,7 +78,7 @@ def evaluate_network(agents, best_agent):
     
 def play_test(agent, games):
     you = User()
-    results = play([None, agent, you], games, False)
+    results = play({1: agent, -1: you}, games, False)
     print(f"The results were: {results}")
     if results[1] > results[2]: print("You were worse than the bot")
     elif results[2] > results[1]: print("You were better than the bot")
