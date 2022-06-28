@@ -6,6 +6,7 @@ from node import Node
 
 class User():
     def __init__(self):
+        # self.mcts = Node(np.zeros(np.prod(config.game_dimensions))[::], None, None, None, None)
         pass
 
     def play_turn(self, root, tau):
@@ -25,6 +26,7 @@ class User():
 
 class Agent():
     def __init__(self, load, name):
+        # self.mcts = Node(np.zeros(np.prod(config.game_dimensions))[::], None, None, None, None)
         self.nn = NeuralNetwork(load, name)
 
     def play_turn(self, root, tau):

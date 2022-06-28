@@ -1,2 +1,0 @@
-28/06/2022 13:27:43: Results are: [0, 0, 1]
-Best_agent is now: -1
