@@ -2,16 +2,18 @@ import numpy as np
 import config
 
 def generate_game_state(node):
+    real_node = node
     board_history = []
-    i = 0
-    while i < config.depth:
-        for player in [node.player, -node.player]:
+    for player in [1, -1]:
+        node = real_node
+        i = 0
+        while i < config.depth:
             position = np.zeros(len(node.s))
             position[node.s==player] = 1
             board_history.append(position.reshape(config.game_dimensions))
-        if node.parent:
-            node = node.parent
-        i += 1
+            if node.parent is not None and node.parent.parent is not None:
+                node = node.parent.parent
+            i += 1
     board_history.append(np.array([[{1: 1, -1: 0}[node.player]] * config.game_dimensions[1]] * config.game_dimensions[0]))
     game_state = np.moveaxis(np.array(board_history), 0, -1)
     return game_state

@@ -21,6 +21,7 @@ def play(players, games, training):
     starts = 1
     while game_count < games:
         setup_mcts(players)
+        action = 0
         player_turn = starts
         root = players[starts].mcts
         turn = 1
