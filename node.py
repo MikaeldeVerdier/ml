@@ -22,6 +22,16 @@ class Node:
     def u(self):
         return self.cpuct * self.prior * np.sqrt(self.parent.n)/(1 + self.n)
 
+    def return_root(self, action):
+        descendant = [child for child in self.children if np.array_equal(child.s, game.move(self.s.copy(), action, -self.player))]
+        if not descendant:
+            root = Node(game.move(self.s.copy(), action, -self.player), self, action, self.player, 0)
+            self.children.append(root)
+        else:
+            root = descendant[0]
+
+        return root
+
     def selection(self, nn):
         if len(self.children) != len(game.get_legal_moves(self.s)):
             if game.check_game_over(self.s) is not None:
@@ -35,9 +45,9 @@ class Node:
     def expand(self, nn):
         action = self.untried_actions.pop(0)
         if action != -1:
-            new_state = game.move(self.s.copy(), action, self.player)[0]
+            new_state = game.move(self.s.copy(), action, self.player)
             prior = nn.test(game.generate_game_state(self))[1][action % config.move_amount] if nn is not None else 0
-            child_node = Node(new_state, self, action, -self.player, prior)
+            child_node = Node(new_state, self, action, self.player, prior)
         else:
             child_node = Node(np.full(np.prod(config.game_dimensions), 2), self, -1, 0, 0)
 

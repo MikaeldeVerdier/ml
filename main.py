@@ -21,21 +21,21 @@ def play(players, games, training):
     starts = 1
     while game_count < games:
         setup_mcts(players)
+        action = None
         player_turn = starts
-        root = players[starts].mcts
         turn = 1
         tau = 1 if training else 1e-10
         outcome = None
         while outcome is None:
             if turn > config.turns_until_tau: tau = 1e-10
             player = players[player_turn]
-            root, pi = player.play_turn(root, tau)
+            action, pi = player.play_turn(action, tau)
             player_turn *= -1
             turn += 0.5
 
-            outcome = game.check_game_over(root.s)
+            outcome = game.check_game_over(player.mcts.s)
 
-            if training: training_set[-1].append([game.generate_game_state(root), pi])
+            if training: training_set[-1].append([game.generate_game_state(player.mcts), pi])
 
         game_count += 1
         starts *= -1

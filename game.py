@@ -43,7 +43,7 @@ def check_game_over(board):
 
 def move(board, a, player):
     board[a] = player
-    return (board, player)
+    return board
 
 def print_board(board):
     board = board.astype("<U1")
