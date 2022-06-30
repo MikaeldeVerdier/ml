@@ -74,9 +74,12 @@ class Node:
         return probs
 
     def backfill(self, nn):
-        self.n += 1
-        self.v = nn.test(game.generate_game_state(self))[0]
-        if self.parent:
-            self.parent.w += self.v
-            self.parent.q = self.parent.w / self.parent.n
-            self.parent.backfill(nn)
+        v = nn.test(game.generate_game_state(self))[0]
+        direction = self.player
+        parent = self
+        while parent:
+            parent.n += 1
+            parent.w += v * direction
+            parent.q = parent.w / parent.n
+            parent = parent.parent
+            direction *= -1

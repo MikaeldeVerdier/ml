@@ -6,7 +6,7 @@ import config
 import game
 from player import *
 
-load = [False, False, False]
+load = [True, True, True]
 agents = {1: Agent(load[0], 1), -1: Agent(load[1], 2)}
 best_agent = json.loads(open("save.json", "r").read())["best_agent"]
 if not load[2]: open("log.txt", "w").truncate(0)
