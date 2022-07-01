@@ -35,16 +35,16 @@ def play(players, games, training):
 
             outcome = game.check_game_over(player.mcts.s)
 
-            if training: training_set[-1].append([game.generate_game_state(player.mcts), pi])
+            if training: training_set[-1].append([player.mcts, pi])
 
         game_count += 1
         starts *= -1
         outcomes[outcome] += 1
         print(f"Game outcome was: {outcome}")
         print(f"Amount of games played is now: {game_count} \n")
-        print(f"We are " + "training" if training else "evaluating")
+        print(f"We are " + ("training" if training else "evaluating"))
         if training:
-            [Set.append(outcome) for Set in training_set[-1]]
+            [position.append(outcome * position[0].player) for position in training_set[-1]]
             training_set.append([])
     
     return training_set[:-1] if training else outcomes
@@ -61,7 +61,7 @@ def retrain_network(agent, batch):
         for position in batch: positions += position
         minibatch = random.sample(positions, config.batch_size)
 
-        x = np.array([batch[0] for batch in minibatch])
+        x = np.array([game.generate_game_state(batch[0]) for batch in minibatch])
         y = {"value_head": np.array([batch[2] for batch in minibatch]), "policy_head": np.array([batch[1] for batch in minibatch])}
 
         agent.nn.train(x, y)

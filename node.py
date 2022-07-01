@@ -37,7 +37,7 @@ class Node:
                 return
             self.expand(nn)
             v = nn.test(game.generate_game_state(self))[0]
-            self.backfill(v, 1)
+            self.backfill(v, self.player)
         else:
             self.p = self.probabilities()
             self.children[np.argmax(self.p)].simulate(nn)

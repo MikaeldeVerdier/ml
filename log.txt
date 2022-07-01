@@ -1,0 +1,6 @@
+01/07/2022 19:21:24: Results are: [1, 0, 0]
+Best_agent is now: 1
+01/07/2022 19:22:00: Results are: [0, 1, 0]
+Best_agent is now: 1
+01/07/2022 19:22:41: Results are: [0, 1, 0]
+Best_agent is now: 1
