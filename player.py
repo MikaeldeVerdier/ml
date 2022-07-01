@@ -31,7 +31,7 @@ class Agent():
         if action is not None: self.mcts = self.mcts.update_root(action)
         
         for _ in range(config.MCTSSims):
-            self.mcts.selection(self.nn)
+            self.mcts.simulate(self.nn)
 
         pi, values = self.getAV(self.mcts)
         
