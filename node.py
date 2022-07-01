@@ -36,7 +36,8 @@ class Node:
             if game.check_game_over(self.s) is not None:
                 return
             self.expand(nn)
-            self.backfill(nn)
+            v = nn.test(game.generate_game_state(self))[0]
+            self.backfill(v, 1)
         else:
             self.p = self.probabilities()
             self.children[np.argmax(self.p)].simulate(nn)
@@ -71,13 +72,9 @@ class Node:
         probs = odds / np.sum(odds)
         return probs
 
-    def backfill(self, nn):
-        v = nn.test(game.generate_game_state(self))[0]
-        direction = 1
-        parent = self
-        while parent:
-            parent.n += 1
-            parent.w += v * direction
-            parent.q = parent.w / parent.n
-            parent = parent.parent
-            direction *= -1
+    def backfill(self, v, direction):
+        self.n += 1
+        self.w += v * direction
+        self.q = self.w / self.n
+        if self.parent:
+            self.parent.backfill(v, direction * -1)
