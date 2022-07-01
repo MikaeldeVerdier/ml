@@ -33,10 +33,9 @@ class Node:
 
     def simulate(self, nn):
         if len(self.children) != len(game.get_legal_moves(self.s)):
-            if game.check_game_over(self.s) is not None:
-                return
+            outcome = game.check_game_over(self.s)
             self.expand(nn)
-            v = nn.test(game.generate_game_state(self))[0]
+            v = nn.test(game.generate_game_state(self))[0] if outcome is None else outcome
             self.backfill(v, self.player)
         else:
             self.p = self.probabilities()
