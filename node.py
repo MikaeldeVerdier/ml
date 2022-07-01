@@ -1,5 +1,4 @@
 import numpy as np
-import random
 import config
 import game
 
@@ -22,7 +21,7 @@ class Node:
     def u(self):
         return self.cpuct * self.prior * np.sqrt(self.parent.n)/(1 + self.n)
 
-    def return_root(self, action):
+    def update_root(self, action):
         descendant = [child for child in self.children if np.array_equal(child.s, game.move(self.s.copy(), action, -self.player))]
         if not descendant:
             root = Node(game.move(self.s.copy(), action, -self.player), self, action, self.player, 0)
@@ -32,7 +31,7 @@ class Node:
 
         return root
 
-    def selection(self, nn):
+    def simulate(self, nn):
         if len(self.children) != len(game.get_legal_moves(self.s)):
             if game.check_game_over(self.s) is not None:
                 return
@@ -40,7 +39,7 @@ class Node:
             self.backfill(nn)
         else:
             self.p = self.probabilities()
-            self.children[np.argmax(self.p)].selection(nn)
+            self.children[np.argmax(self.p)].simulate(nn)
 
     def expand(self, nn):
         action = self.untried_actions.pop(0)
@@ -66,8 +65,7 @@ class Node:
         self.children.append(child_node)"""
 
     def probabilities(self):
-        pi = []
-        for child in self.children: pi.append(child.q + child.u())
+        pi = [child.q + child.u() for child in self.children]
         
         odds = np.exp(pi)
         probs = odds / np.sum(odds)
@@ -75,7 +73,7 @@ class Node:
 
     def backfill(self, nn):
         v = nn.test(game.generate_game_state(self))[0]
-        direction = self.player
+        direction = 1
         parent = self
         while parent:
             parent.n += 1

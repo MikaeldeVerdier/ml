@@ -9,7 +9,7 @@ class User():
         pass
 
     def play_turn(self, action, tau):
-        if action is not None: self.mcts = self.mcts.return_root(action)
+        if action is not None: self.mcts = self.mcts.update_root(action)
         action = int(input("Make your move: "))
         self.mcts = Node(game.move(self.mcts.s.copy(), action, self.mcts.player), self, action, self.mcts.player, 0)
 
@@ -28,7 +28,7 @@ class Agent():
         self.nn = NeuralNetwork(load, name)
 
     def play_turn(self, action, tau):
-        if action is not None: self.mcts = self.mcts.return_root(action)
+        if action is not None: self.mcts = self.mcts.update_root(action)
         
         for _ in range(config.MCTSSims):
             self.mcts.selection(self.nn)

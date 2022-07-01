@@ -6,10 +6,10 @@ import config
 import game
 from player import *
 
-load = [True, True, True]
+load = [False, False]
 agents = {1: Agent(load[0], 1), -1: Agent(load[1], 2)}
 best_agent = json.loads(open("save.json", "r").read())["best_agent"]
-if not load[2]: open("log.txt", "w").truncate(0)
+if not load[0] or not load[1]: open("log.txt", "w").truncate(0)
 
 def setup_mcts(players):
     for i in [1, -1]: players[i].mcts = Node(np.zeros(np.prod(config.game_dimensions))[::], None, None, i, None)
@@ -42,6 +42,7 @@ def play(players, games, training):
         outcomes[outcome] += 1
         print(f"Game outcome was: {outcome}")
         print(f"Amount of games played is now: {game_count} \n")
+        print(f"We are " + "training" if training else "evaluating")
         if training:
             [Set.append(outcome) for Set in training_set[-1]]
             training_set.append([])
@@ -95,42 +96,5 @@ for _ in range(config.loop_iterations):
     batch = self_play(agents[best_agent])
     (x, y) = retrain_network(agents[-best_agent], batch)
     best_agent = evaluate_network(agents, best_agent)
-    play_test(agents[best_agent], config.game_amount_play_test)
 
-for agent in agents: agent.nn.plot_losses()
-while True: exec(input("do something: "))
-
-
-
-
-
-"""
-game_count = 0
-
-saves = [[]]
-
-player_turn = 1
-
-root = agents[player_turn].mcts
-while game_count < 2:
-    for _ in range(100):
-        root.selection()
-
-    saves[-1].append([root.nn_pass, root.p])
-    root = root.children[np.argmax(root.p)]
-
-    outcome = root._check_game_over(root.s)
-    if outcome is not None:
-        print("GAME RESET")
-        game_count += 1
-        root = agents[-player_turn].mcts
-        [save.append(outcome) for save in saves[-1]]
-        saves.append([])
-
-    player_turn *= -1
-
-x = []
-for save in saves: x += save
-print(np.array(saves[:-1]).shape)
-minibatch = [random.choice(x) for _ in range(64)]
-print(np.array(minibatch).shape)"""
+play_test(agents[best_agent], config.game_amount_play_test)
