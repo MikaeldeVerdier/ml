@@ -22,21 +22,22 @@ class Node:
         return self.cpuct * self.prior * np.sqrt(self.parent.n)/(1 + self.n)
 
     def update_root(self, action):
-        descendant = [child for child in self.children if np.array_equal(child.s, game.move(self.s.copy(), action, -self.player))]
+        descendant = [child for child in self.children if np.array_equal(child.s, game.move(self.s.copy(), action, self.player))]
         if not descendant:
-            root = Node(game.move(self.s.copy(), action, -self.player), self, action, self.player, 0)
+            root = Node(game.move(self.s.copy(), action, self.player), self, action, -self.player, 0)
             self.children.append(root)
-        else:
-            root = descendant[0]
+        else: root = descendant[0]
 
         return root
 
     def simulate(self, nn):
         if len(self.children) != len(game.get_legal_moves(self.s)):
             outcome = game.check_game_over(self.s)
-            self.expand(nn)
-            v = nn.test(game.generate_game_state(self))[0] if outcome is None else outcome
-            self.backfill(v, self.player)
+            if outcome is None:
+                self.expand(nn)
+                v = nn.test(game.generate_game_state(self))[0] if outcome is None else outcome
+            else: v = outcome
+            self.backfill(v)
         else:
             self.p = self.probabilities()
             self.children[np.argmax(self.p)].simulate(nn)
@@ -46,7 +47,7 @@ class Node:
         if action != -1:
             new_state = game.move(self.s.copy(), action, self.player)
             prior = nn.test(game.generate_game_state(self))[1][action % config.move_amount] if nn is not None else 0
-            child_node = Node(new_state, self, action, self.player, prior)
+            child_node = Node(new_state, self, action, -self.player, prior)
         else:
             child_node = Node(np.full(np.prod(config.game_dimensions), 2), self, -1, 0, 0)
 
@@ -71,9 +72,9 @@ class Node:
         probs = odds / np.sum(odds)
         return probs
 
-    def backfill(self, v, direction):
+    def backfill(self, v):
         self.n += 1
-        self.w += v * direction
+        self.w += v * self.player
         self.q = self.w / self.n
         if self.parent:
-            self.parent.backfill(v, direction * -1)
+            self.parent.backfill(v)

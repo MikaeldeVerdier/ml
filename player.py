@@ -11,7 +11,7 @@ class User():
     def play_turn(self, action, tau):
         if action is not None: self.mcts = self.mcts.update_root(action)
         action = int(input("Make your move: "))
-        self.mcts = Node(game.move(self.mcts.s.copy(), action, self.mcts.player), self, action, self.mcts.player, 0)
+        self.mcts = Node(game.move(self.mcts.s.copy(), action, self.mcts.player), self, action, -self.mcts.player, 0)
 
         self.print_move(self.mcts)
 

@@ -11,8 +11,8 @@ agents = {1: Agent(load[0], 1), -1: Agent(load[1], 2)}
 best_agent = json.loads(open("save.json", "r").read())["best_agent"]
 if not load[0] or not load[1]: open("log.txt", "w").truncate(0)
 
-def setup_mcts(players):
-    for i in [1, -1]: players[i].mcts = Node(np.zeros(np.prod(config.game_dimensions))[::], None, None, i, None)
+def setup_mcts(players, starts):
+    for player in players.values(): player.mcts = Node(np.zeros(np.prod(config.game_dimensions))[::], None, None, starts, None)
 
 def play(players, games, training):
     if training: training_set = [[]]
@@ -20,7 +20,7 @@ def play(players, games, training):
     game_count = 0
     starts = 1
     while game_count < games:
-        setup_mcts(players)
+        setup_mcts(players, starts)
         action = None
         player_turn = starts
         turn = 1
