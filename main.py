@@ -26,10 +26,10 @@ def play(players, games, training):
         action = None
         player_turn = starts
         turn = 1
-        tau = 1 if training else 1e-5
+        tau = 1 if training else 1e-2
         outcome = None
         while outcome is None:
-            if turn > config.turns_until_tau: tau = 1e-5
+            if turn > config.turns_until_tau: tau = 1e-2
             player = players[player_turn]
             action, pi = player.play_turn(action, tau)
             player_turn *= -1

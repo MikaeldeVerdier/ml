@@ -45,7 +45,7 @@ class Agent():
         return action, pi
 
     def choose_action(self, pi, values, tau):
-        action = np.argmax(pi) if tau == 0 else np.where(np.random.multinomial(1, pi) == 1)[0][0]
+        action = np.argmax(pi) if tau == 1e-2 else np.where(np.random.multinomial(1, pi) == 1)[0][0]
         value = values[action]
 
         return action, value
@@ -56,8 +56,7 @@ class Agent():
 
         for child in root.children:
             if child.parent_action != -1:
-                # pi[child.parent_action] = (child.n ** 1/tau) / root.n ** 1/tau
-                pi[child.parent_action] = child.n
+                pi[child.parent_action] = (child.n ** (1 / tau)) / (root.n ** (1 / tau))
                 values[child.parent_action] = child.q
 
         pi /= np.sum(pi)
