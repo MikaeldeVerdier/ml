@@ -56,7 +56,7 @@ class Agent():
 
         for child in root.children:
             if child.parent_action != -1:
-                pi[child.parent_action] = (child.n ** (1 / tau)) / (root.n ** (1 / tau))
+                pi[child.parent_action] = child.n
                 values[child.parent_action] = child.q
 
         pi /= np.sum(pi)

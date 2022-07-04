@@ -11,7 +11,7 @@ class Node:
 
         self.untried_actions = game.get_legal_moves(self.s)
         self.children = []
-        self.n = 0
+        self.n = 0.1
         self.w = 0
         self.q = 0
         self.prior = prior
