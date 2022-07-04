@@ -22,7 +22,7 @@ training_iterations = 50
 batch_size = 32
 epochs = 1
 validation_split = 0.3
-reg_const = 0.0001
+reg_const = 1e-4
 lr = 0.1
 momentum = 0.9
 
