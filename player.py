@@ -33,7 +33,7 @@ class Agent():
         for _ in range(config.MCTSSims):
             self.mcts.simulate(self.nn)
 
-        pi, values = self.getAV(self.mcts)
+        pi, values = self.getAV(self.mcts, tau)
         
         action, value = self.choose_action(pi, values, tau)
         
@@ -46,17 +46,17 @@ class Agent():
 
     def choose_action(self, pi, values, tau):
         action = np.argmax(pi) if tau == 0 else np.where(np.random.multinomial(1, pi) == 1)[0][0]
-        
         value = values[action]
 
         return action, value
 
-    def getAV(self, root):
+    def getAV(self, root, tau):
         pi = np.zeros(np.prod(config.game_dimensions))
         values = np.zeros(np.prod(config.game_dimensions))
 
         for child in root.children:
             if child.parent_action != -1:
+                # pi[child.parent_action] = (child.n ** 1/tau) / root.n ** 1/tau
                 pi[child.parent_action] = child.n
                 values[child.parent_action] = child.q
 

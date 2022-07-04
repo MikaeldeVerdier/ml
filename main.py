@@ -8,7 +8,9 @@ from player import *
 
 load = [False, False]
 agents = {1: Agent(load[0], 1), -1: Agent(load[1], 2)}
-best_agent = json.loads(open("save.json", "r").read())["best_agent"]
+
+loads = list(np.where(load)[0])
+best_agent = 1 if not loads else json.loads(open("save.json", "r").read())["best_agent"] if len(loads) == 2 else 2 * loads[0] - 1
 if not load[0] or not load[1]: open("log.txt", "w").truncate(0)
 
 def setup_mcts(players, starts):
@@ -24,10 +26,10 @@ def play(players, games, training):
         action = None
         player_turn = starts
         turn = 1
-        tau = 1 if training else 1e-10
+        tau = 1 if training else 1e-5
         outcome = None
         while outcome is None:
-            if turn > config.turns_until_tau: tau = 1e-10
+            if turn > config.turns_until_tau: tau = 1e-5
             player = players[player_turn]
             action, pi = player.play_turn(action, tau)
             player_turn *= -1
@@ -66,7 +68,7 @@ def retrain_network(agent, batch):
 
         agent.nn.train(x, y)
     agent.nn.save_progress()
-    agent.nn.plot_losses(True)
+    agent.nn.plot_losses(False)
 
     return (x, y)
 
