@@ -9,8 +9,8 @@ class Node:
         self.parent_action = parent_action
         self.player = player
 
-        self.untried_actions = game.get_legal_moves(self.s)
         self.children = []
+        
         self.n = 0
         self.w = 0
         self.q = 0
@@ -42,21 +42,10 @@ class Node:
             self.p = self.probabilities()
             self.children[np.argmax(self.p)].simulate(nn)
 
-    """def expand(self, nn):
-        action = self.untried_actions.pop(0)
-        if action != -1:
-            new_state = game.move(self.s.copy(), action, self.player)
-            prior = nn.get_preds(self)[1][action] if nn is not None else 0
-            child_node = Node(new_state, self, action, -self.player, prior)
-        else:
-            child_node = Node(np.full(np.prod(config.game_dimensions), 2), self, -1, 0, -2)
-
-        self.children.append(child_node)"""
-
     def expand_fully(self, nn):
         prior = nn.get_preds(self)[1] if nn is not None else [0] * np.prod(game.game_dimensions)
         
-        for action in self.untried_actions:
+        for action in game.get_legal_moves(self.s):
             if action != -1:
                 new_state = game.move(self.s.copy(), action, self.player)
                 child_node = Node(new_state, self, action, -self.player, prior[action])
