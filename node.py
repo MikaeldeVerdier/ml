@@ -46,7 +46,7 @@ class Node:
         action = self.untried_actions.pop(0)
         if action != -1:
             new_state = game.move(self.s.copy(), action, self.player)
-            prior = nn.get_preds(self)[1][action % config.move_amount] if nn is not None else 0
+            prior = nn.get_preds(self)[1][action] if nn is not None else 0
             child_node = Node(new_state, self, action, -self.player, prior)
         else:
             child_node = Node(np.full(np.prod(config.game_dimensions), 2), self, -1, 0, -2)
@@ -59,7 +59,7 @@ class Node:
         for action in self.untried_actions:
             if action != -1:
                 new_state = game.move(self.s.copy(), action, self.player)
-                child_node = Node(new_state, self, action, -self.player, prior[action % config.move_amount])
+                child_node = Node(new_state, self, action, -self.player, prior[action])
             else:
                 child_node = Node(np.full(np.prod(config.game_dimensions), 2), self, -1, 0, -2)
                 
