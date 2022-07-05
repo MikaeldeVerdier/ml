@@ -38,7 +38,7 @@ class Agent():
         action, value = self.choose_action(pi, values, tau)
         
         self.mcts = [child for child in self.mcts.children if child.parent_action == action][0]
-        nn_value = self.nn.test(game.generate_game_state(self.mcts))[0]
+        nn_value = self.nn.get_preds(self.mcts)[0]
 
         self.print_move(self.mcts, pi, value, nn_value)
 
@@ -59,7 +59,7 @@ class Agent():
                 pi[child.parent_action] = child.n
                 values[child.parent_action] = child.q
 
-        pi /= np.sum(pi)
+        pi /= (np.sum(pi) if np.sum(pi) != 0 else 1)
 
         return pi, values
     

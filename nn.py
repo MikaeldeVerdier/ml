@@ -47,10 +47,10 @@ class NeuralNetwork:
         p = y_pred
         pi = y_true
 
-        zero = tf.zeros(shape = tf.shape(pi), dtype=tf.float32)
+        zero = tf.zeros(shape = tf.shape(pi))
         where = tf.equal(pi, zero)
 
-        negatives = tf.fill(tf.shape(pi), -100.0) 
+        negatives = tf.fill(tf.shape(pi), -100) 
         p = tf.where(where, negatives, p)
 
         loss = tf.nn.softmax_cross_entropy_with_logits(labels = pi, logits = p)
@@ -132,8 +132,20 @@ class NeuralNetwork:
         if not plot: plt.close(fig)
         else: print("PLOTTED")
 
-    def test(self, data):
+    def get_preds(self, node):
+        data = game.generate_game_state(node)
         data = np.expand_dims(data, axis=0)
         (v, p) = self.model.predict(data)
 
-        return (v[0][0], p[0])
+        logits = p[0]
+
+        mask = np.full(logits.shape, True)
+        allowed_actions = [move for move in game.get_legal_moves(node.s) if move != -1]
+        mask[allowed_actions] = False
+
+        logits[mask] = -100
+
+        odds = np.exp(logits)
+        probs = odds / np.sum(odds)
+
+        return (v[0][0], probs)
