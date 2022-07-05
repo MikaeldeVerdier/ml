@@ -45,7 +45,10 @@ class Agent():
         return action, pi
 
     def choose_action(self, pi, values, tau):
-        action = np.argmax(pi) if tau == 1e-2 else np.where(np.random.multinomial(1, pi) == 1)[0][0]
+        if tau == 1e-2:
+            actions = np.flatnonzero(pi == np.max(pi))
+            action = np.random.choice(actions)
+        else: action = np.where(np.random.multinomial(1, pi) == 1)[0][0]
         value = values[action]
 
         return action, value
