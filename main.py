@@ -29,11 +29,11 @@ def play(players, games, training):
         tau = 1 if training else 1e-2
         outcome = None
         while outcome is None:
-            if turn > config.turns_until_tau: tau = 1e-2
+            if turn >= config.turns_until_tau: tau = 1e-2
             player = players[player_turn]
             action, pi = player.play_turn(action, tau)
             player_turn *= -1
-            turn += 0.5
+            turn += 1
 
             outcome = game.check_game_over(player.mcts.s)
 
@@ -75,7 +75,7 @@ def retrain_network(agent, batch):
 def evaluate_network(agents, best_agent):
     results = play(agents, config.game_amount_evaluation, False)
     print(f"The results were: {results}")
-    if results[-best_agent]/(results[best_agent] if results[best_agent] != 0 else 0.1) > config.winning_threshold:
+    if results[-best_agent] > results[best_agent] * config.winning_threshold:
         best_agent *= -1
         print(f"{best_agent} is now best player!")
         agents[1].nn.save_progress(best_agent)

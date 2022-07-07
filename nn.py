@@ -87,12 +87,11 @@ class NeuralNetwork:
         x = LeakyReLU()(x)
         x = Flatten()(x)
         x = Dense(np.prod(config.game_dimensions), use_bias=True, activation="linear", kernel_regularizer=regularizers.l2(config.reg_const), name="policy_head")(x)
-        # x = x.reshape((6, 7))
         return (x)
 
     def train(self, x, y):
         fit = self.model.fit(x, y, batch_size=config.batch_size, epochs=config.epochs, verbose=1, validation_split=config.validation_split, callbacks=[self.cp_callback])
-        print(fit.history)
+        # print(fit.history)
         for metric in fit.history:
             if metric not in self.metrics: self.metrics[metric] = []
             [self.metrics[metric].append(fit.history[metric][i]) for i in range(config.epochs)]
