@@ -31,16 +31,18 @@ class Node:
         return root
 
     def simulate(self, nn):
+        outcome = game.check_game_over(self.s)
         if len(self.children) != len(game.get_legal_moves(self.s)):
-            outcome = game.check_game_over(self.s)
             if outcome is None:
                 self.expand_fully(nn)
                 v = nn.get_preds(self)[0] if outcome is None else outcome
             else: v = outcome
             self.backfill(v)
         else:
-            self.p = self.probabilities()
-            self.children[np.argmax(self.p)].simulate(nn)
+            if outcome is None:
+                self.p = self.probabilities()
+                self.children[np.argmax(self.p)].simulate(nn)
+            else: self.backfill(outcome)
 
     def expand_fully(self, nn):
         prior = nn.get_preds(self)[1] if nn is not None else [0] * np.prod(game.game_dimensions)

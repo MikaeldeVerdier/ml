@@ -44,15 +44,6 @@ class Agent():
 
         return action, pi
 
-    def choose_action(self, pi, values, tau):
-        if tau == 1e-2:
-            actions = np.flatnonzero(pi == np.max(pi))
-            action = np.random.choice(actions)
-        else: action = np.where(np.random.multinomial(1, pi) == 1)[0][0]
-        value = values[action]
-
-        return action, value
-
     def getAV(self, root, tau):
         pi = np.zeros(np.prod(config.game_dimensions))
         values = np.zeros(np.prod(config.game_dimensions))
@@ -65,6 +56,15 @@ class Agent():
         pi /= np.sum(pi)
 
         return pi, values
+
+    def choose_action(self, pi, values, tau):
+        if tau == 1e-2:
+            actions = np.flatnonzero(pi == np.max(pi))
+            action = np.random.choice(actions)
+        else: action = np.where(np.random.multinomial(1, pi) == 1)[0][0]
+        value = values[action]
+
+        return action, value
     
     def print_move(self, root, pi, mcts_value, nn_value):
         player_dict = {1: "X", -1: "O"}

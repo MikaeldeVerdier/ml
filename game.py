@@ -19,14 +19,18 @@ def generate_game_state(node):
     return game_state
 
 def get_legal_moves(board):
-    legal_moves = []
-    for i in range(config.game_dimensions[1]):
-        for i2 in range(config.game_dimensions[0]):
-            if board[i + i2 * config.game_dimensions[1]] != 0:
-                legal_moves.append(-1 if i2 == 0 else i + (i2 - 1) * config.game_dimensions[1])
-                break
-        else:
-            legal_moves.append(i + i2 * config.game_dimensions[1])
+    if config.move_amount != np.prod(config.game_dimensions):
+        legal_moves = []
+        for i in range(config.game_dimensions[1]):
+            for i2 in range(config.game_dimensions[0]):
+                if board[i + i2 * config.game_dimensions[1]] != 0:
+                    legal_moves.append(-1 if i2 == 0 else i + (i2 - 1) * config.game_dimensions[1])
+                    break
+            else:
+                legal_moves.append(i + i2 * config.game_dimensions[1])
+    else:
+        legal_moves = np.where(board == 0)
+        if len(legal_moves) != 0: legal_moves = legal_moves[0]
     return legal_moves
 
 def check_game_over(board):
@@ -38,6 +42,7 @@ def check_game_over(board):
                     # print([i * config.game_dimensions[1] + i2 + i3 for i3 in checks[1]])
                     pos = [board[i * config.game_dimensions[1] + i2 + i3] == player for i3 in checks[1]]
                     if pos.count(True) == config.in_a_row: return player
+
     if np.count_nonzero(board) == np.prod(config.game_dimensions):
         return 0
 
