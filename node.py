@@ -1,82 +1,71 @@
 import numpy as np
-import random
 import config
 import game
 
 class Node:
-    def __init__(self, state, parent, parent_action, player, prior, modifier=1, comp=True):
+    def __init__(self, state, parent, parent_action, player, prior):
         self.s = state
         self.parent = parent
         self.parent_action = parent_action
         self.player = player
 
-        # self.nn_pass = game.generate_game_state(self)
-        self.untried_actions = game.get_legal_moves(self.s)
         self.children = []
-        self.results = [0, 0, 0]
-        self.n = 1
+        
+        self.n = 0
         self.w = 0
         self.q = 0
         self.prior = prior
-        self.modifier = modifier
         
-        self.tau = 1 if not comp else 10e-15
         self.cpuct = np.sqrt(2)
    
     def u(self):
-        return (self.results[self.player]/self.n + self.cpuct * self.prior * np.sqrt(np.log(self.parent.n)/(1 + self.n))) * self.modifier
+        return self.cpuct * self.prior * np.sqrt(np.log(self.parent.n) / (1 + self.n))
 
-    def selection(self, nn):
+    def update_root(self, action):
+        descendant = [child for child in self.children if np.array_equal(child.s, game.move(self.s.copy(), action, self.player))]
+        if not descendant:
+            root = Node(game.move(self.s.copy(), action, self.player), self, action, -self.player, 0)
+            self.children.append(root)
+        else: root = descendant[0]
+
+        return root
+
+    def simulate(self, nn):
+        outcome = game.check_game_over(self.s)
         if len(self.children) != len(game.get_legal_moves(self.s)):
-            if game.check_game_over(self.s) is not None:
-                return
-            self.expand(nn)
-            reward = self.children[-1].simulate()
-            self.backfill(reward, nn)
+            if outcome is None:
+                self.expand_fully(nn)
+                v = nn.get_preds(self)[0] if outcome is None else outcome
+            else: v = outcome
+            self.backfill(v)
         else:
-            self.p = self.probabilities()
-            self.children[np.argmax(self.p) % config.move_amount].selection(nn)
+            if outcome is None:
+                self.p = self.probabilities()
+                self.children[np.argmax(self.p)].simulate(nn)
+            else: self.backfill(outcome)
 
-    def expand(self, nn):
-        action = self.untried_actions.pop(0)
-        if action != -1:
-            new_state = game.move(self.s.copy(), action, self.player, False)[0]
-            prior = nn.test(game.generate_game_state(self))[1][action % config.move_amount] if nn is not None else 0
-            child_node = Node(new_state, self, action, -self.player, prior)
-        else:
-            child_node = Node(np.full(np.prod(config.game_dimensions), 2), self, action, 0, 1, modifier=0)
-
-        self.children.append(child_node)
-
-    def simulate(self):
-        current_state = self.s.copy()
-        player = self.player
-
-        outcome = game.check_game_over(current_state)
-        while outcome is None:
-            action = random.choice(game.get_legal_moves(current_state))
-            (current_state, player) = game.move(current_state, action, player, True)
-            outcome = game.check_game_over(current_state)
-        return outcome
+    def expand_fully(self, nn):
+        prior = nn.get_preds(self)[1] if nn is not None else [0] * np.prod(game.game_dimensions)
+        
+        for action in game.get_legal_moves(self.s):
+            if action != -1:
+                new_state = game.move(self.s.copy(), action, self.player)
+                child_node = Node(new_state, self, action, -self.player, prior[action])
+            else:
+                child_node = Node(np.full(np.prod(config.game_dimensions), 2), self, -1, 0, -2)
+                
+            self.children.append(child_node)
 
     def probabilities(self):
-        pi = np.zeros(np.prod(config.game_dimensions))
-        for child in self.children: pi[child.parent_action] = child.q + child.u()
-        
-        mask = np.full(np.prod(config.game_dimensions), True)
-        mask[game.get_legal_moves(self.s)] = False
-        pi[mask] = -100
+        pi = [child.q + child.u() for child in self.children]
         
         odds = np.exp(pi)
         probs = odds / np.sum(odds)
         return probs
 
-    def backfill(self, result, nn):
+    def backfill(self, v):
         self.n += 1
-        self.results[result] += 1
-
-        self.v = nn.test(game.generate_game_state(self))[0]
+        self.w += v * self.player
+        self.q = self.w / self.n
         if self.parent:
-            self.parent.w += self.v
-            self.parent.q = self.parent.w / self.parent.n
-            self.parent.backfill(result, nn)
+            self.parent.backfill(v)

@@ -47,7 +47,7 @@ class NeuralNetwork:
         p = y_pred
         pi = y_true
 
-        zero = tf.zeros(shape = tf.shape(pi), dtype=tf.float32)
+        zero = tf.zeros(shape = tf.shape(pi), dtype = np.float32)
         where = tf.equal(pi, zero)
 
         negatives = tf.fill(tf.shape(pi), -100.0) 
@@ -87,53 +87,64 @@ class NeuralNetwork:
         x = LeakyReLU()(x)
         x = Flatten()(x)
         x = Dense(np.prod(config.game_dimensions), use_bias=True, activation="linear", kernel_regularizer=regularizers.l2(config.reg_const), name="policy_head")(x)
-        # x = x.reshape((6, 7))
         return (x)
 
     def train(self, x, y):
         fit = self.model.fit(x, y, batch_size=config.batch_size, epochs=config.epochs, verbose=1, validation_split=config.validation_split, callbacks=[self.cp_callback])
-        print(fit.history)
+        # print(fit.history)
         for metric in fit.history:
             if metric not in self.metrics: self.metrics[metric] = []
             [self.metrics[metric].append(fit.history[metric][i]) for i in range(config.epochs)]
 
     def save_progress(self, best_agent = None):
-        fi = "save" if self.load else "empty_save"
-        loaded = json.loads(open(f"{fi}.json", "r").read())
-        self.load = True
+        loaded = json.loads(open(f"save.json", "r").read())
         
         if best_agent is not None: loaded["best_agent"] = best_agent
         else:
+            if not self.load: loaded[f"agent_{self.name}"] = json.loads(open(f"empty_save.json", "r").read())[f"agent_{self.name}"]
             loaded[f"agent_{self.name}"]["iterations"].append(config.training_iterations * config.epochs)
-            for metric in self.metrics: loaded[f"agent_{self.name}"]["metrics"][metric] = self.metrics[metric]
+            for metric in self.metrics: loaded[f"agent_{self.name}"]["metrics"][metric] += self.metrics[metric]
+            self.metrics = {}
+            self.load = True
         open("save.json", "w").write(json.dumps(loaded))
+
 
     def plot_losses(self, plot):
         loaded = json.loads(open("save.json", "r").read())[f"agent_{self.name}"]
-        self.metrics = loaded["metrics"]
-        saves = loaded["iterations"]
 
         fig, axs = plt.subplots(3, sharex=True, figsize=(10, 5))
         plt.xlabel("Training Iteration")
 
-        for metric in self.metrics:
+        for metric in loaded["metrics"]:
             ax = 0 if metric.find("loss") != -1 else 1
             ax = 2 if metric.find("val_") != -1 else ax
-            axs[ax].plot(self.metrics[metric], label=metric)
+            axs[ax].plot(loaded["metrics"][metric], label=metric)
         for ax, metric in zip(axs, ["Loss", "Accuracy", "Val_"]):
             ax.set_title(f"{metric} {self.name}")
             ax.set_ylabel(metric)
             box = ax.get_position()
             ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
             ax.legend(loc="center left", bbox_to_anchor = (1, .5))
-            [ax.axvline(np.sum(saves[:i + 1]) - 1, color="black") for i in range(len(saves))]
+            [ax.axvline(np.sum(loaded["iterations"][:i + 1]) - 1, color="black") for i in range(len(loaded["iterations"]))]
 
         plt.savefig(f"plot{self.name}.png", dpi=300)
         if not plot: plt.close(fig)
         else: print("PLOTTED")
 
-    def test(self, data):
+    def get_preds(self, node):
+        data = game.generate_game_state(node)
         data = np.expand_dims(data, axis=0)
         (v, p) = self.model.predict(data)
 
-        return (v[0][0], p[0])
+        logits = p[0]
+
+        mask = np.full(logits.shape, True)
+        allowed_actions = [move for move in game.get_legal_moves(node.s) if move != -1]
+        mask[allowed_actions] = False
+
+        logits[mask] = -100
+
+        odds = np.exp(logits)
+        probs = odds / np.sum(odds)
+
+        return (v[0][0], probs)

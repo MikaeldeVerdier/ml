@@ -6,49 +6,43 @@ from node import Node
 
 class User():
     def __init__(self):
-        self.start_node = Node(np.zeros(np.prod(config.game_dimensions))[::], None, None, None, None)
-        self.root = self.start_node
-        
-    def play_turn(self, root, tau):
-        while len(root.children) != len(game.get_legal_moves(root.s)):
-            root.expand(None)
-        root = root.children[int(input("Make your move: "))]
+        pass
 
-        self.print_move(root)
+    def play_turn(self, action, tau):
+        if action is not None: self.mcts = self.mcts.update_root(action)
+        action = int(input("Make your move: "))
+        self.mcts = Node(game.move(self.mcts.s.copy(), action, self.mcts.player), self, action, -self.mcts.player, 0)
 
-        return root, None
+        self.print_move(self.mcts)
+
+        return action, None
 
     def print_move(self, root):
-        print(f"It's {[None, 'O', 'X'][root.player]}'s turn")
+        player_dict = {1: "X", -1: "O"}
+        print(f"It's {player_dict[root.player]}'s turn")
         print(f"Move to make is: {root.parent_action}")
         print(f"Position is now: \n {game.print_board(root.s)}")
 
 class Agent():
     def __init__(self, load, name):
         self.nn = NeuralNetwork(load, name)
-        self.start_node = Node(np.zeros(np.prod(config.game_dimensions))[::], None, None, None, None)
-        self.root = self.start_node
 
-    def play_turn(self, root, tau):
+    def play_turn(self, action, tau):
+        if action is not None: self.mcts = self.mcts.update_root(action)
+        
         for _ in range(config.MCTSSims):
-            root.selection(self.nn)
+            self.mcts.simulate(self.nn)
 
-        pi, values = self.getAV(root, tau)
+        pi, values = self.getAV(self.mcts, tau)
         
         action, value = self.choose_action(pi, values, tau)
-        root = [child for child in root.children if child.parent_action == action][0]
-        nn_value = self.nn.test(game.generate_game_state(self.root))[0]
-
-        self.print_move(root, pi, value, nn_value)
-
-        return root, pi
-
-    def choose_action(self, pi, values, tau):
-        action = np.argmax(pi) if tau == 0 else np.where(np.random.multinomial(1, pi)==1)[0][0]
         
-        value = values[action]
+        self.mcts = [child for child in self.mcts.children if child.parent_action == action][0]
+        nn_value = self.nn.get_preds(self.mcts)[0]
 
-        return action, value
+        self.print_move(self.mcts, pi, value, nn_value)
+
+        return action, pi
 
     def getAV(self, root, tau):
         pi = np.zeros(np.prod(config.game_dimensions))
@@ -56,15 +50,25 @@ class Agent():
 
         for child in root.children:
             if child.parent_action != -1:
-                pi[child.parent_action] = child.n
+                pi[child.parent_action] = child.n ** 1/tau
                 values[child.parent_action] = child.q
 
         pi /= np.sum(pi)
 
         return pi, values
+
+    def choose_action(self, pi, values, tau):
+        if tau == 1e-2:
+            actions = np.flatnonzero(pi == np.max(pi))
+            action = np.random.choice(actions)
+        else: action = np.where(np.random.multinomial(1, pi) == 1)[0][0]
+        value = values[action]
+
+        return action, value
     
     def print_move(self, root, pi, mcts_value, nn_value):
-        print(f"It's {[None, 'O', 'X'][root.player]}'s turn")
+        player_dict = {1: "X", -1: "O"}
+        print(f"It's {player_dict[root.player]}'s turn")
         print(f"Action values are: \n {game.print_values(np.round(pi, 3))}")
         print(f"Move to make is: {root.parent_action}")
         print(f"Position is now: \n {game.print_board(root.s)}")
