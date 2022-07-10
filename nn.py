@@ -11,8 +11,6 @@ from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.callbacks import ModelCheckpoint
 from keras.utils.vis_utils import plot_model
 
-import time
-
 class NeuralNetwork:
     def __init__(self, load, name):
         self.load = load
