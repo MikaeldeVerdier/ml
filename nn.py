@@ -1,5 +1,5 @@
-import json
 import numpy as np
+import json
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import config
@@ -10,8 +10,6 @@ from tensorflow.keras.layers import Input, Dense, Conv2D, Flatten, BatchNormaliz
 from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.callbacks import ModelCheckpoint
 from keras.utils.vis_utils import plot_model
-
-import time
 
 class NeuralNetwork:
     def __init__(self, load, name):

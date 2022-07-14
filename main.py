@@ -6,18 +6,19 @@ import config
 import game
 from player import *
 
-load = [False, False]
+load = [True, True]
 agents = {1: Agent(load[0], 1), -1: Agent(load[1], 2)}
 
 loads = list(np.where(load)[0])
 best_agent = 1 if not loads else json.loads(open("save.json", "r").read())["best_agent"] if len(loads) == 2 else 2 * loads[0] - 1
-if not load[0] or not load[1]: open("log.txt", "w").truncate(0)
+if not load[0] or not load[1]:
+    open("log.txt", "w").truncate(0)
+    open("positions.json", "w").write(json.dumps([]))
 
 def setup_mcts(players, starts):
     for player in players.values(): player.mcts = Node(np.zeros(np.prod(config.game_dimensions))[::], None, None, starts, None)
 
 def play(players, games, training):
-    if training: training_set = [[]]
     outcomes = [0, 0, 0]
     game_count = 0
     starts = 1
@@ -27,6 +28,7 @@ def play(players, games, training):
         player_turn = starts
         turn = 1
         tau = 1 if training else 1e-2
+        if training: training_set = []
         outcome = None
         while outcome is None:
             if turn == config.turns_until_tau: tau = 1e-2
@@ -37,7 +39,7 @@ def play(players, games, training):
 
             outcome = game.check_game_over(player.mcts.s)
 
-            if training: training_set[-1].append([player.mcts, pi])
+            if training: training_set.append([player.mcts, pi])
 
         game_count += 1
         starts *= -1
@@ -46,24 +48,27 @@ def play(players, games, training):
         print(f"Amount of games played is now: {game_count} \n")
         print(f"We are " + ("training" if training else "evaluating"))
         if training:
-            [position.append(outcome * position[0].player) for position in training_set[-1]]
-            training_set.append([])
+            # [position.append(outcome * position[0].player) for position in training_set]
+            positions = [[game.generate_game_state(position[0]).tolist()] + [position[1].tolist()] + [outcome * position[0].player] for position in training_set]
+            loaded = json.loads(open("positions.json", "r").read())
+            loaded += positions
+            loaded = loaded[-config.position_amount:]
+            open("positions.json", "w").write(json.dumps(loaded))
+            if len(loaded) != config.position_amount and game_count == games: game_count -= 1
     
-    return training_set[:-1] if training else outcomes
+    return outcomes
 
 def self_play(agent):
     copyAgent = Agent(agent.nn.load, agent.nn.name)
-    training_data = play({1: agent, -1: copyAgent}, config.game_amount_self_playing, True)
-    
-    return training_data
+    results = play({1: agent, -1: copyAgent}, config.game_amount_self_play, True)
 
-def retrain_network(agent, batch):
+    print(f"The results from self-play were: {results}")
+
+def retrain_network(agent):
     for _ in range(config.training_iterations):
-        positions = []
-        for position in batch: positions += position
-        minibatch = random.sample(positions, config.batch_size)
+        minibatch = random.sample(json.loads(open("positions.json", "r").read()), config.batch_size)
 
-        x = np.array([game.generate_game_state(batch[0]) for batch in minibatch])
+        x = np.array([batch[0] for batch in minibatch])
         y = {"value_head": np.array([batch[2] for batch in minibatch]), "policy_head": np.array([batch[1] for batch in minibatch])}
 
         agent.nn.train(x, y)
@@ -95,8 +100,8 @@ def log(results, best_agent):
     open("log.txt", "a").write(f"{datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')}: Results are: {results}\nBest_agent is now: {best_agent}\n")
 
 for _ in range(config.loop_iterations):
-    batch = self_play(agents[best_agent])
-    (x, y) = retrain_network(agents[-best_agent], batch)
+    self_play(agents[best_agent])
+    (x, y) = retrain_network(agents[-best_agent])
     best_agent = evaluate_network(agents, best_agent)
 
 play_test(agents[best_agent], config.game_amount_play_test)
