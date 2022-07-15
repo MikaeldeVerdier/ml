@@ -25,7 +25,7 @@ class NeuralNetwork:
         vh = self.value_head(x)
         ph = self.policy_head(x)
 
-        checkpoint_path = f"training_{name}/cp.ckpt"
+        checkpoint_path = f"{config.save_folder}training_{name}/cp.ckpt"
         self.cp_callback = ModelCheckpoint(filepath=checkpoint_path, save_weights_only=True, verbose=1)
 
         self.model = Model(inputs=[self.main_input], outputs=[vh, ph])
@@ -35,7 +35,7 @@ class NeuralNetwork:
             self.model.load_weights(checkpoint_path)
         else:
             try:
-                plot_model(self.model, to_file="model.png", show_shapes=True, show_layer_names=True)
+                plot_model(self.model, to_file=f"{config.save_folder}model.png", show_shapes=True, show_layer_names=True)
             except ImportError:
                 print("You need to download pydot and graphviz to plot model.")
 
@@ -125,7 +125,7 @@ class NeuralNetwork:
             ax.legend(loc="center left", bbox_to_anchor = (1, .5))
             [ax.axvline(np.sum(loaded["iterations"][:i + 1]) - 1, color="black") for i in range(len(loaded["iterations"]))]
 
-        plt.savefig(f"plot{self.name}.png", dpi=300)
+        plt.savefig(f"{config.save_folder}plot{self.name}.png", dpi=300)
         if not show_plot: plt.close(fig)
         else: print("PLOTTED")
 
