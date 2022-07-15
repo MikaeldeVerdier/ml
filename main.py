@@ -10,10 +10,10 @@ load = [False, False]
 agents = {1: Agent(load[0], 1), -1: Agent(load[1], 2)}
 
 loads = list(np.where(load)[0])
-best_agent = 1 if not loads else json.loads(open("save.json", "r").read())["best_agent"] if len(loads) == 2 else 2 * loads[0] - 1
+best_agent = 1 if not loads else json.loads(open(f"{config.save_folder}save.json", "r").read())["best_agent"] if len(loads) == 2 else 2 * loads[0] - 1
 if not load[0] or not load[1]:
-    open("log.txt", "w").truncate(0)
-    open("positions.json", "w").write(json.dumps([]))
+    open(f"{config.save_folder}log.txt", "w").truncate(0)
+    open(f"{config.save_folder}positions.json", "w").write(json.dumps([]))
 
 def setup_mcts(players, starts):
     for player in players.values(): player.mcts = Node(np.zeros(np.prod(config.game_dimensions))[::], None, None, starts, None)
@@ -50,11 +50,12 @@ def play(players, games, training):
         if training:
             # [position.append(outcome * position[0].player) for position in training_set]
             positions = [[game.generate_game_state(position[0]).tolist()] + [position[1].tolist()] + [outcome * position[0].player] for position in training_set]
-            loaded = json.loads(open("positions.json", "r").read())
+            loaded = json.loads(open(f"{config.save_folder}positions.json", "r").read())
             loaded += positions
             loaded = loaded[-config.position_amount:]
-            open("positions.json", "w").write(json.dumps(loaded))
-            if len(loaded) != config.position_amount and game_count == games: game_count -= 1
+            print(f"Positions length is now {len(loaded)}")
+            open(f"{config.save_folder}positions.json", "w").write(json.dumps(loaded))
+            if len(loaded) != config.position_amount and game_count == games: games += 1
     
     return outcomes
 
@@ -66,7 +67,7 @@ def self_play(agent):
 
 def retrain_network(agent):
     for _ in range(config.training_iterations):
-        minibatch = random.sample(json.loads(open("positions.json", "r").read()), config.batch_size)
+        minibatch = random.sample(json.loads(open(f"{config.save_folder}positions.json", "r").read()), config.batch_size)
 
         x = np.array([batch[0] for batch in minibatch])
         y = {"value_head": np.array([batch[2] for batch in minibatch]), "policy_head": np.array([batch[1] for batch in minibatch])}
@@ -97,7 +98,7 @@ def play_test(agent, games):
     else: print("You tied with the bot")
 
 def log(results, best_agent):
-    open("log.txt", "a").write(f"{datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')}: Results are: {results}\nBest_agent is now: {best_agent}\n")
+    open(f"{config.save_folder}log.txt", "a").write(f"{datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')}: Results are: {results} \nBest_agent is now: {best_agent} \n")
 
 for _ in range(config.loop_iterations):
     self_play(agents[best_agent])

@@ -9,7 +9,7 @@ def generate_game_state(node):
         i = 0
         while i < config.depth:
             position = np.zeros(len(node.s))
-            position[node.s==player] = 1
+            position[node.s == player] = 1
             board_history.append(position.reshape(config.game_dimensions))
             if node.parent is not None and node.parent.parent is not None:
                 node = node.parent.parent
