@@ -44,9 +44,10 @@ def play(players, games, training):
         game_count += 1
         starts *= -1
         outcomes[outcome] += 1
+        
         print(f"Game outcome was: {outcome}")
-        print(f"Amount of games played is now: {game_count} \n")
-        print(f"We are " + ("training" if training else "evaluating"))
+        print(f"Amount of games played is now: {game_count}")
+
         if training:
             # [position.append(outcome * position[0].player) for position in training_set]
             positions = [[game.generate_game_state(position[0]).tolist()] + [position[1].tolist()] + [outcome * position[0].player] for position in training_set]
@@ -57,6 +58,8 @@ def play(players, games, training):
             open(f"{config.save_folder}positions.json", "w").write(json.dumps(loaded))
             if len(loaded) != config.position_amount and game_count == games: games += 1
     
+        print(f"\nWe are " + ("training" if training else "evaluating"))
+
     return outcomes
 
 def self_play(agent):
