@@ -44,7 +44,8 @@ def play(players, games, training):
         game_count += 1
         starts *= -1
         outcomes[outcome] += 1
-        
+
+        print(f"We are " + ("training" if training else "evaluating"))
         print(f"Game outcome was: {outcome}")
         print(f"Amount of games played is now: {game_count}")
 
@@ -54,11 +55,9 @@ def play(players, games, training):
             loaded = json.loads(open(f"{config.save_folder}positions.json", "r").read())
             loaded += positions
             loaded = loaded[-config.position_amount:]
-            print(f"Positions length is now {len(loaded)}")
+            print(f"Positions length is now {len(loaded)} \n")
             open(f"{config.save_folder}positions.json", "w").write(json.dumps(loaded))
             if len(loaded) != config.position_amount and game_count == games: games += 1
-    
-        print(f"\nWe are " + ("training" if training else "evaluating"))
 
     return outcomes
 

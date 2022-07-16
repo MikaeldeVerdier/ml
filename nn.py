@@ -141,6 +141,7 @@ class NeuralNetwork:
         mask[allowed_actions] = False
 
         logits[mask] = -100
+        if max(logits) > 50: logits *= 25/max(logits)
 
         odds = np.exp(logits)
         probs = odds / np.sum(odds)

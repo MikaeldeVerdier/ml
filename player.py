@@ -41,6 +41,7 @@ class Agent():
             self.mcts = [child for child in self.mcts.children if child.parent_action == action][0]
         except IndexError as error:
             print(f"You got the error: {error}")
+            self.mcts = [child for child in self.mcts.children if child.parent_action == action][0]
         nn_value = self.nn.get_preds(self.mcts)[0]
 
         self.print_move(self.mcts, pi, value, nn_value)
@@ -55,11 +56,7 @@ class Agent():
             if child.parent_action != -1:
                 pi[child.parent_action] = child.n ** 1/tau
                 values[child.parent_action] = child.q
-        with np.errstate(divide="raise"):
-            try:
-                pi /= np.sum(pi)
-            except FloatingPointError as error:
-                print(f"You got the error: {error}")
+
         pi /= np.sum(pi)
 
         return pi, values
