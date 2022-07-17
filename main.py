@@ -32,14 +32,13 @@ def play(players, games, training):
         outcome = None
         while outcome is None:
             if turn == config.turns_until_tau: tau = 1e-2
-            player = players[player_turn]
-            action, pi = player.play_turn(action, tau)
-            player_turn *= -1
+            action, pi = players[player_turn].play_turn(action, tau)
+
+            outcome = game.check_game_over(players[player_turn].mcts.s)
+            if training: training_set.append([players[-player_turn].mcts, pi])
+
             turn += 1
-
-            outcome = game.check_game_over(player.mcts.s)
-
-            if training: training_set.append([player.mcts, pi])
+            player_turn *= -1
 
         game_count += 1
         starts *= -1
@@ -76,6 +75,7 @@ def retrain_network(agent):
 
         agent.nn.train(x, y)
     agent.nn.save_progress()
+    
     agent.nn.plot_losses(False)
 
     return (x, y)

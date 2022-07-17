@@ -37,11 +37,7 @@ class Agent():
         
         action, value = self.choose_action(pi, values, tau)
         
-        try:
-            self.mcts = [child for child in self.mcts.children if child.parent_action == action][0]
-        except IndexError as error:
-            print(f"You got the error: {error}")
-            self.mcts = [child for child in self.mcts.children if child.parent_action == action][0]
+        self.mcts = [child for child in self.mcts.children if child.parent_action == action][0]
         nn_value = self.nn.get_preds(self.mcts)[0]
 
         self.print_move(self.mcts, pi, value, nn_value)

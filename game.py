@@ -14,7 +14,7 @@ def generate_game_state(node):
             if node.parent is not None and node.parent.parent is not None:
                 node = node.parent.parent
             i += 1
-    board_history.append(np.array([[{1: 1, -1: 0}[node.player]] * config.game_dimensions[1]] * config.game_dimensions[0]))
+    board_history.append(np.array([[{1: 0, -1: 1}[node.player]] * config.game_dimensions[1]] * config.game_dimensions[0]))
     game_state = np.moveaxis(np.array(board_history), 0, -1)
     return game_state
 

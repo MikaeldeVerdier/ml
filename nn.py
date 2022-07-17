@@ -13,6 +13,8 @@ from keras.utils.vis_utils import plot_model
 
 class NeuralNetwork:
     def __init__(self, load, name):
+        print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
+
         self.load = load
         self.name = name
         
@@ -141,7 +143,7 @@ class NeuralNetwork:
         mask[allowed_actions] = False
 
         logits[mask] = -100
-        if max(logits) > 50: logits *= 25/max(logits)
+        if max(logits) > 85: logits *= 85/max(logits)
 
         odds = np.exp(logits)
         probs = odds / np.sum(odds)
