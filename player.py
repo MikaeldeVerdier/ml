@@ -21,7 +21,7 @@ class User():
         player_dict = {1: "X", -1: "O"}
         print(f"It's {player_dict[root.player]}'s turn")
         print(f"Move to make is: {root.parent_action}")
-        print(f"Position is now: \n{game.print_board(root.s)}")
+        print(f"Position is now:\n{game.print_board(root.s)}")
 
 class Agent():
     def __init__(self, load, name):
@@ -31,7 +31,7 @@ class Agent():
         if action is not None: self.mcts = self.mcts.update_root(action)
         
         for _ in range(config.MCTSSims):
-            self.mcts.simulate(self.nn)
+            self.mcts.simulate_rec(self.nn)
 
         pi, values = self.getAV(self.mcts, tau)
         
@@ -69,8 +69,8 @@ class Agent():
     def print_move(self, root, pi, mcts_value, nn_value):
         player_dict = {1: "X", -1: "O"}
         print(f"It's {player_dict[root.player]}'s turn")
-        print(f"Action values are: \n{game.print_values(np.round(pi, 3))}")
+        print(f"Action values are:\n{game.print_values(np.round(pi, 3))}")
         print(f"Move to make is: {root.parent_action}")
-        print(f"Position is now: \n{game.print_board(root.s)}")
+        print(f"Position is now:\n{game.print_board(root.s)}")
         print(f"MCTS percieved value is: {np.round(mcts_value, 3)}")
         print(f"NN percieved value is: {np.round(nn_value * 1000)/1000}\n")

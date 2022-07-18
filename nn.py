@@ -144,7 +144,7 @@ class NeuralNetwork:
         logits[mask] = -100
         # if max(logits) > 85: logits *= 85/max(logits)
 
-        odds = np.exp(logits, dtype="float64")
+        odds = np.exp(logits, dtype="float64" if max(logits) < 85 else "float32") # Is np.exp always float64 (then remove)
         probs = odds / np.sum(odds)
 
         return (v[0][0], probs)

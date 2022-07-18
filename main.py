@@ -6,7 +6,7 @@ import config
 import game
 from player import *
 
-load = [True, True]
+load = [False, False]
 agents = {1: Agent(load[0], 1), -1: Agent(load[1], 2)}
 
 loads = list(np.where(load)[0])
@@ -54,7 +54,7 @@ def play(players, games, training):
             loaded = json.loads(open(f"{config.save_folder}positions.json", "r").read())
             loaded += positions
             loaded = loaded[-config.position_amount:]
-            print(f"Positions length is now {len(loaded)} \n")
+            print(f"Positions length is now {len(loaded)}\n")
             open(f"{config.save_folder}positions.json", "w").write(json.dumps(loaded))
             if len(loaded) != config.position_amount and game_count == games: games += 1
 
@@ -75,7 +75,7 @@ def retrain_network(agent):
 
         agent.nn.train(x, y)
     agent.nn.save_progress()
-    
+
     agent.nn.plot_losses(False)
 
     return (x, y)
@@ -100,7 +100,7 @@ def play_test(agent, games):
     else: print("You tied with the bot")
 
 def log(results, best_agent):
-    open(f"{config.save_folder}log.txt", "a").write(f"{datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')}: Results are: {results} \nBest_agent is now: {best_agent} \n")
+    open(f"{config.save_folder}log.txt", "a").write(f"{datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')}: Results are: {results}\nBest_agent is now: {best_agent}\n")
 
 for _ in range(config.loop_iterations):
     self_play(agents[best_agent])
