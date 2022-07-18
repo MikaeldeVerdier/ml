@@ -6,7 +6,7 @@ import config
 import game
 from player import *
 
-load = [False, False]
+load = [True, True]
 agents = {1: Agent(load[0], 1), -1: Agent(load[1], 2)}
 
 loads = list(np.where(load)[0])

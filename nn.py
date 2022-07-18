@@ -132,8 +132,7 @@ class NeuralNetwork:
         else: print("PLOTTED")
 
     def get_preds(self, node):
-        data = game.generate_game_state(node)
-        data = np.expand_dims(data, axis=0)
+        data = np.expand_dims(game.generate_game_state(node), axis=0)
         (v, p) = self.model.predict(data)
 
         logits = p[0]
@@ -143,9 +142,9 @@ class NeuralNetwork:
         mask[allowed_actions] = False
 
         logits[mask] = -100
-        if max(logits) > 85: logits *= 85/max(logits)
+        # if max(logits) > 85: logits *= 85/max(logits)
 
-        odds = np.exp(logits)
+        odds = np.exp(logits, dtype="float64")
         probs = odds / np.sum(odds)
 
         return (v[0][0], probs)
