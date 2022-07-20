@@ -10,6 +10,7 @@ class User():
 
     def play_turn(self, action, tau):
         if action is not None: self.mcts = self.mcts.update_root(action)
+        print(f"Legal moves for you are: {game.get_legal_moves(self.mcts.s)}")
         action = int(input("Make your move: "))
         self.mcts = Node(game.move(self.mcts.s.copy(), action, self.mcts.player), self, action, -self.mcts.player, 0)
 
@@ -31,7 +32,7 @@ class Agent():
         if action is not None: self.mcts = self.mcts.update_root(action)
         
         for _ in range(config.MCTSSims):
-            self.mcts.simulate_rec(self.nn)
+            self.mcts.simulate(self.nn)
 
         pi, values = self.getAV(self.mcts, tau)
         

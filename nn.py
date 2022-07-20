@@ -142,9 +142,8 @@ class NeuralNetwork:
         mask[allowed_actions] = False
 
         logits[mask] = -100
-        # if max(logits) > 85: logits *= 85/max(logits)
 
-        odds = np.exp(logits, dtype="float64" if max(logits) < 85 else "float32") # Is np.exp always float64 (then remove)
+        odds = np.exp(logits, dtype="float64") # Does it still overflow?
         probs = odds / np.sum(odds)
 
         return (v[0][0], probs)

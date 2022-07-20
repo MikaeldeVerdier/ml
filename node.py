@@ -17,7 +17,7 @@ class Node:
         self.prior = prior
         
         self.cpuct = np.sqrt(2)
-   
+
     def u(self):
         return self.cpuct * self.prior * np.sqrt((np.log(self.parent.n) if self.parent.n != 0 else 0) / (1 + self.n))
 
@@ -30,34 +30,19 @@ class Node:
 
         return root
 
-    def simulate_rec(self, nn):
-        outcome = game.check_game_over(self.s)
+    def simulate(self, nn):
         if self.children:
-            if outcome is None:
-                p = self.probabilities()
-                self.children[np.random.choice(np.flatnonzero(p == np.max(p)))].simulate_rec(nn)
-            else: self.backfill(outcome)
+            p = self.probabilities()
+            self.children[np.random.choice(np.flatnonzero(p == np.max(p)))].simulate(nn)
         else:
+            outcome = game.check_game_over(self.s)
             if outcome is None:
                 self.expand_fully(nn)
                 v = nn.get_preds(self)[0]
             else: v = outcome
-            if self.parent: self.backfill(v)
-
-    def simulate_loop(self, nn):
-        root = self
-        while root.children:
-            p = root.probabilities()
-            root = root.children[np.random.choice(np.flatnonzero(p == np.max(p)))]
-
-        if outcome is None:
-            root.expand_fully(nn)
-            v = nn.get_preds(self)[0]
-        else: v = outcome
-        if self.parent: self.backfill(v)
+            if self.parent:
+                self.backfill(v)
         
-        outcome = game.check_game_over(root.s)
-
     def expand_fully(self, nn):
         prior = nn.get_preds(self)[1] if nn is not None else [0] * np.prod(config.game_dimensions)
         
@@ -66,7 +51,7 @@ class Node:
                 new_state = game.move(self.s.copy(), action, self.player)
                 child_node = Node(new_state, self, action, -self.player, prior[action])
             else:
-                child_node = Node(np.full(np.prod(config.game_dimensions), 2), self, -1, 0, -2)
+                child_node = Node(np.full(np.prod(config.game_dimensions), 2), self, -1, 0, -9999)
                 
             self.children.append(child_node)
 
@@ -79,5 +64,4 @@ class Node:
         self.n += 1
         self.w += v * -self.player
         self.q = self.w / self.n
-        if self.parent:
-            self.parent.backfill(v)
+        if self.parent: self.parent.backfill(v)

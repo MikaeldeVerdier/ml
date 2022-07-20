@@ -46,7 +46,7 @@ def play(players, games, training):
 
         print(f"We are " + ("training" if training else "evaluating"))
         print(f"Game outcome was: {outcome}")
-        print(f"Amount of games played is now: {game_count}")
+        print(f"Amount of games played is now: {game_count}\n")
 
         if training:
             # [position.append(outcome * position[0].player) for position in training_set]
