@@ -10,7 +10,7 @@ load = [False, False]
 agents = {1: Agent(load[0], 1), -1: Agent(load[1], 2)}
 
 loads = list(np.where(load)[0])
-best_agent = 1 if not loads else json.loads(open(f"{config.save_folder}save.json", "r").read())["best_agent"] if len(loads) == 2 else 2 * loads[0] - 1
+best_agent = 1 if not loads else json.loads(open(f"{config.save_folder}save.json", "r").read())["best_agent"] if len(loads) == 2 else 2 * int(loads[0]) - 1
 if not load[0] or not load[1]:
     open(f"{config.save_folder}log.txt", "w").truncate(0)
     open(f"{config.save_folder}positions.json", "w").write(json.dumps([]))
@@ -74,8 +74,8 @@ def retrain_network(agent):
         y = {"value_head": np.array([batch[2] for batch in minibatch]), "policy_head": np.array([batch[1] for batch in minibatch])}
 
         agent.nn.train(x, y)
-    agent.nn.save_progress()
 
+    agent.nn.save_progress()
     agent.nn.plot_losses(False)
 
     return (x, y)
@@ -99,6 +99,12 @@ def play_test(agent, games):
     elif results[2] > results[1]: print("You were better than the bot")
     else: print("You tied with the bot")
 
+def play_versions(versions, games):
+    agents = {i: Agent(True, name, version = v) for name, v in versions for i in [-1, 1]}
+    results = play(agents, games, False)
+    print(f"The results between {versions[0]} and {versions[1]} were: {results}")
+    print(f"The best version was: {versions[max(results[1:])]}")
+
 def log(results, best_agent):
     open(f"{config.save_folder}log.txt", "a").write(f"{datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')}: Results are: {results}\nBest_agent is now: {best_agent}\n")
 
@@ -107,4 +113,5 @@ for _ in range(config.loop_iterations):
     (x, y) = retrain_network(agents[-best_agent])
     best_agent = evaluate_network(agents, best_agent)
 
+play_versions([(2, 33), (2, 32)], 25)
 play_test(agents[best_agent], config.game_amount_play_test)

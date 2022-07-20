@@ -12,7 +12,7 @@ from tensorflow.keras.callbacks import ModelCheckpoint
 from keras.utils.vis_utils import plot_model
 
 class NeuralNetwork:
-    def __init__(self, load, name):
+    def __init__(self, load, name, version):
         print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 
         self.load = load
@@ -27,14 +27,13 @@ class NeuralNetwork:
         vh = self.value_head(x)
         ph = self.policy_head(x)
 
-        checkpoint_path = f"{config.save_folder}training_{name}/cp.ckpt"
-        self.cp_callback = ModelCheckpoint(filepath=checkpoint_path, save_weights_only=True, verbose=1)
-
         self.model = Model(inputs=[self.main_input], outputs=[vh, ph])
         self.model.compile(loss={"value_head": "mean_squared_error", "policy_head": self.softmax_cross_entropy_with_logits}, optimizer=SGD(learning_rate=config.lr, momentum=config.momentum), loss_weights={"value_head": 0.5, "policy_head": 0.5}, metrics="accuracy")
         
         if load:
-            self.model.load_weights(checkpoint_path)
+            v = json.loads(open(f"{config.save_folder}save.json", "r").read())[f"agent_{self.name}"]["version"] if version is None else version + 1
+            checkpoint_path = f"{config.save_folder}training_{self.name}/v.{v - 1}/cp.cpkt"
+            self.model.load_weights(checkpoint_path).expect_partial()
         else:
             try:
                 plot_model(self.model, to_file=f"{config.save_folder}model.png", show_shapes=True, show_layer_names=True)
@@ -90,24 +89,29 @@ class NeuralNetwork:
         return (x)
 
     def train(self, x, y):
-        fit = self.model.fit(x, y, batch_size=config.batch_size, epochs=config.epochs, verbose=1, validation_split=config.validation_split, callbacks=[self.cp_callback])
-        # print(fit.history)
+        version = json.loads(open(f"{config.save_folder}save.json", "r").read())[f"agent_{self.name}"]["version"]
+        checkpoint_path = f"{config.save_folder}training_{self.name}/v.{version}/cp.cpkt"
+        cp_callback = ModelCheckpoint(filepath=checkpoint_path, save_weights_only=True, verbose=1)
+
+        fit = self.model.fit(x, y, batch_size=config.batch_size, epochs=config.epochs, verbose=1, validation_split=config.validation_split, callbacks=[cp_callback])
         for metric in fit.history:
             if metric not in self.metrics: self.metrics[metric] = []
             [self.metrics[metric].append(fit.history[metric][i]) for i in range(config.epochs)]
 
-    def save_progress(self, best_agent = None):
+    def save_progress(self, best_agent=None):
         loaded = json.loads(open(f"{config.save_folder}save.json", "r").read())
         
         if best_agent is not None: loaded["best_agent"] = best_agent
         else:
-            if not self.load: loaded[f"agent_{self.name}"] = json.loads(open(f"{config.save_folder}empty_save.json", "r").read())[f"agent_{self.name}"]
+            if not self.load:
+                loaded[f"agent_{self.name}"] = json.loads(open(f"{config.save_folder}empty_save.json", "r").read())[f"agent_{self.name}"]
+                self.load = True
+            loaded[f"agent_{self.name}"]["version"] += 1
             loaded[f"agent_{self.name}"]["iterations"].append(config.training_iterations * config.epochs)
             for metric in self.metrics: loaded[f"agent_{self.name}"]["metrics"][metric] += self.metrics[metric]
             self.metrics = {}
-            self.load = True
-        open(f"{config.save_folder}save.json", "w").write(json.dumps(loaded))
 
+        open(f"{config.save_folder}save.json", "w").write(json.dumps(loaded))
 
     def plot_losses(self, show_plot):
         loaded = json.loads(open(f"{config.save_folder}save.json", "r").read())[f"agent_{self.name}"]
@@ -141,9 +145,10 @@ class NeuralNetwork:
         allowed_actions = [move for move in game.get_legal_moves(node.s) if move != -1]
         mask[allowed_actions] = False
 
+        if max(logits) > 85: logits *= 85/max(logits)
         logits[mask] = -100
 
-        odds = np.exp(logits, dtype="float64") # Does it still overflow?
+        odds = np.exp(logits)
         probs = odds / np.sum(odds)
 
         return (v[0][0], probs)

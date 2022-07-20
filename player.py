@@ -25,8 +25,8 @@ class User():
         print(f"Position is now:\n{game.print_board(root.s)}")
 
 class Agent():
-    def __init__(self, load, name):
-        self.nn = NeuralNetwork(load, name)
+    def __init__(self, load, name, version=None):
+        self.nn = NeuralNetwork(load, name, version=version)
 
     def play_turn(self, action, tau):
         if action is not None: self.mcts = self.mcts.update_root(action)
