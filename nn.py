@@ -103,13 +103,11 @@ class NeuralNetwork:
         
         if best_agent is not None: loaded["best_agent"] = best_agent
         else:
-            if not self.load:
-                loaded[f"agent_{self.name}"] = json.loads(open(f"{config.save_folder}empty_save.json", "r").read())[f"agent_{self.name}"]
-                self.load = True
             loaded[f"agent_{self.name}"]["version"] += 1
             loaded[f"agent_{self.name}"]["iterations"].append(config.training_iterations * config.epochs)
             for metric in self.metrics: loaded[f"agent_{self.name}"]["metrics"][metric] += self.metrics[metric]
             self.metrics = {}
+            self.load = True
 
         open(f"{config.save_folder}save.json", "w").write(json.dumps(loaded))
 

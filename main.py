@@ -14,6 +14,13 @@ best_agent = 1 if not loads else json.loads(open(f"{config.save_folder}save.json
 if not load[0] or not load[1]:
     open(f"{config.save_folder}log.txt", "w").truncate(0)
     open(f"{config.save_folder}positions.json", "w").write(json.dumps([]))
+    
+loaded = json.loads(open(f"{config.save_folder}save.json", "r").read())
+for agent in agents.values():
+    if not agent.nn.load:
+        empty = json.loads(open(f"{config.save_folder}empty_save.json", "r").read())[f"agent_{agent.nn.name}"]
+        loaded[f"agent_{agent.nn.name}"] = empty
+open(f"{config.save_folder}save.json", "w").write(json.dumps(loaded))
 
 def setup_mcts(players, starts):
     for player in players.values(): player.mcts = Node(np.zeros(np.prod(config.game_dimensions))[::], None, None, starts, None)
