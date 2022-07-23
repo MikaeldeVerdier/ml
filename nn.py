@@ -34,6 +34,7 @@ class NeuralNetwork:
             v = json.loads(open(f"{config.save_folder}save.json", "r").read())[f"agent_{self.name}"]["version"] if version is None else version + 1
             checkpoint_path = f"{config.save_folder}training_{self.name}/v.{v - 1}/cp.cpkt"
             self.model.load_weights(checkpoint_path).expect_partial()
+            print(f"Version {v - 1} now loaded for nn with name: {name}")
         else:
             try:
                 plot_model(self.model, to_file=f"{config.save_folder}model.png", show_shapes=True, show_layer_names=True)
@@ -46,13 +47,13 @@ class NeuralNetwork:
         p = y_pred
         pi = y_true
 
-        zero = tf.zeros(shape = tf.shape(pi), dtype = np.float32)
+        zero = tf.zeros(shape = tf.shape(pi), dtype=np.float32)
         where = tf.equal(pi, zero)
 
         negatives = tf.fill(tf.shape(pi), -100.0) 
         p = tf.where(where, negatives, p)
 
-        loss = tf.nn.softmax_cross_entropy_with_logits(labels = pi, logits = p)
+        loss = tf.nn.softmax_cross_entropy_with_logits(labels=pi, logits=p)
 
         return loss
 
@@ -134,7 +135,7 @@ class NeuralNetwork:
         else: print("PLOTTED")
 
     def get_preds(self, node):
-        data = np.expand_dims(game.generate_game_state(node), axis=0)
+        data = np.expand_dims(game.generate_game_state(node, False), axis=0)
         (v, p) = self.model.predict(data)
 
         logits = p[0]

@@ -1,15 +1,16 @@
 import numpy as np
 import config
 
-def generate_game_state(node):
-    real_node = node
+def generate_game_state(node, mirror):
+    root = node
     board_history = []
     for player in [1, -1]:
-        node = real_node
+        node = root
         i = 0
         while i < config.depth:
-            position = np.zeros(len(node.s))
-            position[node.s == player] = 1
+            s = node.s if not mirror else mirror_board(node.s)
+            position = np.zeros(len(s))
+            position[s == player] = 1
             board_history.append(position.reshape(config.game_dimensions))
             if node.parent is not None and node.parent.parent is not None:
                 node = node.parent.parent
@@ -17,6 +18,17 @@ def generate_game_state(node):
     board_history.append(np.array([[{1: 0, -1: 1}[node.player]] * config.game_dimensions[1]] * config.game_dimensions[0]))
     game_state = np.moveaxis(np.array(board_history), 0, -1)
     return game_state
+
+def mirror_board(board):
+    """b = []
+    for z in range(config.game_dimensions[0]):
+        for x in range(config.game_dimensions[1] - 1, -1, -1):
+            print(x + z * config.game_dimensions[1])
+            b.append(board[x + z * config.game_dimensions[1]])"""
+    
+    b = [board[x + z * config.game_dimensions[1]] for z in range(config.game_dimensions[0]) for x in range(config.game_dimensions[1] - 1, -1, -1)]
+
+    return b
 
 def get_legal_moves(board):
     if config.move_amount != np.prod(config.game_dimensions):

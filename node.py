@@ -30,7 +30,7 @@ class Node:
 
         return root
 
-    def simulate(self, nn):
+    def simulate2(self, nn):
         if self.children:
             p = self.probabilities()
             self.children[np.random.choice(np.flatnonzero(p == np.max(p)))].simulate(nn)
@@ -42,7 +42,19 @@ class Node:
             else: v = outcome
             if self.parent:
                 self.backfill(v)
-        
+
+    def simulate(self, nn):
+        root = self
+        while root.children:
+            p = root.probabilities()
+            root = root.children[np.random.choice(np.flatnonzero(p == np.max(p)))]
+        outcome = game.check_game_over(root.s)
+        if outcome is None:
+            root.expand_fully(nn)
+            v = nn.get_preds(root)[0]
+        else: v = outcome
+        if root.parent: root.backfill(v)
+
     def expand_fully(self, nn):
         prior = nn.get_preds(self)[1] if nn is not None else [0] * np.prod(config.game_dimensions)
         
@@ -60,8 +72,16 @@ class Node:
         
         return pi
 
-    def backfill(self, v):
+    def backfill2(self, v):
         self.n += 1
         self.w += v * -self.player
         self.q = self.w / self.n
-        if self.parent: self.parent.backfill(v)
+        if self.parent: self.parent.backfill2(v)
+
+    def backfill(self, v):
+        root = self
+        while root:
+            root.n += 1
+            root.w += v * -root.player
+            root.q = root.w / root.n
+            root = root.parent
