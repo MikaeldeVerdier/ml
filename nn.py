@@ -20,7 +20,6 @@ class NeuralNetwork:
         
         self.main_input = Input(shape=config.game_dimensions + (config.depth * 2 + 1,), name="main_input")
 
-        # x = BatchNormalization(axis=3)(main_input)
         x = self.convolutional_layer(self.main_input, config.convolutional_layer["filter_amount"], config.convolutional_layer["kernel_size"])
         for _ in range(config.residual_layer["amount"]): x = self.residual_layer(x, config.residual_layer["filter_amount"], config.residual_layer["kernel_size"])
 
@@ -40,6 +39,8 @@ class NeuralNetwork:
                 plot_model(self.model, to_file=f"{config.save_folder}model.png", show_shapes=True, show_layer_names=True)
             except ImportError:
                 print("You need to download pydot and graphviz to plot model.")
+
+        print(f"Summary for this model is: {self.model.summary()}")
 
         self.metrics = {}
 
@@ -102,7 +103,7 @@ class NeuralNetwork:
     def save_progress(self, best_agent=None):
         loaded = json.loads(open(f"{config.save_folder}save.json", "r").read())
         
-        if best_agent is not None: loaded["best_agent"] = best_agent
+        if best_agent: loaded["best_agent"] = best_agent
         else:
             loaded[f"agent_{self.name}"]["version"] += 1
             loaded[f"agent_{self.name}"]["iterations"].append(config.training_iterations * config.epochs)

@@ -17,6 +17,7 @@ position_amount = 10000
 MCTSSims = 50
 depth = 1
 turns_until_tau = 10
+cpuct = 1
 
 # Retraining network
 training_iterations = 3
