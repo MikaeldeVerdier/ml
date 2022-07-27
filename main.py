@@ -1,4 +1,3 @@
-from unicodedata import mirrored
 import numpy as np
 import random
 import json
@@ -57,7 +56,6 @@ def play(players, games, training):
         print(f"Amount of games played is now: {game_count}\n")
 
         if training:
-            # [position.append(outcome * position[0].player) for position in training_set]
             positions = [[game.generate_game_state(position[0], mirror).tolist()] + [game.mirror_board(position[1].tolist()) if mirror else position[1].tolist()] + [outcome * position[0].player] for position in training_set for mirror in [False, True]]
             loaded = json.loads(open(f"{config.save_folder}positions.json", "r").read())
             loaded += positions
@@ -103,9 +101,15 @@ def play_test(agent, games):
     you = User()
     results = play({1: agent, -1: you}, games, False)
     print(f"The results were: {results}")
-    if results[1] > results[2]: print("You were worse than the bot")
-    elif results[2] > results[1]: print("You were better than the bot")
-    else: print("You tied with the bot")
+    if results[1] > results[2]:
+        log(results, "the bot")
+        print("You were worse than the bot")
+    elif results[2] > results[1]:
+        log(results, "you")
+        print("You were better than the bot")
+    else:
+        log(results, "both")
+        print("You tied with the bot")
 
 def play_versions(versions, games):
     agents = {1 - 2 * i: Agent(True, name, version = v) for i, (name, v) in enumerate(versions)}
@@ -123,5 +127,5 @@ for _ in range(config.loop_iterations):
     (x, y) = retrain_network(agents[-best_agent])
     best_agent = evaluate_network(agents, best_agent)
 
-play_versions([(1, 0), (2, 0)], 25)
+play_versions([(1, 0), (2, 0)], 20)
 play_test(agents[best_agent], config.game_amount_play_test)

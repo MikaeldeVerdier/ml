@@ -40,7 +40,7 @@ class NeuralNetwork:
             except ImportError:
                 print("You need to download pydot and graphviz to plot model.")
 
-        print(f"Summary for this model is: {self.model.summary()}")
+        self.model.summary()
 
         self.metrics = {}
 
@@ -59,35 +59,35 @@ class NeuralNetwork:
         return loss
 
     def convolutional_layer(self, x, filters, kernel_size):
-        x = Conv2D(filters=filters, kernel_size=kernel_size, data_format="channels_last", padding="same", use_bias=True, activation="linear", kernel_regularizer=regularizers.l2(config.reg_const))(x)
+        x = Conv2D(filters=filters, kernel_size=kernel_size, data_format="channels_last", padding="same", use_bias=False, activation="linear", kernel_regularizer=regularizers.l2(config.reg_const))(x)
         x = BatchNormalization(axis=3)(x)
         x = LeakyReLU()(x)
         return (x)
 
     def residual_layer(self, input_block, filters, kernel_size):
         x = self.convolutional_layer(input_block, filters, kernel_size)
-        x = Conv2D(filters=filters, kernel_size=kernel_size, data_format="channels_last", padding="same", use_bias=True, activation="linear", kernel_regularizer=regularizers.l2(config.reg_const))(x)
+        x = Conv2D(filters=filters, kernel_size=kernel_size, data_format="channels_last", padding="same", use_bias=False, activation="linear", kernel_regularizer=regularizers.l2(config.reg_const))(x)
         x = BatchNormalization(axis=3)(x)
         x = add([input_block, x])
         x = LeakyReLU()(x)
         return (x)
 
     def value_head(self, x):
-        x = Conv2D(filters=1, kernel_size=(1, 1), data_format="channels_last", padding="same", use_bias=True, activation="linear", kernel_regularizer=regularizers.l2(config.reg_const))(x)
+        x = Conv2D(filters=1, kernel_size=(1, 1), data_format="channels_last", padding="same", use_bias=False, activation="linear", kernel_regularizer=regularizers.l2(config.reg_const))(x)
         x = BatchNormalization(axis=3)(x)
         x = LeakyReLU()(x)
         x = Flatten()(x)
-        x = Dense(config.dense_value_head, use_bias=True, activation="linear", kernel_regularizer=regularizers.l2(config.reg_const))(x)
+        x = Dense(config.dense_value_head, use_bias=False, activation="linear", kernel_regularizer=regularizers.l2(config.reg_const))(x)
         x = LeakyReLU()(x)
-        x = Dense(1, use_bias=True, activation="tanh", kernel_regularizer=regularizers.l2(config.reg_const), name="value_head")(x)
+        x = Dense(1, use_bias=False, activation="tanh", kernel_regularizer=regularizers.l2(config.reg_const), name="value_head")(x)
         return (x)
 
     def policy_head(self, x):
-        x = Conv2D(filters=2, kernel_size=(1, 1), data_format="channels_last", padding="same", use_bias=True, activation="linear", kernel_regularizer=regularizers.l2(config.reg_const))(x)
+        x = Conv2D(filters=2, kernel_size=(1, 1), data_format="channels_last", padding="same", use_bias=False, activation="linear", kernel_regularizer=regularizers.l2(config.reg_const))(x)
         x = BatchNormalization(axis=3)(x)
         x = LeakyReLU()(x)
         x = Flatten()(x)
-        x = Dense(np.prod(config.game_dimensions), use_bias=True, activation="linear", kernel_regularizer=regularizers.l2(config.reg_const), name="policy_head")(x)
+        x = Dense(np.prod(config.game_dimensions), use_bias=False, activation="linear", kernel_regularizer=regularizers.l2(config.reg_const), name="policy_head")(x)
         return (x)
 
     def train(self, x, y):
