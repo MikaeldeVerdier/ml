@@ -1,9 +1,9 @@
 import numpy as np
 import json
-import tensorflow as tf
-import matplotlib.pyplot as plt
 import config
 import game
+import matplotlib.pyplot as plt
+import tensorflow as tf
 from tensorflow.keras import regularizers
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input, Dense, Conv2D, Flatten, BatchNormalization, LeakyReLU, add
@@ -17,8 +17,9 @@ class NeuralNetwork:
 
         self.load = load
         self.name = name
+        self.version = version
         
-        self.main_input = Input(shape=config.game_dimensions + (config.depth * 2 + 1,), name="main_input")
+        self.main_input = Input(shape=game.game_dimensions + (config.depth * 2 + 1,), name="main_input")
 
         x = self.convolutional_layer(self.main_input, config.convolutional_layer["filter_amount"], config.convolutional_layer["kernel_size"])
         for _ in range(config.residual_layer["amount"]): x = self.residual_layer(x, config.residual_layer["filter_amount"], config.residual_layer["kernel_size"])
@@ -30,10 +31,10 @@ class NeuralNetwork:
         self.model.compile(loss={"value_head": "mean_squared_error", "policy_head": self.softmax_cross_entropy_with_logits}, optimizer=SGD(learning_rate=config.lr, momentum=config.momentum), loss_weights={"value_head": 0.5, "policy_head": 0.5}, metrics="accuracy")
         
         if load:
-            v = json.loads(open(f"{config.save_folder}save.json", "r").read())[f"agent_{self.name}"]["version"] if version is None else version + 1
-            checkpoint_path = f"{config.save_folder}training_{self.name}/v.{v - 1}/cp.cpkt"
+            self.version = json.loads(open(f"{config.save_folder}save.json", "r").read())[f"agent_{self.name}"]["version"] if not version else version + 1
+            checkpoint_path = f"{config.save_folder}training_{self.name}/v.{self.version - 1}/cp.cpkt"
             self.model.load_weights(checkpoint_path).expect_partial()
-            print(f"Version {v - 1} now loaded for nn with name: {name}")
+            print(f"Version {self.version - 1} now loaded for nn with name: {name}")
         else:
             try:
                 plot_model(self.model, to_file=f"{config.save_folder}model.png", show_shapes=True, show_layer_names=True)
@@ -48,7 +49,7 @@ class NeuralNetwork:
         p = y_pred
         pi = y_true
 
-        zero = tf.zeros(shape = tf.shape(pi), dtype=np.float32)
+        zero = tf.zeros(shape=tf.shape(pi), dtype=np.float32)
         where = tf.equal(pi, zero)
 
         negatives = tf.fill(tf.shape(pi), -100.0) 
@@ -87,12 +88,11 @@ class NeuralNetwork:
         x = BatchNormalization(axis=3)(x)
         x = LeakyReLU()(x)
         x = Flatten()(x)
-        x = Dense(np.prod(config.game_dimensions), use_bias=False, activation="linear", kernel_regularizer=regularizers.l2(config.reg_const), name="policy_head")(x)
+        x = Dense(np.prod(game.game_dimensions), use_bias=False, activation="linear", kernel_regularizer=regularizers.l2(config.reg_const), name="policy_head")(x)
         return (x)
 
     def train(self, x, y):
-        version = json.loads(open(f"{config.save_folder}save.json", "r").read())[f"agent_{self.name}"]["version"]
-        checkpoint_path = f"{config.save_folder}training_{self.name}/v.{version}/cp.cpkt"
+        checkpoint_path = f"{config.save_folder}training_{self.name}/v.{self.version}/cp.cpkt"
         cp_callback = ModelCheckpoint(filepath=checkpoint_path, save_weights_only=True, verbose=1)
 
         fit = self.model.fit(x, y, batch_size=config.batch_size, epochs=config.epochs, verbose=1, validation_split=config.validation_split, callbacks=[cp_callback])
@@ -105,7 +105,8 @@ class NeuralNetwork:
         
         if best_agent: loaded["best_agent"] = best_agent
         else:
-            loaded[f"agent_{self.name}"]["version"] += 1
+            self.version += 1
+            loaded[f"agent_{self.name}"]["version"] = self.version
             loaded[f"agent_{self.name}"]["iterations"].append(config.training_iterations * config.epochs)
             for metric in self.metrics: loaded[f"agent_{self.name}"]["metrics"][metric] += self.metrics[metric]
             self.metrics = {}

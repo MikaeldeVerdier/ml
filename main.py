@@ -23,7 +23,7 @@ for agent in agents.values():
 open(f"{config.save_folder}save.json", "w").write(json.dumps(loaded))
 
 def setup_mcts(players, starts):
-    for player in players.values(): player.mcts = Node(np.zeros(np.prod(config.game_dimensions))[::], None, None, starts, None)
+    for player in players.values(): player.mcts = Node(np.zeros(np.prod(game.game_dimensions))[::], None, None, starts, None)
 
 def play(players, games, training):
     game_count = 0
@@ -94,33 +94,36 @@ def evaluate_network(agents, best_agent):
         print(f"{best_agent} is now best player!")
         agents[1].nn.save_progress(best_agent)
 
-    log(results, best_agent)
+    log(agents, results, best_agent)
+
     return best_agent
     
 def play_test(agent, games):
     you = User()
-    results = play({1: agent, -1: you}, games, False)
+    agents = {1: agent, -1: you}
+    results = play(agents, games, False)
+
+    best = agents[np.argmax(results[1:])].full_name
     print(f"The results were: {results}")
-    if results[1] > results[2]:
-        log(results, "the bot")
-        print("You were worse than the bot")
-    elif results[2] > results[1]:
-        log(results, "you")
-        print("You were better than the bot")
-    else:
-        log(results, "both")
-        print("You tied with the bot")
+    log(agents, results, best)
 
 def play_versions(versions, games):
     agents = {1 - 2 * i: Agent(True, name, version = v) for i, (name, v) in enumerate(versions)}
     results = play(agents, games, False)
+    
     print(f"The results between {versions[0]} and {versions[1]} were: {results}")
     best = versions[np.argmax(results[1:])]
     print(f"The best version was: {best}")
-    log(results, best)
+    log(agents, results, best)
 
-def log(results, best_agent):
-    open(f"{config.save_folder}log.txt", "a").write(f"{datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')}: Results are: {results}\nBest_agent is now: {best_agent}\n")
+def log(agents, results, best_agent):
+    message = f"""{datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')}:
+------------------ {agents[1].get_full_name()} vs {agents[-1].get_full_name()} ------------------
+Results are: {results}
+best_agent is: {best_agent}
+------------------------------------------------------
+"""
+    open(f"{config.save_folder}log.txt", "a").write(message)
 
 for _ in range(config.loop_iterations):
     self_play(agents[best_agent])

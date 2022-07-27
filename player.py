@@ -8,6 +8,9 @@ class User():
     def __init__(self):
         pass
 
+    def get_full_name(self):
+        return "You"
+
     def play_turn(self, action, tau):
         if action is not None: self.mcts = self.mcts.update_root(action)
         print(f"Legal moves for you are: {game.get_legal_moves(self.mcts.s)}")
@@ -25,8 +28,11 @@ class User():
         print(f"Position is now:\n{game.print_board(root.s)}")
 
 class Agent():
-    def __init__(self, load, name, version=None):
-        self.nn = NeuralNetwork(load, name, version=version)
+    def __init__(self, load, name, version=0):
+        self.nn = NeuralNetwork(load, name, version)
+    
+    def get_full_name(self):
+        return (self.nn.name, self.nn.version)
 
     def play_turn(self, action, tau):
         if action is not None: self.mcts = self.mcts.update_root(action)
@@ -38,7 +44,7 @@ class Agent():
         
         action, value = self.choose_action(pi, values, tau)
         
-        self.mcts = [child for child in self.mcts.children if child.parent_action == action][0]
+        self.mcts = self.mcts.children[action % game.move_amount]
         nn_value = self.nn.get_preds(self.mcts)[0]
 
         self.print_move(self.mcts, pi, value, nn_value)
@@ -46,8 +52,8 @@ class Agent():
         return action, pi
 
     def getAV(self, root, tau):
-        pi = np.zeros(np.prod(config.game_dimensions))
-        values = np.zeros(np.prod(config.game_dimensions))
+        pi = np.zeros(np.prod(game.game_dimensions))
+        values = np.zeros(np.prod(game.game_dimensions))
 
         for child in root.children:
             if child.parent_action != -1:

@@ -20,15 +20,14 @@ class Node:
         return config.cpuct * self.prior * np.sqrt((np.log(self.parent.n) if self.parent.n != 0 else 0) / (1 + self.n))
 
     def update_root(self, action):
-        descendant = [child for child in self.children if np.array_equal(child.s, game.move(self.s.copy(), action, self.player))]
-        if not descendant:
+        if not self.children:
             root = Node(game.move(self.s.copy(), action, self.player), self, action, -self.player, 0)
             self.children.append(root)
-        else: root = descendant[0]
+        else: root = self.children[action % game.move_amount]
 
         return root
 
-    def simulate2(self, nn):
+    """def simulate2(self, nn):
         if self.children:
             p = self.probabilities()
             self.children[np.random.choice(np.flatnonzero(p == np.max(p)))].simulate(nn)
@@ -39,7 +38,7 @@ class Node:
                 v = nn.get_preds(self)[0]
             else: v = outcome
             if self.parent:
-                self.backfill(v)
+                self.backfill(v)"""
 
     def simulate(self, nn):
         root = self
@@ -54,25 +53,25 @@ class Node:
         if root.parent: root.backfill(v)
 
     def expand_fully(self, nn):
-        prior = nn.get_preds(self)[1] if nn else [0] * np.prod(config.game_dimensions)
+        prior = nn.get_preds(self)[1]
         
         for action in game.get_legal_moves(self.s):
             if action != -1:
                 new_state = game.move(self.s.copy(), action, self.player)
                 child_node = Node(new_state, self, action, -self.player, prior[action])
             else:
-                child_node = Node(np.full(np.prod(config.game_dimensions), 2), self, -1, 0, -9999)
+                child_node = Node(np.full(np.prod(game.game_dimensions), 2), self, -1, 0, -9999)
                 
             self.children.append(child_node)
 
     def probabilities(self):        
         return [child.q + child.u() for child in self.children]
 
-    def backfill2(self, v):
+    """def backfill2(self, v):
         self.n += 1
         self.w += v * -self.player
         self.q = self.w / self.n
-        if self.parent: self.parent.backfill2(v)
+        if self.parent: self.parent.backfill2(v)"""
 
     def backfill(self, v):
         root = self
