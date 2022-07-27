@@ -26,20 +26,20 @@ def mirror_board(board):
             print(x + z * config.game_dimensions[1])
             b.append(board[x + z * config.game_dimensions[1]])"""
     
-    b = [board[x + z * config.game_dimensions[1]] for z in range(config.game_dimensions[0]) for x in range(config.game_dimensions[1] - 1, -1, -1)]
+    mirrored_board = [board[x + z * config.game_dimensions[1]] for z in range(config.game_dimensions[0]) for x in range(config.game_dimensions[1] - 1, -1, -1)]
 
-    return b
+    return mirrored_board
 
 def get_legal_moves(board):
     if config.move_amount != np.prod(config.game_dimensions):
         legal_moves = []
-        for i in range(config.game_dimensions[1]):
-            for i2 in range(config.game_dimensions[0]):
-                if board[i + i2 * config.game_dimensions[1]] != 0:
-                    legal_moves.append(-1 if i2 == 0 else i + (i2 - 1) * config.game_dimensions[1])
+        for dim1 in range(config.game_dimensions[1]):
+            for dim2 in range(config.game_dimensions[0]):
+                if board[dim1 + dim2 * config.game_dimensions[1]] != 0:
+                    legal_moves.append(-1 if dim2 == 0 else dim1 + (dim2 - 1) * config.game_dimensions[1])
                     break
             else:
-                legal_moves.append(i + i2 * config.game_dimensions[1])
+                legal_moves.append(dim1 + dim2 * config.game_dimensions[1])
     else:
         legal_moves = np.where(board == 0)
         if len(legal_moves) != 0: legal_moves = legal_moves[0]
