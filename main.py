@@ -7,7 +7,7 @@ import config
 import game
 from player import *
 
-load = [False, True, True]
+load = [False, False, False]
 agents = {1: Agent(load[0], 1), -1: Agent(load[1], 2)}
 
 loads = list(np.where(load)[0])
@@ -79,7 +79,7 @@ def retrain_network(agent):
         minibatch = random.sample(json.loads(open(f"{config.save_folder}positions.json", "r").read()), config.batch_size)
 
         x = np.array([batch[0] for batch in minibatch])
-        y = {"value_head": np.array([batch[2] for batch in minibatch]), "policy_head": np.array([batch[1] for batch in minibatch])}
+        y = {"value_head": np.array([batch[2] for batch in minibatch], dtype="float64"), "policy_head": np.array([batch[1] for batch in minibatch])}
 
         agent.nn.train(x, y)
 
