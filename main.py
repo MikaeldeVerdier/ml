@@ -17,6 +17,7 @@ if not load[0] or not load[1]:
     open(f"{config.save_folder}positions.json", "w").write(json.dumps([]))
 
 loaded = json.loads(open(f"{config.save_folder}save.json", "r").read())
+loaded["best_agent"] = best_agent
 for agent in agents.values():
     if not agent.nn.load:
         empty = json.loads(open(f"{config.save_folder}empty_save.json", "r").read())[f"agent_{agent.nn.name}"]
@@ -116,7 +117,7 @@ def play_versions(versions, games):
     print(f"The best version was: {best}")
     log(agents, results, best)
 
-def plot_losses(agents, show_lines):
+def plot_metrics(agents, show_lines):
     loaded = json.loads(open(f"{config.save_folder}save.json", "r").read())
 
     fig, axs = plt.subplots(2, 2, figsize=(25, 7))
@@ -141,7 +142,7 @@ def plot_losses(agents, show_lines):
                 iterations = loaded[f"agent_{agent.nn.name}"]["iterations"]
                 [ax.axvline(np.sum(iterations[:i2 + 1]) - 1, color="black") for i2 in range(len(iterations))]
 
-    plt.savefig(f"{config.save_folder}plot.png", dpi=600)
+    plt.savefig(f"{config.save_folder}metrics.png", dpi=600)
     plt.close(fig)
 
 def log(agents, results, best_agent):
@@ -156,7 +157,7 @@ best_agent is: {best_agent}
 for _ in range(config.loop_iterations):
     self_play(agents[best_agent])
     (x, y) = retrain_network(agents[-best_agent])
-    plot_losses(agents, False)
+    plot_metrics(agents, False)
     best_agent = evaluate_network(agents, best_agent)
 
 play_versions([(1, 0), (2, 0)], 20)
