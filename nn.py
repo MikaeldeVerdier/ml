@@ -30,10 +30,12 @@ class NeuralNetwork:
         self.model.compile(loss={"value_head": "mean_squared_error", "policy_head": self.softmax_cross_entropy_with_logits}, optimizer=SGD(learning_rate=config.lr, momentum=config.momentum), loss_weights={"value_head": 0.5, "policy_head": 0.5}, metrics="accuracy")
         
         if load:
-            self.version = json.loads(open(f"{config.save_folder}save.json", "r").read())[f"agent_{self.name}"]["version"] if not version else version + 1
-            checkpoint_path = f"{config.save_folder}training_{self.name}/v.{self.version - 1}/cp.cpkt"
-            self.model.load_weights(checkpoint_path).expect_partial()
-            print(f"Version {self.version - 1} now loaded for nn with name: {name}")
+            if self.version is None:
+                self.version = json.loads(open(f"{config.save_folder}save.json", "r").read())[f"agent_{self.name}"]["version"] - 1
+            if version is not None or self.version != 0:
+                checkpoint_path = f"{config.save_folder}training_{self.name}/v.{self.version}/cp.cpkt"
+                self.model.load_weights(checkpoint_path).expect_partial()
+                print(f"Version {version - 1} now loaded for nn with name: {name}")
         else:
             try:
                 plot_model(self.model, to_file=f"{config.save_folder}model.png", show_shapes=True, show_layer_names=True)

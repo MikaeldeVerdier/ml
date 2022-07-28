@@ -28,7 +28,7 @@ class User():
         print(f"Position is now:\n{game.print_board(root.s)}")
 
 class Agent():
-    def __init__(self, load, name, version=0):
+    def __init__(self, load, name, version=None):
         self.nn = NeuralNetwork(load, name, version)
     
     def get_full_name(self):

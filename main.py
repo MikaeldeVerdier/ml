@@ -7,7 +7,7 @@ import config
 import game
 from player import *
 
-load = [False, False]
+load = [True, True]
 agents = {1: Agent(load[0], 1), -1: Agent(load[1], 2)}
 
 loads = list(np.where(load)[0])
@@ -94,7 +94,7 @@ def evaluate_network(agents, best_agent):
         best_agent *= -1
         print(f"{best_agent} is now best player!")
         agents[1].nn.save_progress(best_agent)
-
+        
     log(agents, results, best_agent)
 
     return best_agent
