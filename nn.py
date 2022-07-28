@@ -2,7 +2,6 @@ import numpy as np
 import json
 import config
 import game
-import matplotlib.pyplot as plt
 import tensorflow as tf
 from tensorflow.keras import regularizers
 from tensorflow.keras.models import Model
@@ -114,10 +113,10 @@ class NeuralNetwork:
 
         open(f"{config.save_folder}save.json", "w").write(json.dumps(loaded))
 
-    def plot_losses(self, show_plot):
+    """def plot_losses(self, show_plot):
         loaded = json.loads(open(f"{config.save_folder}save.json", "r").read())[f"agent_{self.name}"]
 
-        fig, axs = plt.subplots(3, sharex=True, figsize=(10, 5))
+        fig, axs = plt.subplots(4, sharex=True, figsize=(10, 5))
         plt.xlabel("Training Iteration")
 
         for metric in loaded["metrics"]:
@@ -134,7 +133,7 @@ class NeuralNetwork:
 
         plt.savefig(f"{config.save_folder}plot{self.name}.png", dpi=300)
         if not show_plot: plt.close(fig)
-        else: print("PLOTTED")
+        else: print("PLOTTED")"""
 
     def get_preds(self, node):
         data = np.expand_dims(game.generate_game_state(node, False), axis=0)

@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 import random
 import json
 import datetime
@@ -82,7 +83,6 @@ def retrain_network(agent):
         agent.nn.train(x, y)
 
     agent.nn.save_progress()
-    agent.nn.plot_losses(False)
 
     return (x, y)
 
@@ -116,6 +116,34 @@ def play_versions(versions, games):
     print(f"The best version was: {best}")
     log(agents, results, best)
 
+def plot_losses(agents, show_lines):
+    loaded = json.loads(open(f"{config.save_folder}save.json", "r").read())
+
+    fig, axs = plt.subplots(2, 2, figsize=(25, 7))
+    plt.xlabel("Training Iteration")
+
+    for i, agent in enumerate(agents.values()):
+        for metric in loaded[f"agent_{agent.nn.name}"]["metrics"]:
+            ax_index = 0 if metric.find("loss") != -1 else 1
+            ax = axs[ax_index, i]
+            ax.plot(loaded[f"agent_{agent.nn.name}"]["metrics"][metric], label=metric)
+            # if not ax.get_title():
+    
+    for ax_index, metric in enumerate(["Loss", "Accuracy"]):
+        for i, agent in enumerate(agents.values()):
+            ax = axs[ax_index, i]
+            ax.set_title(f"{agent.nn.name}: {metric}")
+            ax.set_ylabel(metric)
+            box = ax.get_position()
+            ax.set_position([box.x0 * ([0.6, 1] * 2)[i], box.y0, box.width, box.height])
+            ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
+            if show_lines:
+                iterations = loaded[f"agent_{agent.nn.name}"]["iterations"]
+                [ax.axvline(np.sum(iterations[:i2 + 1]) - 1, color="black") for i2 in range(len(iterations))]
+
+    plt.savefig(f"{config.save_folder}plot.png", dpi=600)
+    plt.close(fig)
+
 def log(agents, results, best_agent):
     message = f"""{datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')}:
 ------------------ {agents[1].get_full_name()} vs {agents[-1].get_full_name()} ------------------
@@ -128,6 +156,7 @@ best_agent is: {best_agent}
 for _ in range(config.loop_iterations):
     self_play(agents[best_agent])
     (x, y) = retrain_network(agents[-best_agent])
+    plot_losses(agents, False)
     best_agent = evaluate_network(agents, best_agent)
 
 play_versions([(1, 0), (2, 0)], 20)
