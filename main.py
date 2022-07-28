@@ -7,12 +7,12 @@ import config
 import game
 from player import *
 
-load = [True, True]
+load = [False, True, True]
 agents = {1: Agent(load[0], 1), -1: Agent(load[1], 2)}
 
 loads = list(np.where(load)[0])
 best_agent = 1 if not loads else json.loads(open(f"{config.save_folder}save.json", "r").read())["best_agent"] if len(loads) == 2 else 1 - 2 * int(loads[0])
-if not load[0] or not load[1]:
+if not load[2]:
     open(f"{config.save_folder}log.txt", "w").truncate(0)
     open(f"{config.save_folder}positions.json", "w").write(json.dumps([]))
 
@@ -94,7 +94,7 @@ def evaluate_network(agents, best_agent):
         best_agent *= -1
         print(f"{best_agent} is now best player!")
         agents[1].nn.save_progress(best_agent)
-        
+
     log(agents, results, best_agent)
 
     return best_agent

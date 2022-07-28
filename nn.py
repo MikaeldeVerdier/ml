@@ -30,17 +30,17 @@ class NeuralNetwork:
         self.model.compile(loss={"value_head": "mean_squared_error", "policy_head": self.softmax_cross_entropy_with_logits}, optimizer=SGD(learning_rate=config.lr, momentum=config.momentum), loss_weights={"value_head": 0.5, "policy_head": 0.5}, metrics="accuracy")
         
         if load:
-            if self.version is None:
-                self.version = json.loads(open(f"{config.save_folder}save.json", "r").read())[f"agent_{self.name}"]["version"] - 1
-            if version is not None or self.version != 0:
-                checkpoint_path = f"{config.save_folder}training_{self.name}/v.{self.version}/cp.cpkt"
-                self.model.load_weights(checkpoint_path).expect_partial()
-                print(f"Version {version - 1} now loaded for nn with name: {name}")
+            if version is None: self.version = json.loads(open(f"{config.save_folder}save.json", "r").read())[f"agent_{self.name}"]["version"] - 1
+            checkpoint_path = f"{config.save_folder}training_{self.name}/v.{self.version}/cp.cpkt"
+            self.model.load_weights(checkpoint_path).expect_partial()
+            print(f"Version {self.version} now loaded for nn with name: {name}")
         else:
             try:
                 plot_model(self.model, to_file=f"{config.save_folder}model.png", show_shapes=True, show_layer_names=True)
             except ImportError:
                 print("You need to download pydot and graphviz to plot model.")
+
+        if version is None: self.version = 0
 
         self.model.summary()
 
