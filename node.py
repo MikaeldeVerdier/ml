@@ -59,8 +59,7 @@ class Node:
             if action != -1:
                 new_state = game.move(self.s.copy(), action, self.player)
                 child_node = Node(new_state, self, action, -self.player, prior[action])
-            else:
-                child_node = Node(np.full(np.prod(game.game_dimensions), 2), self, -1, 0, -9999)
+            else: child_node = Node(np.full(np.prod(game.game_dimensions), 2), self, -1, 0, -9999)
                 
             self.children.append(child_node)
 

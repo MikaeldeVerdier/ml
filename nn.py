@@ -114,28 +114,6 @@ class NeuralNetwork:
 
         open(f"{config.save_folder}save.json", "w").write(json.dumps(loaded))
 
-    """def plot_losses(self, show_plot):
-        loaded = json.loads(open(f"{config.save_folder}save.json", "r").read())[f"agent_{self.name}"]
-
-        fig, axs = plt.subplots(4, sharex=True, figsize=(10, 5))
-        plt.xlabel("Training Iteration")
-
-        for metric in loaded["metrics"]:
-            ax = 0 if metric.find("loss") != -1 else 1
-            ax = 2 if metric.find("val_") != -1 else ax
-            axs[ax].plot(loaded["metrics"][metric], label=metric)
-        for ax, metric in zip(axs, ["Loss", "Accuracy", "Val_"]):
-            ax.set_title(f"{metric} {self.name}")
-            ax.set_ylabel(metric)
-            box = ax.get_position()
-            ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
-            ax.legend(loc="center left", bbox_to_anchor = (1, .5))
-            [ax.axvline(np.sum(loaded["iterations"][:i + 1]) - 1, color="black") for i in range(len(loaded["iterations"]))]
-
-        plt.savefig(f"{config.save_folder}plot{self.name}.png", dpi=300)
-        if not show_plot: plt.close(fig)
-        else: print("PLOTTED")"""
-
     def get_preds(self, node):
         data = np.expand_dims(game.generate_game_state(node, False), axis=0)
         (v, p) = self.model.predict(data)

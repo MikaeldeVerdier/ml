@@ -7,22 +7,25 @@ import config
 import game
 from player import *
 
-load = [False, False, False]
-agents = {1: Agent(load[0], 1), -1: Agent(load[1], 2)}
+def initiate():
+    load = [False, False, False]
+    agents = {1: Agent(load[0], 1), -1: Agent(load[1], 2)}
 
-loads = list(np.where(load)[0])
-best_agent = 1 if not loads else json.loads(open(f"{config.save_folder}save.json", "r").read())["best_agent"] if len(loads) == 2 else 1 - 2 * int(loads[0])
-if not load[2]:
-    open(f"{config.save_folder}log.txt", "w").truncate(0)
-    open(f"{config.save_folder}positions.json", "w").write(json.dumps([]))
+    loads = list(np.where(load)[0])
+    best_agent = 1 if not loads else json.loads(open(f"{config.save_folder}save.json", "r").read())["best_agent"] if len(loads) == 2 else 1 - 2 * int(loads[0])
+    if not load[2]:
+        open(f"{config.save_folder}log.txt", "w").truncate(0)
+        open(f"{config.save_folder}positions.json", "w").write(json.dumps([]))
 
-loaded = json.loads(open(f"{config.save_folder}save.json", "r").read())
-loaded["best_agent"] = best_agent
-for agent in agents.values():
-    if not agent.nn.load:
-        empty = json.loads(open(f"{config.save_folder}empty_save.json", "r").read())[f"agent_{agent.nn.name}"]
-        loaded[f"agent_{agent.nn.name}"] = empty
-open(f"{config.save_folder}save.json", "w").write(json.dumps(loaded))
+    loaded = json.loads(open(f"{config.save_folder}save.json", "r").read())
+    loaded["best_agent"] = best_agent
+    for agent in agents.values():
+        if not agent.nn.load:
+            empty = json.loads(open(f"{config.save_folder}empty_save.json", "r").read())[f"agent_{agent.nn.name}"]
+            loaded[f"agent_{agent.nn.name}"] = empty
+    open(f"{config.save_folder}save.json", "w").write(json.dumps(loaded))
+
+    return agents, best_agent
 
 def setup_mcts(players, starts):
     for player in players.values(): player.mcts = Node(np.zeros(np.prod(game.game_dimensions))[::], None, None, starts, None)
@@ -85,8 +88,6 @@ def retrain_network(agent):
 
     agent.nn.save_progress()
 
-    return (x, y)
-
 def evaluate_network(agents, best_agent):
     results = play(agents, config.game_amount_evaluation, False)
     print(f"The results were: {results}")
@@ -117,20 +118,22 @@ def play_versions(versions, games):
     print(f"The best version was: {best}")
     log(agents, results, best)
 
-def plot_metrics_vertical(agents, show_lines):
+def plot_metrics_horizontal(agents, show_lines):
     loaded = json.loads(open(f"{config.save_folder}save.json", "r").read())
 
-    fig, axs = plt.subplots(2, 2, figsize=(25, 7))
+    fig, axs = plt.subplots(4, 2, figsize=(25, 14))
     plt.xlabel("Training Iteration")
 
     for i, agent in enumerate(agents.values()):
         for metric in loaded[f"agent_{agent.nn.name}"]["metrics"]:
-            ax_index = 0 if metric.find("loss") != -1 else 1
+            ax_index = (2, 3) if "val_" in metric else (0, 1)
+            ax_index = ax_index[0] if "loss" in metric else ax_index[1]
+
             ax = axs[ax_index, i]
             ax.plot(loaded[f"agent_{agent.nn.name}"]["metrics"][metric], label=metric)
             # if not ax.get_title():
     
-    for ax_index, metric in enumerate(["Loss", "Accuracy"]):
+    for ax_index, metric in enumerate(["Loss", "Accuracy", "Validation Loss", "Validation Accuracy"]):
         for i, agent in enumerate(agents.values()):
             ax = axs[ax_index, i]
             ax.set_title(f"{agent.nn.name}: {metric}")
@@ -145,7 +148,7 @@ def plot_metrics_vertical(agents, show_lines):
     plt.savefig(f"{config.save_folder}metrics.png", dpi=600)
     plt.close(fig)
 
-def plot_metrics_horizontal(agents, show_lines):
+"""def plot_metrics_vertical(agents, show_lines):
     loaded = json.loads(open(f"{config.save_folder}save.json", "r").read())
 
     fig, axs = plt.subplots(4, figsize=(15, 15))
@@ -171,7 +174,7 @@ def plot_metrics_horizontal(agents, show_lines):
                 [ax.axvline(np.sum(iterations[:i2 + 1]) - 1, color="black") for i2 in range(len(iterations))]
 
     plt.savefig(f"{config.save_folder}metrics.png", dpi=600)
-    plt.close(fig)
+    plt.close(fig)"""
 
 def log(agents, results, best_agent):
     message = f"""{datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')}:
@@ -182,11 +185,16 @@ best_agent is: {best_agent}
 """
     open(f"{config.save_folder}log.txt", "a").write(message)
 
-for _ in range(config.loop_iterations):
-    self_play(agents[best_agent])
-    (x, y) = retrain_network(agents[-best_agent])
-    plot_metrics_vertical(agents, False)
-    best_agent = evaluate_network(agents, best_agent)
+def main():
+    agents, best_agent = initiate()
+    for _ in range(config.loop_iterations):
+        self_play(agents[best_agent])
+        retrain_network(agents[-best_agent])
+        plot_metrics_horizontal(agents, False)
+        best_agent = evaluate_network(agents, best_agent)
 
-play_versions([(1, 0), (2, 0)], 20)
-play_test(agents[best_agent], config.game_amount_play_test)
+    play_versions([(1, 1), (2, 1)], 20)
+    play_test(agents[best_agent], config.game_amount_play_test)
+
+if __name__ == "__main__":
+    main()
