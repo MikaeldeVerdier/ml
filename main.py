@@ -19,15 +19,15 @@ def initiate():
             positions.write(json.dumps([]))
 
     with open(f"{config.save_folder}save.json", "r") as save_r:
-        match len(loads):
-            case 0:
-                best_agent = 1
-            case 1:
-                best_agent = 1 - 2 * int(loads[0])
-            case 2:
-                best_agent = json.loads(save_r.read())["best_agent"]
-
         loaded = json.loads(save_r.read())
+
+        if not loads:
+            best_agent = 1
+        elif len(loads) == 1:
+            best_agent = 1 - 2 * int(loads[0])
+        else:
+            best_agent = loaded["best_agent"]
+        
         loaded["best_agent"] = best_agent
         for agent in agents.values():
             if not agent.nn.load:
