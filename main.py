@@ -137,7 +137,7 @@ def plot_metrics_horizontal(agents, show_lines):
     with open(f"{config.save_folder}save.json", "r") as save:
         loaded = json.loads(save.read())
 
-        fig, axs = plt.subplots(4, 2, sharey="row", figsize=(25, 14))
+        _, axs = plt.subplots(4, 2, sharey="row", figsize=(25, 14))
         plt.xlabel("Training Iteration")
 
         for i, agent in enumerate(agents.values()):
@@ -161,7 +161,7 @@ def plot_metrics_horizontal(agents, show_lines):
                     [ax.axvline(np.sum(iterations[:i2 + 1]) - 1, color="black") for i2 in range(len(iterations))]
 
         plt.savefig(f"{config.save_folder}metrics.png", dpi=300)
-        plt.close(fig)
+        plt.close("all")
 
 """def plot_metrics_vertical(agents, show_lines):
     loaded = json.loads(open(f"{config.save_folder}save.json", "r").read())
