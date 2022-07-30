@@ -13,10 +13,8 @@ def initiate():
     loads = list(np.where(load[:-1])[0])
 
     if not load[2]:
-        with open(f"{config.save_folder}log.txt", "w") as log:
-            log.truncate(0)
-        with open(f"{config.save_folder}positions.json", "w") as positions:
-            positions.write(json.dumps([]))
+        with open(f"{config.save_folder}log.txt", "w") as log: log.truncate(0)
+        with open(f"{config.save_folder}positions.json", "w") as positions: positions.write(json.dumps([]))
 
     with open(f"{config.save_folder}save.json", "r") as save_r:
         loaded = json.loads(save_r.read())
@@ -78,8 +76,7 @@ def play(players, games, training):
                 loaded += positions
                 loaded = loaded[-config.position_amount:]
                 print(f"Positions length is now {len(loaded)}\n")
-                with open(f"{config.save_folder}positions.json", "w") as positions_w:
-                    positions_w.write(json.dumps(loaded))
+                with open(f"{config.save_folder}positions.json", "w") as positions_w: positions_w.write(json.dumps(loaded))
             
             if len(loaded) != config.position_amount and game_count == games: games += 1
 
