@@ -8,9 +8,9 @@ import game
 from player import *
 
 def initiate():
-    load = [False, False, False]
+    load = [False, True, True]
     agents = {1: Agent(load[0], 1), -1: Agent(load[1], 2)}
-    loads = list(np.where(load)[0])
+    loads = list(np.where(load[:-1])[0])
 
     if not load[2]:
         with open(f"{config.save_folder}log.txt", "w") as log:
@@ -137,7 +137,7 @@ def plot_metrics_horizontal(agents, show_lines):
     with open(f"{config.save_folder}save.json", "r") as save:
         loaded = json.loads(save.read())
 
-        fig, axs = plt.subplots(4, 2, figsize=(25, 14))
+        fig, axs = plt.subplots(4, 2, sharey="row", figsize=(25, 14))
         plt.xlabel("Training Iteration")
 
         for i, agent in enumerate(agents.values()):
@@ -160,7 +160,7 @@ def plot_metrics_horizontal(agents, show_lines):
                     iterations = loaded[f"agent_{agent.nn.name}"]["iterations"]
                     [ax.axvline(np.sum(iterations[:i2 + 1]) - 1, color="black") for i2 in range(len(iterations))]
 
-        plt.savefig(f"{config.save_folder}metrics.png", dpi=600)
+        plt.savefig(f"{config.save_folder}metrics.png", dpi=300)
         plt.close(fig)
 
 """def plot_metrics_vertical(agents, show_lines):
