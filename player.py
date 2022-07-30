@@ -32,7 +32,7 @@ class Agent():
         self.nn = NeuralNetwork(load, name, version)
     
     def get_full_name(self):
-        return (self.nn.name, self.nn.version)
+        return (self.nn.name, self.nn.version - 1)
 
     def play_turn(self, action, tau):
         if action is not None: self.mcts = self.mcts.update_root(action)

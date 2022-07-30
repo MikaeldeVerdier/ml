@@ -10,20 +10,31 @@ from player import *
 def initiate():
     load = [False, False, False]
     agents = {1: Agent(load[0], 1), -1: Agent(load[1], 2)}
-
     loads = list(np.where(load)[0])
-    best_agent = 1 if not loads else json.loads(open(f"{config.save_folder}save.json", "r").read())["best_agent"] if len(loads) == 2 else 1 - 2 * int(loads[0])
-    if not load[2]:
-        open(f"{config.save_folder}log.txt", "w").truncate(0)
-        open(f"{config.save_folder}positions.json", "w").write(json.dumps([]))
 
-    loaded = json.loads(open(f"{config.save_folder}save.json", "r").read())
-    loaded["best_agent"] = best_agent
-    for agent in agents.values():
-        if not agent.nn.load:
-            empty = json.loads(open(f"{config.save_folder}empty_save.json", "r").read())[f"agent_{agent.nn.name}"]
-            loaded[f"agent_{agent.nn.name}"] = empty
-    open(f"{config.save_folder}save.json", "w").write(json.dumps(loaded))
+    if not load[2]:
+        with open(f"{config.save_folder}log.txt", "w") as log:
+            log.truncate(0)
+        with open(f"{config.save_folder}positions.json", "w") as positions:
+            positions.write(json.dumps([]))
+
+    with open(f"{config.save_folder}save.json", "r") as save_r:
+        match len(loads):
+            case 0:
+                best_agent = 1
+            case 1:
+                best_agent = 1 - 2 * int(loads[0])
+            case 2:
+                best_agent = json.loads(save_r.read())["best_agent"]
+
+        loaded = json.loads(save_r.read())
+        loaded["best_agent"] = best_agent
+        for agent in agents.values():
+            if not agent.nn.load:
+                with open(f"{config.save_folder}empty_save.json", "r") as empty_save:
+                    empty = json.loads(empty_save.read())[f"agent_{agent.nn.name}"]
+                    loaded[f"agent_{agent.nn.name}"] = empty
+        with open(f"{config.save_folder}save.json", "w") as save_w: save_w.write(json.dumps(loaded))
 
     return agents, best_agent
 
@@ -61,12 +72,15 @@ def play(players, games, training):
         print(f"Amount of games played is now: {game_count}\n")
 
         if training:
-            positions = [[game.generate_game_state(position[0], mirror).tolist()] + [game.mirror_board(position[1].tolist()) if mirror else position[1].tolist()] + [outcome * position[0].player] for position in training_set for mirror in [False, True]]
-            loaded = json.loads(open(f"{config.save_folder}positions.json", "r").read())
-            loaded += positions
-            loaded = loaded[-config.position_amount:]
-            print(f"Positions length is now {len(loaded)}\n")
-            open(f"{config.save_folder}positions.json", "w").write(json.dumps(loaded))
+            with open(f"{config.save_folder}positions.json", "r") as positions_r:
+                positions = [[game.generate_game_state(position[0], mirror).tolist()] + [game.mirror_board(position[1].tolist()) if mirror else position[1].tolist()] + [outcome * position[0].player] for position in training_set for mirror in [False, True]]
+                loaded = json.loads(positions_r.read())
+                loaded += positions
+                loaded = loaded[-config.position_amount:]
+                print(f"Positions length is now {len(loaded)}\n")
+                with open(f"{config.save_folder}positions.json", "w") as positions_w:
+                    positions_w.write(json.dumps(loaded))
+            
             if len(loaded) != config.position_amount and game_count == games: games += 1
 
     return outcomes
@@ -79,12 +93,13 @@ def self_play(agent):
 
 def retrain_network(agent):
     for _ in range(config.training_iterations):
-        minibatch = random.sample(json.loads(open(f"{config.save_folder}positions.json", "r").read()), config.batch_size)
+        with open(f"{config.save_folder}positions.json", "r") as positions:
+            minibatch = random.sample(json.loads(positions.read()), config.batch_size)
 
-        x = np.array([batch[0] for batch in minibatch])
-        y = {"value_head": np.array([batch[2] for batch in minibatch], dtype="float64"), "policy_head": np.array([batch[1] for batch in minibatch])}
+            x = np.array([batch[0] for batch in minibatch])
+            y = {"value_head": np.array([batch[2] for batch in minibatch], dtype="float64"), "policy_head": np.array([batch[1] for batch in minibatch])}
 
-        agent.nn.train(x, y)
+            agent.nn.train(x, y)
 
     agent.nn.save_progress()
 
@@ -119,34 +134,34 @@ def play_versions(versions, games):
     log(agents, results, best)
 
 def plot_metrics_horizontal(agents, show_lines):
-    loaded = json.loads(open(f"{config.save_folder}save.json", "r").read())
+    with open(f"{config.save_folder}save.json", "r") as save:
+        loaded = json.loads(save.read())
 
-    fig, axs = plt.subplots(4, 2, figsize=(25, 14))
-    plt.xlabel("Training Iteration")
+        fig, axs = plt.subplots(4, 2, figsize=(25, 14))
+        plt.xlabel("Training Iteration")
 
-    for i, agent in enumerate(agents.values()):
-        for metric in loaded[f"agent_{agent.nn.name}"]["metrics"]:
-            ax_index = (2, 3) if "val_" in metric else (0, 1)
-            ax_index = ax_index[0] if "loss" in metric else ax_index[1]
-
-            ax = axs[ax_index, i]
-            ax.plot(loaded[f"agent_{agent.nn.name}"]["metrics"][metric], label=metric)
-            # if not ax.get_title():
-    
-    for ax_index, metric in enumerate(["Loss", "Accuracy", "Validation Loss", "Validation Accuracy"]):
         for i, agent in enumerate(agents.values()):
-            ax = axs[ax_index, i]
-            ax.set_title(f"{agent.nn.name}: {metric}")
-            ax.set_ylabel(metric)
-            box = ax.get_position()
-            ax.set_position([box.x0 * ([0.6, 1] * 2)[i], box.y0, box.width, box.height])
-            ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
-            if show_lines:
-                iterations = loaded[f"agent_{agent.nn.name}"]["iterations"]
-                [ax.axvline(np.sum(iterations[:i2 + 1]) - 1, color="black") for i2 in range(len(iterations))]
+            for metric in loaded[f"agent_{agent.nn.name}"]["metrics"]:
+                ax_index = (2, 3) if "val_" in metric else (0, 1)
+                ax_index = ax_index[0] if "loss" in metric else ax_index[1]
 
-    plt.savefig(f"{config.save_folder}metrics.png", dpi=600)
-    plt.close(fig)
+                ax = axs[ax_index, i]
+                ax.plot(loaded[f"agent_{agent.nn.name}"]["metrics"][metric], label=metric)
+        
+        for ax_index, metric in enumerate(["Loss", "Accuracy", "Validation Loss", "Validation Accuracy"]):
+            for i, agent in enumerate(agents.values()):
+                ax = axs[ax_index, i]
+                ax.set_title(f"{agent.nn.name}: {metric}")
+                ax.set_ylabel(metric)
+                box = ax.get_position()
+                ax.set_position([box.x0 * ([0.6, 1] * 2)[i], box.y0, box.width, box.height])
+                ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
+                if show_lines:
+                    iterations = loaded[f"agent_{agent.nn.name}"]["iterations"]
+                    [ax.axvline(np.sum(iterations[:i2 + 1]) - 1, color="black") for i2 in range(len(iterations))]
+
+        plt.savefig(f"{config.save_folder}metrics.png", dpi=600)
+        plt.close(fig)
 
 """def plot_metrics_vertical(agents, show_lines):
     loaded = json.loads(open(f"{config.save_folder}save.json", "r").read())
@@ -183,7 +198,7 @@ Results are: {results}
 best_agent is: {best_agent}
 ------------------------------------------------------
 """
-    open(f"{config.save_folder}log.txt", "a").write(message)
+    with open(f"{config.save_folder}log.txt", "a") as log: log.write(message)
 
 def main():
     agents, best_agent = initiate()

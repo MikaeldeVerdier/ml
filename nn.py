@@ -17,6 +17,8 @@ class NeuralNetwork:
         self.load = load
         self.name = name
         self.version = version
+
+        self.metrics = {}
         
         self.main_input = Input(shape=game.game_dimensions + (config.depth * 2 + 1,), name="main_input")
 
@@ -30,7 +32,8 @@ class NeuralNetwork:
         self.model.compile(loss={"value_head": "mean_squared_error", "policy_head": self.softmax_cross_entropy_with_logits}, optimizer=SGD(learning_rate=config.lr, momentum=config.momentum), loss_weights={"value_head": 0.5, "policy_head": 0.5}, metrics="accuracy")
         
         if load:
-            if version is None: self.version = json.loads(open(f"{config.save_folder}save.json", "r").read())[f"agent_{self.name}"]["version"]
+            if version is None:
+                with open(f"{config.save_folder}save.json", "r") as save: self.version = json.loads(save.read())[f"agent_{self.name}"]["version"]
             checkpoint_path = f"{config.save_folder}training_{self.name}/v.{self.version - 1}/cp.cpkt"
             self.model.load_weights(checkpoint_path).expect_partial()
             print(f"NN with name: {name} now loaded version: {self.version - 1}")
@@ -41,9 +44,7 @@ class NeuralNetwork:
             except ImportError:
                 print("You need to download pydot and graphviz to plot model.")
 
-        self.model.summary()
-
-        self.metrics = {}
+        # self.model.summary()
 
     def softmax_cross_entropy_with_logits(self, y_true, y_pred):
         p = y_pred
@@ -101,18 +102,19 @@ class NeuralNetwork:
             [self.metrics[metric].append(fit.history[metric][i]) for i in range(config.epochs)]
 
     def save_progress(self, best_agent=None):
-        loaded = json.loads(open(f"{config.save_folder}save.json", "r").read())
-        
-        if best_agent: loaded["best_agent"] = best_agent
-        else:
-            self.version += 1
-            loaded[f"agent_{self.name}"]["version"] = self.version
-            loaded[f"agent_{self.name}"]["iterations"].append(config.training_iterations * config.epochs)
-            for metric in self.metrics: loaded[f"agent_{self.name}"]["metrics"][metric] += self.metrics[metric]
-            self.metrics = {}
-            self.load = True
+        with open(f"{config.save_folder}save.json", "r") as save_r:
+            loaded = json.loads(save_r.read())
+            
+            if best_agent: loaded["best_agent"] = best_agent
+            else:
+                self.version += 1
+                loaded[f"agent_{self.name}"]["version"] = self.version
+                loaded[f"agent_{self.name}"]["iterations"].append(config.training_iterations * config.epochs)
+                for metric in self.metrics: loaded[f"agent_{self.name}"]["metrics"][metric] += self.metrics[metric]
+                self.metrics = {}
+                self.load = True
 
-        open(f"{config.save_folder}save.json", "w").write(json.dumps(loaded))
+            with open(f"{config.save_folder}save.json", "w") as save_w: save_w.write(json.dumps(loaded))
 
     def get_preds(self, node):
         data = np.expand_dims(game.generate_game_state(node, False), axis=0)
