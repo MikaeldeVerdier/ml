@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import random
 import json
 import datetime
+import time
 import config
 import game
 from player import *
@@ -131,7 +132,7 @@ def plot_metrics_horizontal(agents, show_lines):
     with open(f"{config.SAVE_FOLDER}save.json", "r") as save:
         loaded = json.loads(save.read())
 
-        _, axs = plt.subplots(4, 2, sharey="row", figsize=(25, 14))
+        _, axs = plt.subplots(4, 2, sharey="row", figsize=(25, 15))
         plt.xlabel("Training Iteration")
 
         for i, agent in enumerate(agents.values()):
@@ -154,7 +155,10 @@ def plot_metrics_horizontal(agents, show_lines):
                     iterations = loaded[f"agent_{agent.nn.name}"]["iterations"]
                     [ax.axvline(np.sum(iterations[:i2 + 1]) - 1, color="black") for i2 in range(len(iterations))]
 
+        plt.show(block=False)
         plt.savefig(f"{config.SAVE_FOLDER}metrics.png", dpi=300)
+        time.sleep(1)
+        plt.pause(0.1)
         plt.close("all")
 
 def log(agents, results, best_agent):
