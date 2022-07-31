@@ -20,27 +20,27 @@ class NeuralNetwork:
 
         self.metrics = {}
         
-        self.main_input = Input(shape=game.game_dimensions + (config.depth * 2 + 1,), name="main_input")
+        self.main_input = Input(shape=game.GAME_DIMENSIONS + (config.DEPTH * 2 + 1,), name="main_input")
 
-        x = self.convolutional_layer(self.main_input, config.convolutional_layer["filter_amount"], config.convolutional_layer["kernel_size"])
-        for _ in range(config.residual_layer["amount"]): x = self.residual_layer(x, config.residual_layer["filter_amount"], config.residual_layer["kernel_size"])
+        x = self.convolutional_layer(self.main_input, config.CONVOLUTIONAL_LAYER["filter_amount"], config.CONVOLUTIONAL_LAYER["kernel_size"])
+        for _ in range(config.RESIDUAL_LAYER["amount"]): x = self.residual_layer(x, config.RESIDUAL_LAYER["filter_amount"], config.RESIDUAL_LAYER["kernel_size"])
 
         vh = self.value_head(x)
         ph = self.policy_head(x)
 
         self.model = Model(inputs=[self.main_input], outputs=[vh, ph])
-        self.model.compile(loss={"value_head": "mean_squared_error", "policy_head": self.softmax_cross_entropy_with_logits}, optimizer=SGD(learning_rate=config.lr, momentum=config.momentum), loss_weights={"value_head": 0.5, "policy_head": 0.5}, metrics="accuracy")
+        self.model.compile(loss={"value_head": "mean_squared_error", "policy_head": self.softmax_cross_entropy_with_logits}, optimizer=SGD(learning_rate=config.LEARNING_RATE, momentum=config.MOMENTUM), loss_weights={"value_head": 0.5, "policy_head": 0.5}, metrics="accuracy")
         
         if load:
             if version is None:
-                with open(f"{config.save_folder}save.json", "r") as save: self.version = json.loads(save.read())[f"agent_{self.name}"]["version"]
-            checkpoint_path = f"{config.save_folder}training_{self.name}/v.{self.version - 1}/cp.cpkt"
+                with open(f"{config.SAVE_FOLDER}save.json", "r") as save: self.version = json.loads(save.read())[f"agent_{self.name}"]["version"]
+            checkpoint_path = f"{config.SAVE_FOLDER}training_{self.name}/v.{self.version - 1}/cp.cpkt"
             self.model.load_weights(checkpoint_path).expect_partial()
             print(f"NN with name: {name} now loaded version: {self.version - 1}")
         else:
             if version is None: self.version = 1
             try:
-                plot_model(self.model, to_file=f"{config.save_folder}model.png", show_shapes=True, show_layer_names=True)
+                plot_model(self.model, to_file=f"{config.SAVE_FOLDER}model.png", show_shapes=True, show_layer_names=True)
             except ImportError:
                 print("You need to download pydot and graphviz to plot model.")
 
@@ -61,60 +61,60 @@ class NeuralNetwork:
         return loss
 
     def convolutional_layer(self, x, filters, kernel_size):
-        x = Conv2D(filters=filters, kernel_size=kernel_size, data_format="channels_last", padding="same", use_bias=False, activation="linear", kernel_regularizer=regularizers.l2(config.reg_const))(x)
+        x = Conv2D(filters=filters, kernel_size=kernel_size, data_format="channels_last", padding="same", use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         x = BatchNormalization(axis=3)(x)
         x = LeakyReLU()(x)
         return (x)
 
     def residual_layer(self, input_block, filters, kernel_size):
         x = self.convolutional_layer(input_block, filters, kernel_size)
-        x = Conv2D(filters=filters, kernel_size=kernel_size, data_format="channels_last", padding="same", use_bias=False, activation="linear", kernel_regularizer=regularizers.l2(config.reg_const))(x)
+        x = Conv2D(filters=filters, kernel_size=kernel_size, data_format="channels_last", padding="same", use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         x = BatchNormalization(axis=3)(x)
         x = add([input_block, x])
         x = LeakyReLU()(x)
         return (x)
 
     def value_head(self, x):
-        x = Conv2D(filters=1, kernel_size=(1, 1), data_format="channels_last", padding="same", use_bias=False, activation="linear", kernel_regularizer=regularizers.l2(config.reg_const))(x)
+        x = Conv2D(filters=1, kernel_size=(1, 1), data_format="channels_last", padding="same", use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         x = BatchNormalization(axis=3)(x)
         x = LeakyReLU()(x)
         x = Flatten()(x)
-        x = Dense(config.dense_value_head, use_bias=False, activation="linear", kernel_regularizer=regularizers.l2(config.reg_const))(x)
+        x = Dense(config.DENSE_VALUE_HEAD, use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         x = LeakyReLU()(x)
-        x = Dense(1, use_bias=False, activation="tanh", kernel_regularizer=regularizers.l2(config.reg_const), name="value_head")(x)
+        x = Dense(1, use_bias=config.USE_BIAS, activation="tanh", kernel_regularizer=regularizers.l2(config.REG_CONST), name="value_head")(x)
         return (x)
 
     def policy_head(self, x):
-        x = Conv2D(filters=2, kernel_size=(1, 1), data_format="channels_last", padding="same", use_bias=False, activation="linear", kernel_regularizer=regularizers.l2(config.reg_const))(x)
+        x = Conv2D(filters=2, kernel_size=(1, 1), data_format="channels_last", padding="same", use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         x = BatchNormalization(axis=3)(x)
         x = LeakyReLU()(x)
         x = Flatten()(x)
-        x = Dense(np.prod(game.game_dimensions), use_bias=False, activation="linear", kernel_regularizer=regularizers.l2(config.reg_const), name="policy_head")(x)
+        x = Dense(np.prod(game.GAME_DIMENSIONS), use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST), name="policy_head")(x)
         return (x)
 
     def train(self, x, y):
-        checkpoint_path = f"{config.save_folder}training_{self.name}/v.{self.version}/cp.cpkt"
+        checkpoint_path = f"{config.SAVE_FOLDER}training_{self.name}/v.{self.version}/cp.cpkt"
         cp_callback = ModelCheckpoint(filepath=checkpoint_path, save_weights_only=True, verbose=1)
 
-        fit = self.model.fit(x, y, batch_size=config.batch_size, epochs=config.epochs, verbose=1, validation_split=config.validation_split, callbacks=[cp_callback])
+        fit = self.model.fit(x, y, batch_size=config.BATCH_SIZE, epochs=config.EPOCHS, verbose=1, validation_split=config.VALIDATION_SPLIT, callbacks=[cp_callback])
         for metric in fit.history:
             if metric not in self.metrics: self.metrics[metric] = []
-            [self.metrics[metric].append(fit.history[metric][i]) for i in range(config.epochs)]
+            [self.metrics[metric].append(fit.history[metric][i]) for i in range(config.EPOCHS)]
 
     def save_progress(self, best_agent=None):
-        with open(f"{config.save_folder}save.json", "r") as save_r:
+        with open(f"{config.SAVE_FOLDER}save.json", "r") as save_r:
             loaded = json.loads(save_r.read())
             
             if best_agent: loaded["best_agent"] = best_agent
             else:
                 self.version += 1
                 loaded[f"agent_{self.name}"]["version"] = self.version
-                loaded[f"agent_{self.name}"]["iterations"].append(config.training_iterations * config.epochs)
+                loaded[f"agent_{self.name}"]["iterations"].append(config.TRAINING_ITERATIONS * config.EPOCHS)
                 for metric in self.metrics: loaded[f"agent_{self.name}"]["metrics"][metric] += self.metrics[metric]
                 self.metrics = {}
                 self.load = True
 
-            with open(f"{config.save_folder}save.json", "w") as save_w: save_w.write(json.dumps(loaded))
+            with open(f"{config.SAVE_FOLDER}save.json", "w") as save_w: save_w.write(json.dumps(loaded))
 
     def get_preds(self, node):
         data = np.expand_dims(game.generate_game_state(node, False), axis=0)

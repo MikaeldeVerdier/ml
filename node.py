@@ -17,16 +17,16 @@ class Node:
         self.prior = prior
 
     def u(self):
-        return config.cpuct * self.prior * np.sqrt((np.log(self.parent.n) if self.parent.n != 0 else 0) / (1 + self.n))
+        return config.CPUCT * self.prior * np.sqrt((np.log(self.parent.n) if self.parent.n != 0 else 0) / (1 + self.n))
 
     def u2(self, epsilon, nuidx):
-        return config.cpuct * ((1 - epsilon) * self.prior + nuidx * epsilon) * np.sqrt(self.parent.n) / (1 + self.n)
+        return config.CPUCT * ((1 - epsilon) * self.prior + nuidx * epsilon) * np.sqrt(self.parent.n) / (1 + self.n)
 
     def update_root(self, action):
         if not self.children:
             root = Node(game.move(self.s.copy(), action, self.player), self, action, -self.player, 0)
             self.children.append(root)
-        else: root = self.children[action % game.move_amount]
+        else: root = self.children[action % game.MOVE_AMOUNT]
 
         return root
 
@@ -62,7 +62,7 @@ class Node:
             if action != -1:
                 new_state = game.move(self.s.copy(), action, self.player)
                 child_node = Node(new_state, self, action, -self.player, prior[action])
-            else: child_node = Node(np.full(np.prod(game.game_dimensions), 2), self, -1, 0, -9999)
+            else: child_node = Node(np.full(np.prod(game.GAME_DIMENSIONS), 2), self, -1, 0, -9999)
                 
             self.children.append(child_node)
 
@@ -71,8 +71,8 @@ class Node:
 
     def probabilities2(self, is_root):
         if is_root:
-            epsilon = config.epsilon
-            nu = np.random.dirichlet([config.alpha] * len(self.children))
+            epsilon = config.EPSILON
+            nu = np.random.dirichlet([config.ALPHA] * len(self.children))
         else:
             epsilon = 0
             nu = [0] * len(self.children)
