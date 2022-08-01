@@ -34,15 +34,15 @@ def initiate():
 
     return agents, best_agent
 
-def setup_mcts(players, starts):
-    for player in players.values(): player.mcts = Node(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], None, None, starts, None)
+def setup_mcts(players):
+    for player in players.values(): player.mcts = Node(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], None, None, 1, None)
 
 def play(players, games, training):
     game_count = 0
     outcomes = [0, 0, 0]
     starts = 1
     while game_count < games:
-        setup_mcts(players, starts)
+        setup_mcts(players)
         action = None
         player_turn = starts
         turn = 1
@@ -60,11 +60,11 @@ def play(players, games, training):
             player_turn *= -1
 
         game_count += 1
-        outcomes[outcome] += 1
+        outcomes[outcome * starts] += 1
         starts *= -1
 
         print(f"We are " + ("training" if training else "evaluating"))
-        print(f"Game outcome was: {outcome}")
+        print(f"Game outcome was: {outcome} (Agent: {outcome * -starts})")
         print(f"Amount of games played is now: {game_count}\n")
 
         if training:
