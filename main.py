@@ -67,15 +67,10 @@ def play(players, games, training):
         print(f"Amount of games played is now: {game_count}\n")
 
         if training:
-            with open(f"{config.SAVE_FOLDER}positions.json", "r") as positions_r:
-                positions = [[game.generate_game_state(position[0], mirror).tolist()] + [game.mirror_board(position[1].tolist()) if mirror else position[1].tolist()] + [outcome * position[0].player] for position in training_set for mirror in [False, True]]
-                loaded = json.loads(positions_r.read())
-                loaded += positions
-                loaded = loaded[-config.POSITION_AMOUNT:]
-                print(f"Positions length is now {len(loaded)}\n")
-                with open(f"{config.SAVE_FOLDER}positions.json", "w") as positions_w: positions_w.write(json.dumps(loaded))
+            positions = [[game.generate_game_state(position[0], mirror).tolist()] + [game.mirror_board(position[1].tolist()) if mirror else position[1].tolist()] + [outcome * position[0].player] for position in training_set for mirror in [False, True]]
+            full = append_positions(positions)
             
-            if len(loaded) != config.POSITION_AMOUNT and game_count == games: games += 1
+            if not full and game_count == games: games += 1
 
     return outcomes
 
@@ -161,6 +156,15 @@ def plot_metrics_horizontal(agents, show_lines):
         plt.pause(0.1)
         plt.close("all")
 
+def append_positions(positions):
+    with open(f"{config.SAVE_FOLDER}positions.json", "r") as positions_r:
+        loaded = json.loads(positions_r.read())
+        loaded += positions
+        loaded = loaded[-config.POSITION_AMOUNT:]
+        print(f"Positions length is now {len(loaded)}\n")
+        with open(f"{config.SAVE_FOLDER}positions.json", "w") as positions_w: positions_w.write(json.dumps(loaded))
+        return len(loaded) == config.POSITION_AMOUNT
+
 def log(agents, results, best_agent):
     message = f"""{datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')}:
 ------------------ {agents[1].get_full_name()} vs {agents[-1].get_full_name()} ------------------
@@ -179,8 +183,9 @@ def main():
         plot_metrics_horizontal(agents, False)
         best_agent = evaluate_network(agents, best_agent)
 
-    play_versions([(1, 1), (2, 1)], config.GAME_AMOUNT_PLAY_VERSIONS)
-    play_test(agents[best_agent], config.GAME_AMOUNT_PLAY_TEST)
+    # play_versions([(1, 1), (2, 1)], config.GAME_AMOUNT_PLAY_VERSIONS)
+    # play_test(agents[best_agent], config.GAME_AMOUNT_PLAY_TEST)
+    # with open("poss.json", "r") as poss: append_positions(json.loads(poss.read()))
 
 if __name__ == "__main__":
     main()
