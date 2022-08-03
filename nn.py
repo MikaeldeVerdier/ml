@@ -1,3 +1,4 @@
+from functools import cache
 import numpy as np
 import json
 import config
@@ -34,6 +35,7 @@ class NeuralNetwork:
         if load:
             if version is None:
                 with open(f"{config.SAVE_FOLDER}save.json", "r") as save: self.version = json.loads(save.read())[f"agent_{self.name}"]["version"]
+            else: self.version = version + 1
             checkpoint_path = f"{config.SAVE_FOLDER}training_{self.name}/v.{self.version - 1}/cp.cpkt"
             self.model.load_weights(checkpoint_path).expect_partial()
             print(f"NN with name: {name} now loaded version: {self.version - 1}")
@@ -45,6 +47,9 @@ class NeuralNetwork:
                 print("You need to download pydot and graphviz to plot model.")
 
         # self.model.summary()
+
+    def __hash__(self):
+        return hash((self.name, self.version - 1))
 
     def softmax_cross_entropy_with_logits(self, y_true, y_pred):
         p = y_pred
@@ -93,6 +98,8 @@ class NeuralNetwork:
         return (x)
 
     def train(self, x, y):
+        self.get_preds.cache_clear()
+
         checkpoint_path = f"{config.SAVE_FOLDER}training_{self.name}/v.{self.version}/cp.cpkt"
         cp_callback = ModelCheckpoint(filepath=checkpoint_path, save_weights_only=True, verbose=1)
 
@@ -116,6 +123,7 @@ class NeuralNetwork:
 
             with open(f"{config.SAVE_FOLDER}save.json", "w") as save_w: save_w.write(json.dumps(loaded))
 
+    @cache
     def get_preds(self, node):
         data = np.expand_dims(game.generate_game_state(node, False), axis=0)
         (v, p) = self.model.predict(data)

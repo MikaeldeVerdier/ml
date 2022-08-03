@@ -3,13 +3,12 @@ import matplotlib.pyplot as plt
 import random
 import json
 import datetime
-import time
 import config
 import game
 from player import *
 
 def initiate():
-    load = [False, False, False]
+    load = [True, True, True]
     agents = {1: Agent(load[0], 1), -1: Agent(load[1], 2)}
     loads = list(np.where(load[:-1])[0])
 
@@ -137,11 +136,14 @@ def plot_metrics_horizontal(agents, show_lines):
 
         for i, agent in enumerate(agents.values()):
             for metric in loaded[f"agent_{agent.nn.name}"]["metrics"]:
-                ax_index = (2, 3) if "val_" in metric else (0, 1)
-                ax_index = ax_index[0] if "loss" in metric else ax_index[1]
+                data = loaded[f"agent_{agent.nn.name}"]["metrics"][metric]
+                if data:
+                    ax_index = (2, 3) if "val_" in metric else (0, 1)
+                    ax_index = ax_index[0] if "loss" in metric else ax_index[1]
+                    ax = axs[ax_index, i]
 
-                ax = axs[ax_index, i]
-                ax.plot(loaded[f"agent_{agent.nn.name}"]["metrics"][metric], label=metric)
+                    ax.plot(data, label=metric)
+                    ax.axhline(data[-1], color="black", linestyle=":")
         
         for ax_index, metric in enumerate(["Loss", "Accuracy", "Validation Loss", "Validation Accuracy"]):
             for i, agent in enumerate(agents.values()):
@@ -153,11 +155,9 @@ def plot_metrics_horizontal(agents, show_lines):
                 ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
                 if show_lines:
                     iterations = loaded[f"agent_{agent.nn.name}"]["iterations"]
-                    [ax.axvline(np.sum(iterations[:i2 + 1]) - 1, color="black") for i2 in range(len(iterations))]
+                    [ax.axvline(np.sum(iterations[:i2 + 1]) - 1, color="black", linestyle=":") for i2 in range(len(iterations))]
 
-        plt.show(block=False)
         plt.savefig(f"{config.SAVE_FOLDER}metrics.png", dpi=300)
-        time.sleep(1)
         plt.pause(0.1)
         plt.close("all")
 
@@ -172,13 +172,16 @@ best_agent is: {best_agent}
 
 def main():
     agents, best_agent = initiate()
+    
+    best_agent = evaluate_network(agents, best_agent)
+    
     for _ in range(config.LOOP_ITERATIONS):
         self_play(agents[best_agent])
         retrain_network(agents[-best_agent])
         plot_metrics_horizontal(agents, False)
         best_agent = evaluate_network(agents, best_agent)
 
-    play_versions([(1, 1), (2, 1)], 20)
+    play_versions([(1, 1), (2, 1)], config.GAME_AMOUNT_PLAY_VERSIONS)
     play_test(agents[best_agent], config.GAME_AMOUNT_PLAY_TEST)
 
 if __name__ == "__main__":

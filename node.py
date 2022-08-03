@@ -15,6 +15,9 @@ class Node:
         self.w = 0
         self.q = 0
         self.prior = prior
+    
+    def __hash__(self):
+        return hash(tuple(self.s))
 
     def u(self):
         return config.CPUCT * self.prior * np.sqrt((np.log(self.parent.n) if self.parent.n != 0 else 0) / (1 + self.n))
@@ -50,14 +53,12 @@ class Node:
             root = root.children[np.random.choice(np.flatnonzero(p == np.max(p)))]
         outcome = game.check_game_over(root.s)
         if outcome is None:
-            root.expand_fully(nn)
-            v = nn.get_preds(root)[0]
+            (v, p) = nn.get_preds(root)
+            root.expand_fully(p)
         else: v = outcome
         if root.parent: root.backfill(v)
 
-    def expand_fully(self, nn):
-        prior = nn.get_preds(self)[1]
-        
+    def expand_fully(self, prior):
         for action in game.get_legal_moves(self.s):
             if action != -1:
                 new_state = game.move(self.s.copy(), action, self.player)
