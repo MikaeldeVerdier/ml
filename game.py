@@ -17,7 +17,7 @@ def generate_game_state(node, mirror):
             board_history.append(position.reshape(GAME_DIMENSIONS))
             if node.parent and node.parent.parent:
                 node = node.parent.parent
-    board_history.append(np.array([[[node.player + 1]] * GAME_DIMENSIONS[1]] * GAME_DIMENSIONS[0]))
+    # board_history.append(np.array([[[node.player + 1]] * GAME_DIMENSIONS[1]] * GAME_DIMENSIONS[0]))
     game_state = np.moveaxis(np.array(board_history), 0, -1)
     return game_state
 

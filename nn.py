@@ -21,7 +21,7 @@ class NeuralNetwork:
 
         self.metrics = {}
         
-        self.main_input = Input(shape=game.GAME_DIMENSIONS + (config.DEPTH * 2 + 1,), name="main_input")
+        self.main_input = Input(shape=game.GAME_DIMENSIONS + (config.DEPTH * 2,), name="main_input")
 
         x = self.convolutional_layer(self.main_input, config.CONVOLUTIONAL_LAYER["filter_amount"], config.CONVOLUTIONAL_LAYER["kernel_size"])
         for _ in range(config.RESIDUAL_LAYER["amount"]): x = self.residual_layer(x, config.RESIDUAL_LAYER["filter_amount"], config.RESIDUAL_LAYER["kernel_size"])
