@@ -8,7 +8,7 @@ import game
 from player import *
 
 def initiate():
-    load = [True, True, True]
+    load = [False, False, False]
     agents = {1: Agent(load[0], 1), -1: Agent(load[1], 2)}
     loads = list(np.where(load[:-1])[0])
 
@@ -172,9 +172,7 @@ best_agent is: {best_agent}
 
 def main():
     agents, best_agent = initiate()
-    
-    best_agent = evaluate_network(agents, best_agent)
-    
+        
     for _ in range(config.LOOP_ITERATIONS):
         self_play(agents[best_agent])
         retrain_network(agents[-best_agent])

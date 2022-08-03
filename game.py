@@ -17,20 +17,12 @@ def generate_game_state(node, mirror):
             board_history.append(position.reshape(GAME_DIMENSIONS))
             if node.parent and node.parent.parent:
                 node = node.parent.parent
-    board_history.append(np.array([[{1: 0, -1: 1}[node.player]] * GAME_DIMENSIONS[1]] * GAME_DIMENSIONS[0]))
+    board_history.append(np.array([[[node.player + 1]] * GAME_DIMENSIONS[1]] * GAME_DIMENSIONS[0]))
     game_state = np.moveaxis(np.array(board_history), 0, -1)
     return game_state
 
 def mirror_board(board):
-    """b = []
-    for z in range(GAME_DIMENSIONS[0]):
-        for x in range(GAME_DIMENSIONS[1] - 1, -1, -1):
-            print(x + z * GAME_DIMENSIONS[1])
-            b.append(board[x + z * GAME_DIMENSIONS[1]])"""
-    
-    mirrored_board = [board[x + z * GAME_DIMENSIONS[1]] for z in range(GAME_DIMENSIONS[0]) for x in range(GAME_DIMENSIONS[1] - 1, -1, -1)]
-
-    return mirrored_board
+    return [board[x + z * GAME_DIMENSIONS[1]] for z in range(GAME_DIMENSIONS[0]) for x in range(GAME_DIMENSIONS[1] - 1, -1, -1)]
 
 def get_legal_moves(board):
     if MOVE_AMOUNT != np.prod(GAME_DIMENSIONS):
