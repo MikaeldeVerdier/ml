@@ -67,7 +67,7 @@ def play(players, games, training):
         print(f"Amount of games played is now: {game_count}\n")
 
         if training:
-            positions = [[game.generate_game_state(position[0], mirror).tolist()] + [game.mirror_board(position[1].tolist()) if mirror else position[1].tolist()] + [outcome * position[0].player] for position in training_set for mirror in [False, True]]
+            positions = [[game.generate_tutorial_game_state(position[0], mirror).tolist()] + [game.mirror_board(position[1].tolist()) if mirror else position[1].tolist()] + [outcome * position[0].player] for position in training_set for mirror in [False, True]]
             full = append_positions(positions)
             
             if not full and game_count == games: games += 1

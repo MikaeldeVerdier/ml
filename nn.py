@@ -125,7 +125,7 @@ class NeuralNetwork:
 
     @cache
     def get_preds(self, node):
-        data = np.expand_dims(game.generate_game_state(node, False), axis=0)
+        data = np.expand_dims(game.generate_tutorial_game_state(node, False), axis=0)
         (v, p) = self.model.predict(data)
 
         logits = p[0]
