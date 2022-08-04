@@ -16,7 +16,6 @@ try:
 except ImportError:
     def cache(f):
         cache = {}
-        caching.cache_clear = cache.clear
 
         def caching(nn, data):
             cache_ref = hash((nn, data))
@@ -25,6 +24,8 @@ except ImportError:
             v = f(nn, data)
             cache[cache_ref] = v
             return v
+
+        caching.cache_clear = cache.clear
 
         return caching
 
