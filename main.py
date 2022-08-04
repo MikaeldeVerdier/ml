@@ -68,11 +68,20 @@ def play(players, games, training):
 
         if training:
             positions = [[game.generate_tutorial_game_state(position[0], mirror).tolist()] + [game.mirror_board(position[1].tolist()) if mirror else position[1].tolist()] + [outcome * position[0].player] for position in training_set for mirror in [False, True]]
-            full = append_positions(positions)
+            is_full = append_positions(positions)
             
-            if not full and game_count == games: games += 1
+            if not is_full and game_count == games: games += 1
 
     return outcomes
+
+def append_positions(positions):
+    with open(f"{config.SAVE_FOLDER}positions.json", "r") as positions_r:
+        loaded = json.loads(positions_r.read())
+        loaded += positions
+        loaded = loaded[-config.POSITION_AMOUNT:]
+        print(f"Positions length is now {len(loaded)}\n")
+        with open(f"{config.SAVE_FOLDER}positions.json", "w") as positions_w: positions_w.write(json.dumps(loaded))
+        return len(loaded) == config.POSITION_AMOUNT
 
 def self_play(agent):
     copyAgent = Agent(agent.nn.load, agent.nn.name)
@@ -103,6 +112,15 @@ def evaluate_network(agents, best_agent):
     log(agents, results, best_agent)
 
     return best_agent
+
+def log(agents, results, best_agent):
+    message = f"""{datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')}:
+------------------ {agents[1].get_full_name()} vs {agents[-1].get_full_name()} ------------------
+Results are: {results}
+best_agent is: {best_agent}
+------------------------------------------------------
+"""
+    with open(f"{config.SAVE_FOLDER}log.txt", "a") as log: log.write(message)
     
 def play_test(agent, games):
     you = User()
@@ -155,24 +173,6 @@ def plot_metrics_horizontal(agents, show_lines):
         plt.savefig(f"{config.SAVE_FOLDER}metrics.png", dpi=300)
         plt.pause(0.1)
         plt.close("all")
-
-def append_positions(positions):
-    with open(f"{config.SAVE_FOLDER}positions.json", "r") as positions_r:
-        loaded = json.loads(positions_r.read())
-        loaded += positions
-        loaded = loaded[-config.POSITION_AMOUNT:]
-        print(f"Positions length is now {len(loaded)}\n")
-        with open(f"{config.SAVE_FOLDER}positions.json", "w") as positions_w: positions_w.write(json.dumps(loaded))
-        return len(loaded) == config.POSITION_AMOUNT
-
-def log(agents, results, best_agent):
-    message = f"""{datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')}:
------------------- {agents[1].get_full_name()} vs {agents[-1].get_full_name()} ------------------
-Results are: {results}
-best_agent is: {best_agent}
-------------------------------------------------------
-"""
-    with open(f"{config.SAVE_FOLDER}log.txt", "a") as log: log.write(message)
 
 def main():
     agents, best_agent = initiate()

@@ -24,17 +24,17 @@ def generate_game_state(node, mirror):
 def generate_tutorial_game_state(node, mirror):
     position = []
     for player in [1, -1]:
-        s = node.s if not mirror else mirror_board(node.s)
+        s = node.s if not mirror else np.array(mirror_board(node.s))
         player_position = np.zeros(len(s))
         player_position[s == player] = 1
 
         position += player_position.tolist()
 
-    position = np.array(position).reshape((GAME_DIMENSIONS + (2,)))
+    position = np.reshape(position, (GAME_DIMENSIONS + (2,)))
     return position
 
 def mirror_board(board):
-    return np.array([board[x + z * GAME_DIMENSIONS[1]] for z in range(GAME_DIMENSIONS[0]) for x in range(GAME_DIMENSIONS[1] - 1, -1, -1)])
+    return [board[x + z * GAME_DIMENSIONS[1]] for z in range(GAME_DIMENSIONS[0]) for x in range(GAME_DIMENSIONS[1] - 1, -1, -1)]
 
 def get_legal_moves(board):
     if MOVE_AMOUNT != np.prod(GAME_DIMENSIONS):

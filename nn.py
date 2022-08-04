@@ -1,4 +1,3 @@
-from functools import cache
 import numpy as np
 import json
 import config
@@ -10,6 +9,22 @@ from tensorflow.keras.layers import Input, Dense, Conv2D, Flatten, BatchNormaliz
 from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.callbacks import ModelCheckpoint
 from keras.utils.vis_utils import plot_model
+
+try:
+    from functools import cache
+except ImportError:
+    def cache(f):
+        cache = {}
+
+        def caching(nn, data):
+            cache_ref = hash(nn) + hash(data)
+            if cache_ref in cache:
+                return cache[cache_ref]
+            v = f(nn, data)
+            cache[cache_ref] = v
+            return v
+        
+        return caching
 
 class NeuralNetwork:
     def __init__(self, load, name, version):
