@@ -12,18 +12,20 @@ from keras.utils.vis_utils import plot_model
 
 try:
     from functools import cache
+    raise ImportError
 except ImportError:
     def cache(f):
         cache = {}
+        caching.cache_clear = cache.clear
 
         def caching(nn, data):
-            cache_ref = hash(nn) + hash(data)
+            cache_ref = hash((nn, data))
             if cache_ref in cache:
                 return cache[cache_ref]
             v = f(nn, data)
             cache[cache_ref] = v
             return v
-        
+
         return caching
 
 class NeuralNetwork:
