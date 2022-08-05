@@ -1,5 +1,5 @@
 # Main loop
-LOOP_ITERATIONS = 36
+LOOP_ITERATIONS = 50
 
 # Network architecture
 CONVOLUTIONAL_LAYER = {"filter_amount": 75, "kernel_size": (4, 4)}

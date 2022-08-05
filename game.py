@@ -27,7 +27,7 @@ def generate_tutorial_game_state(node, mirror):
     for player in [1, -1]:
         node = root
         for _ in range(config.DEPTH):
-            s = node.s if not mirror else mirror_board(node.s)
+            s = node.s if not mirror else np.array(mirror_board(node.s))
             position = np.zeros(len(s))
             position[s == player] = 1
             board_history += position.tolist()
