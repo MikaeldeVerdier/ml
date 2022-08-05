@@ -8,7 +8,7 @@ import game
 from player import *
 
 def initiate():
-    load = [False, False, True]
+    load = [False, False, False]
     agents = {1: Agent(load[0], 1), -1: Agent(load[1], 2)}
     loads = list(np.where(load[:-1])[0])
 
