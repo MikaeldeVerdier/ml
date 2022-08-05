@@ -165,6 +165,7 @@ def plot_metrics_horizontal(agents, show_lines):
                 ax.set_ylabel(metric)
                 box = ax.get_position()
                 ax.set_position([box.x0 * ([0.6, 1] * 2)[i], box.y0, box.width, box.height])
+                ax.yaxis.set_tick_params(labelbottom=True)
                 ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
                 if show_lines:
                     iterations = loaded[f"agent_{agent.nn.name}"]["iterations"]
