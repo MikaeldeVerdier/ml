@@ -23,7 +23,7 @@ class Node:
         return config.CPUCT * self.prior * np.sqrt((np.log(self.parent.n) if self.parent.n != 0 else 0) / (1 + self.n))
 
     def u2(self, epsilon, nuidx):
-        return config.CPUCT * ((1 - epsilon) * self.prior + nuidx * epsilon) * np.sqrt(self.parent.n) / (1 + self.n)
+        return config.CPUCT * ((1 - epsilon) * self.prior + nuidx * epsilon) * np.sqrt(self.parent.n - 1) / (1 + self.n)
 
     def update_root(self, action):
         if not self.children:
@@ -56,7 +56,7 @@ class Node:
             (v, p) = nn.get_preds(root)
             root.expand_fully(p)
         else: v = outcome
-        if root.parent: root.backfill(v)
+        root.backfill(v)
 
     def expand_fully(self, prior):
         for action in game.get_legal_moves(self.s):

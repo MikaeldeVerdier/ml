@@ -37,8 +37,7 @@ class Agent():
     def play_turn(self, action, tau):
         if action is not None: self.mcts = self.mcts.update_root(action)
         
-        for _ in range(config.MCTS_SIMS):
-            self.mcts.simulate(self.nn)
+        for _ in range(config.MCTS_SIMS): self.mcts.simulate(self.nn)
 
         pi, values = self.getAV(self.mcts, tau)
         
