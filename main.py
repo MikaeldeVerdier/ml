@@ -92,7 +92,7 @@ def self_play(agent):
 def retrain_network(agent):
     for _ in range(config.TRAINING_ITERATIONS):
         with open(f"{config.SAVE_FOLDER}positions.json", "r") as positions:
-            minibatch = random.sample(json.loads(positions.read()), config.BATCH_SIZE)
+            minibatch = json.loads(positions.read()) # random.sample(json.loads(positions.read()), config.BATCH_SIZE)
 
             x = np.array([batch[0] for batch in minibatch])
             y = {"value_head": np.array([batch[2] for batch in minibatch], dtype="float64"), "policy_head": np.array([batch[1] for batch in minibatch])}

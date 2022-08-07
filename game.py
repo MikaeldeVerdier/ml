@@ -24,7 +24,7 @@ def generate_game_state(node, mirror):
 def generate_tutorial_game_state(node, mirror):
     root = node
     board_history = []
-    for player in [1, -1]:
+    for player in [node.player, -node.player]:
         node = root
         for _ in range(config.DEPTH):
             s = node.s if not mirror else np.array(mirror_board(node.s))

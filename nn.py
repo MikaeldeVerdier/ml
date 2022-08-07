@@ -152,7 +152,7 @@ class NeuralNetwork:
         allowed_actions = [move for move in game.get_legal_moves(node.s) if move != -1]
         mask[allowed_actions] = False
 
-        if max(logits) > 85: logits *= 85/max(logits)
+        # if max(logits) > 85: logits *= 85/max(logits)
         logits[mask] = -100
 
         odds = np.exp(logits)
