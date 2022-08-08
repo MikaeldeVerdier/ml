@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import random
 import json
 import datetime
 import config
@@ -132,7 +131,7 @@ def play_test(agent, games):
     log(agents, results, best)
 
 def play_versions(versions, games):
-    agents = {1 - 2 * i: Agent(True, name, version = v) for i, (name, v) in enumerate(versions)}
+    agents = {1 - 2 * i: Agent(True, name, version=v) for i, (name, v) in enumerate(versions)}
     results = play(agents, games, False)
     
     print(f"The results between {versions[0]} and {versions[1]} were: {results}")

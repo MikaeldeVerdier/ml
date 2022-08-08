@@ -17,7 +17,7 @@ class Node:
         self.prior = prior
     
     def __hash__(self):
-        return hash(tuple(self.s))
+        return hash(tuple(self.s) + (self.player,))
 
     def u(self):
         return config.CPUCT * self.prior * np.sqrt((np.log(self.parent.n) if self.parent.n != 0 else 0) / (1 + self.n))
