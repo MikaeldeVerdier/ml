@@ -31,7 +31,7 @@ def generate_tutorial_game_state(node, mirror):
             position = np.zeros(len(s))
             position[s == player] = 1
             board_history += position.tolist()
-            if node.parent and node.parent.parent: node = node.parent.parent
+            if node.parent: node = node.parent
     # board_history.append(np.array([[[node.player + 1]] * GAME_DIMENSIONS[1]] * GAME_DIMENSIONS[0]))
     game_state = np.reshape(board_history, (GAME_DIMENSIONS + (config.DEPTH * 2,)))
     return game_state

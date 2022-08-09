@@ -17,7 +17,12 @@ class Node:
         self.prior = prior
     
     def __hash__(self):
-        return hash(tuple(self.s))
+        node = self
+        result = []
+        for _ in range(config.DEPTH):
+            result.append(tuple(node.s))
+            if node.parent: node = node.parent
+        return hash(tuple(result))
 
     def u(self):
         return config.CPUCT * self.prior * np.sqrt((np.log(self.parent.n) if self.parent.n != 0 else 0) / (1 + self.n))
