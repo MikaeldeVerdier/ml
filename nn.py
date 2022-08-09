@@ -149,8 +149,8 @@ class NeuralNetwork:
         logits = p[0]
 
         mask = np.full(logits.shape, True)
-        allowed_actions = [move for move in game.get_legal_moves(node.s) if move != -1]
-        mask[allowed_actions] = False
+        legal_moves = game.get_legal_moves(node.s, False)
+        mask[legal_moves] = False
 
         if max(logits) > 85: logits *= 85/max(logits)
         logits[mask] = -100

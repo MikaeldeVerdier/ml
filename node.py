@@ -17,7 +17,7 @@ class Node:
         self.prior = prior
     
     def __hash__(self):
-        return hash(tuple(self.s) + (self.player,))
+        return hash(tuple(self.s))
 
     def u(self):
         return config.CPUCT * self.prior * np.sqrt((np.log(self.parent.n) if self.parent.n != 0 else 0) / (1 + self.n))
@@ -59,7 +59,7 @@ class Node:
         root.backfill(v)
 
     def expand_fully(self, prior):
-        for action in game.get_legal_moves(self.s):
+        for action in game.get_legal_moves(self.s, True):
             if action != -1:
                 new_state = game.move(self.s.copy(), action, self.player)
                 child_node = Node(new_state, self, action, -self.player, prior[action])

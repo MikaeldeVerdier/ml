@@ -33,26 +33,28 @@ def initiate():
     return agents, best_agent
 
 def setup_mcts(players):
-    for player in players.values(): player.mcts = Node(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], None, None, 1, None)
+    for player in players: player.mcts = Node(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], None, None, 1, None)
 
 def play(players, games, training):
     game_count = 0
     outcomes = [0, 0, 0]
     starts = 1
     while game_count < games:
-        setup_mcts(players)
+        setup_mcts(set(players.values()))
         action = None
         player_turn = starts
         turn = 1
-        tau = 1 if training else 1e-2
-        if training: training_set = []
+        if training:
+            tau = 1
+            training_set = []
+        else: tau = 1e-2
         outcome = None
         while outcome is None:
             if turn == config.TURNS_UNTIL_TAU: tau = 1e-2
             action, pi = players[player_turn].play_turn(action, tau)
 
             outcome = game.check_game_over(players[player_turn].mcts.s)
-            if training: training_set.append([players[-player_turn].mcts, pi])
+            if training: training_set.append([players[player_turn].mcts.parent, pi])
 
             turn += 1
             player_turn *= -1
@@ -84,7 +86,7 @@ def append_positions(positions):
 
 def self_play(agent):
     copyAgent = Agent(agent.nn.load, agent.nn.name)
-    results = play({1: agent, -1: copyAgent}, config.GAME_AMOUNT_SELF_PLAY, True)
+    results = play({1: agent, -1: agent}, config.GAME_AMOUNT_SELF_PLAY, True)
 
     print(f"The results from self-play were: {results}")
 
