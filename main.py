@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import json
+import random
 import datetime
 import config
 import game
@@ -85,7 +86,6 @@ def append_positions(positions):
         return len(loaded) == config.POSITION_AMOUNT
 
 def self_play(agent):
-    copyAgent = Agent(agent.nn.load, agent.nn.name)
     results = play({1: agent, -1: agent}, config.GAME_AMOUNT_SELF_PLAY, True)
 
     print(f"The results from self-play were: {results}")
@@ -93,7 +93,7 @@ def self_play(agent):
 def retrain_network(agent):
     for _ in range(config.TRAINING_ITERATIONS):
         with open(f"{config.SAVE_FOLDER}positions.json", "r") as positions:
-            minibatch = json.loads(positions.read()) # random.sample(json.loads(positions.read()), config.BATCH_SIZE)
+            minibatch = random.sample(json.loads(positions.read()), config.BATCH_SIZE)
 
             x = np.array([batch[0] for batch in minibatch])
             y = {"value_head": np.array([batch[2] for batch in minibatch], dtype="float64"), "policy_head": np.array([batch[1] for batch in minibatch])}
