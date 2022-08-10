@@ -78,10 +78,10 @@ class Node:
     def probabilities2(self, is_root):
         if is_root:
             epsilon = config.EPSILON
-            nu = np.random.dirichlet([config.ALPHA] * len(self.children))
+            nu = np.random.dirichlet([config.ALPHA] * game.MOVE_AMOUNT)
         else:
             epsilon = 0
-            nu = [0] * len(self.children)
+            nu = [0] * game.MOVE_AMOUNT
         return [child.q + child.u2(epsilon, nu[i]) for i, child in enumerate(self.children)]
 
     """def backfill2(self, v):
@@ -94,6 +94,6 @@ class Node:
         root = self
         while root:
             root.n += 1
-            root.w += v * -root.player
+            root.w += v * self.player * -root.player
             root.q = root.w / root.n
             root = root.parent

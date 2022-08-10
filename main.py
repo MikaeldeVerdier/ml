@@ -2,18 +2,20 @@ import numpy as np
 import matplotlib.pyplot as plt
 import json
 import random
-import shutil
+from shutil import copyfile
 import datetime
 import config
 import game
 from player import *
 
 def initiate():
-    load = [False, False, True]
+    load = [False, False, False]
     agents = {1: Agent(load[0], 1), -1: Agent(load[1], 2)}
     loads = list(np.where(load[:-1])[0])
 
     if not load[2]:
+        copyfile(f"{config.SAVE_FOLDER}log.txt", f"{config.SAVE_FOLDER}log_backup.txt")
+        copyfile(f"{config.SAVE_FOLDER}positions.json", f"{config.SAVE_FOLDER}positions_backup.json")
         with open(f"{config.SAVE_FOLDER}log.txt", "w") as log: log.truncate(0)
         with open(f"{config.SAVE_FOLDER}positions.json", "w") as positions: positions.write(json.dumps([]))
 
@@ -72,7 +74,7 @@ def play(players, games, training):
         if training:
             positions = [[game.generate_tutorial_game_state(position[0], mirror).tolist()] + [game.mirror_board(position[1].tolist()) if mirror else position[1].tolist()] + [outcome * position[0].player] for position in training_set for mirror in [False, True]]
             is_full, recent = append_positions(positions)
-            if recent and is_full: shutil.copyfile(f"{config.SAVE_FOLDER}positions.json", f"{config.SAVE_FOLDER}positions_{config.POSITION_AMOUNT}.json")
+            if recent and is_full: copyfile(f"{config.SAVE_FOLDER}positions.json", f"{config.SAVE_FOLDER}positions_{config.POSITION_AMOUNT}.json")
             
             if not is_full and game_count == games: games += 1
 
