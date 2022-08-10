@@ -72,7 +72,7 @@ def play(players, games, training):
         if training:
             positions = [[game.generate_tutorial_game_state(position[0], mirror).tolist()] + [game.mirror_board(position[1].tolist()) if mirror else position[1].tolist()] + [outcome * position[0].player] for position in training_set for mirror in [False, True]]
             is_full, recent = append_positions(positions)
-            if recent: shutil.copyfile(f"{config.SAVE_FOLDER}positions.json", f"{config.SAVE_FOLDER}positions_{config.POSITION_AMOUNT}.json")
+            if recent and is_full: shutil.copyfile(f"{config.SAVE_FOLDER}positions.json", f"{config.SAVE_FOLDER}positions_{config.POSITION_AMOUNT}.json")
             
             if not is_full and game_count == games: games += 1
 
