@@ -2,13 +2,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 import json
 import random
+import shutil
 import datetime
 import config
 import game
 from player import *
 
 def initiate():
-    load = [False, False, False]
+    load = [False, False, True]
     agents = {1: Agent(load[0], 1), -1: Agent(load[1], 2)}
     loads = list(np.where(load[:-1])[0])
 
@@ -70,7 +71,8 @@ def play(players, games, training):
 
         if training:
             positions = [[game.generate_tutorial_game_state(position[0], mirror).tolist()] + [game.mirror_board(position[1].tolist()) if mirror else position[1].tolist()] + [outcome * position[0].player] for position in training_set for mirror in [False, True]]
-            is_full = append_positions(positions)
+            is_full, recent = append_positions(positions)
+            if recent: shutil.copyfile(f"{config.SAVE_FOLDER}positions.json", f"{config.SAVE_FOLDER}positions_{config.POSITION_AMOUNT}.json")
             
             if not is_full and game_count == games: games += 1
 
@@ -79,11 +81,12 @@ def play(players, games, training):
 def append_positions(positions):
     with open(f"{config.SAVE_FOLDER}positions.json", "r") as positions_r:
         loaded = json.loads(positions_r.read())
+        recent = len(loaded) != config.POSITION_AMOUNT
         loaded += positions
         loaded = loaded[-config.POSITION_AMOUNT:]
         print(f"Positions length is now {len(loaded)}\n")
         with open(f"{config.SAVE_FOLDER}positions.json", "w") as positions_w: positions_w.write(json.dumps(loaded))
-        return len(loaded) == config.POSITION_AMOUNT
+        return len(loaded) == config.POSITION_AMOUNT, recent
 
 def self_play(agent):
     results = play({1: agent, -1: agent}, config.GAME_AMOUNT_SELF_PLAY, True)
