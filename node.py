@@ -60,7 +60,7 @@ class Node:
         if outcome is None:
             (v, p) = nn.get_preds(root)
             root.expand_fully(p)
-        else: v = outcome
+        else: v = outcome * root.player
         root.backfill(v)
 
     def expand_fully(self, prior):
