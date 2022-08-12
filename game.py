@@ -21,17 +21,18 @@ def generate_game_state(node, mirror):
     game_state = np.moveaxis(np.array(board_history), 0, -1)
     return game_state
 
-def generate_tutorial_game_state(node, mirror):
-    root = node
+def generate_tutorial_game_state(nodes, mirror):
+    nodes = (None,) * (config.DEPTH - len(nodes)) + nodes
+    root = nodes[-1]
     board_history = []
-    for player in [node.player, -node.player]:
+    for player in [root.player, -root.player]:
         node = root
-        for _ in range(config.DEPTH):
+        for depth in range(config.DEPTH):
             s = node.s if not mirror else np.array(mirror_board(node.s))
             position = np.zeros(len(s))
             position[s == player] = 1
             board_history += position.tolist()
-            if node.parent: node = node.parent
+            if nodes[-depth - 1]: node = nodes[-depth - 1]
     # board_history.append(np.array([[[node.player + 1]] * GAME_DIMENSIONS[1]] * GAME_DIMENSIONS[0]))
     game_state = np.reshape(board_history, (GAME_DIMENSIONS + (config.DEPTH * 2,)))
     return game_state

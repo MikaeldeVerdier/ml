@@ -18,11 +18,11 @@ except ImportError:
     def cache(f):
         cache = {}
 
-        def caching(nn, data):
-            cache_ref = hash((nn, data))
+        def caching(*args):
+            cache_ref = hash(args)
             if cache_ref in cache:
                 return cache[cache_ref]
-            v = f(nn, data)
+            v = f(*args)
             cache[cache_ref] = v
             return v
 
@@ -141,14 +141,14 @@ class NeuralNetwork:
         write("save.json", json.dumps(loaded))
 
     @cache
-    def get_preds(self, node):
-        data = np.expand_dims(game.generate_tutorial_game_state(node, False), axis=0)
+    def get_preds(self, node, parents):
+        data = np.expand_dims(game.generate_tutorial_game_state((node,) + parents, False), axis=0)
         (v, p) = self.model.predict(data)
 
         logits = p[0]
 
-        # v = [[0.3]]
-        # logits = np.array(list(range(42)))
+        # v = [[0.3]] #
+        # logits = np.array(list(range(42))) #
 
         mask = np.full(logits.shape, True)
         legal_moves = game.get_legal_moves(node.s)

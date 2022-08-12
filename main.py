@@ -4,6 +4,7 @@ import random
 import datetime
 import config
 import game
+from node import *
 from player import *
 from files import *
 
@@ -31,7 +32,7 @@ def initiate():
     return agents, best_agent
 
 def setup_mcts(players):
-    for player in players: player.mcts = Node(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], None, None, 1, None)
+    for player in players: player.mcts = Node(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], None, 1, Tree())
 
 def play(players, games, training):
     game_count = 0
@@ -49,10 +50,12 @@ def play(players, games, training):
         outcome = None
         while outcome is None:
             if turn == config.TURNS_UNTIL_TAU: tau = 1e-2
+            if training: training_set.append([players[player_turn].mcts])
+
             action, pi = players[player_turn].play_turn(action, tau)
 
             outcome = game.check_game_over(players[player_turn].mcts.s)
-            if training: training_set.append([players[player_turn].mcts.parent, pi])
+            if training: training_set[-1].append(pi)
 
             turn += 1
             player_turn *= -1
@@ -66,7 +69,7 @@ def play(players, games, training):
         print(f"Amount of games played is now: {game_count}\n")
 
         if training:
-            positions = [[game.generate_tutorial_game_state(position[0], mirror).tolist()] + [game.mirror_board(position[1].tolist()) if mirror else position[1].tolist()] + [outcome * position[0].player] for position in training_set for mirror in [False, True]]
+            positions = [[game.generate_tutorial_game_state((position[0],), mirror).tolist()] + [game.mirror_board(position[1].tolist()) if mirror else position[1].tolist()] + [outcome * position[0].player] for position in training_set for mirror in [False, True]]
             is_full, recent = add_to_file("positions.json", positions, config.POSITION_AMOUNT)
             if is_full and recent: make_backup("positions.json", f"positions_{config.POSITION_AMOUNT}.json")
             
