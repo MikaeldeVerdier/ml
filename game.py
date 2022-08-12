@@ -39,14 +39,14 @@ def generate_tutorial_game_state(node, mirror):
 def mirror_board(board):
     return [board[x + z * GAME_DIMENSIONS[1]] for z in range(GAME_DIMENSIONS[0]) for x in range(GAME_DIMENSIONS[1] - 1, -1, -1)]
 
-def get_legal_moves(board, all_moves):
+def get_legal_moves(board): # , all_moves):
     if MOVE_AMOUNT != np.prod(GAME_DIMENSIONS):
         legal_moves = []
         for dim1 in range(GAME_DIMENSIONS[1]):
             for dim2 in range(GAME_DIMENSIONS[0]):
                 if board[dim1 + dim2 * GAME_DIMENSIONS[1]] != 0:
                     if dim2 != 0: legal_moves.append(dim1 + (dim2 - 1) * GAME_DIMENSIONS[1])
-                    elif all_moves: legal_moves.append(-1)
+                    # elif all_moves: legal_moves.append(-1)
                     # legal_moves.append(-1 if dim2 == 0 else dim1 + (dim2 - 1) * GAME_DIMENSIONS[1])
                     break
             else: legal_moves.append(dim1 + dim2 * GAME_DIMENSIONS[1])

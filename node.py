@@ -34,7 +34,7 @@ class Node:
         if not self.children:
             root = Node(game.move(self.s.copy(), action, self.player), self, action, -self.player, 0)
             self.children.append(root)
-        else: root = self.children[action % game.MOVE_AMOUNT]
+        else: root = [child for child in self.children if child.parent_action == action][0]
 
         return root
 
@@ -56,6 +56,7 @@ class Node:
         while root.children:
             p = root.probabilities2(root == self)
             root = root.children[np.random.choice(np.flatnonzero(p == np.max(p)))]
+            # root = root.children[np.argmax(p)]
         outcome = game.check_game_over(root.s)
         if outcome is None:
             (v, p) = nn.get_preds(root)
@@ -64,11 +65,12 @@ class Node:
         root.backfill(v)
 
     def expand_fully(self, prior):
-        for action in game.get_legal_moves(self.s, True):
-            if action != -1:
-                new_state = game.move(self.s.copy(), action, self.player)
-                child_node = Node(new_state, self, action, -self.player, prior[action])
-            else: child_node = Node(np.full(np.prod(game.GAME_DIMENSIONS), 2), self, -1, 0, -9999)
+        # for action in sorted(game.get_legal_moves(self.s, False)):
+        for action in game.get_legal_moves(self.s):
+            # if action != -1:
+            new_state = game.move(self.s.copy(), action, self.player)
+            child_node = Node(new_state, self, action, -self.player, prior[action])
+            # else: child_node = Node(np.full(np.prod(game.GAME_DIMENSIONS), 2), self, -1, 0, -9999)
                 
             self.children.append(child_node)
 
@@ -79,9 +81,11 @@ class Node:
         if is_root:
             epsilon = config.EPSILON
             nu = np.random.dirichlet([config.ALPHA] * game.MOVE_AMOUNT)
+            # nu = [0.1] * len(self.children)
         else:
             epsilon = 0
-            nu = [0] * game.MOVE_AMOUNT
+            nu = [0] * len(self.children)
+        # print(self.n - 1)
         return [child.q + child.u2(epsilon, nu[i]) for i, child in enumerate(self.children)]
 
     """def backfill2(self, v):

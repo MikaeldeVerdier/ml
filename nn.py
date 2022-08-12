@@ -2,6 +2,7 @@ import numpy as np
 import json
 import config
 import game
+from files import *
 import tensorflow as tf
 from tensorflow.keras import regularizers
 from tensorflow.keras.models import Model
@@ -51,16 +52,15 @@ class NeuralNetwork:
         self.model.compile(loss={"value_head": "mean_squared_error", "policy_head": self.softmax_cross_entropy_with_logits}, optimizer=SGD(learning_rate=config.LEARNING_RATE, momentum=config.MOMENTUM), loss_weights={"value_head": 0.5, "policy_head": 0.5}, metrics="accuracy")
         
         if load:
-            if version is None:
-                with open(f"{config.SAVE_FOLDER}save.json", "r") as save: self.version = json.loads(save.read())[f"agent_{self.name}"]["version"]
+            if version is None: self.version = load_file("save.json")[f"agent_{self.name}"]["version"]
             else: self.version = version + 1
-            checkpoint_path = f"{config.SAVE_FOLDER}training_{self.name}/v.{self.version - 1}/cp.cpkt"
+            checkpoint_path = f"{config.SAVE_PATH}training_{self.name}/v.{self.version - 1}/cp.cpkt"
             self.model.load_weights(checkpoint_path).expect_partial()
             print(f"NN with name: {name} now loaded version: {self.version - 1}")
         else:
             if version is None: self.version = 1
             try:
-                plot_model(self.model, to_file=f"{config.SAVE_FOLDER}model.png", show_shapes=True, show_layer_names=True)
+                plot_model(self.model, to_file=f"{config.SAVE_PATH}model.png", show_shapes=True, show_layer_names=True)
             except ImportError:
                 print("You need to download pydot and graphviz to plot model.")
 
@@ -118,7 +118,7 @@ class NeuralNetwork:
     def train(self, x, y):
         self.get_preds.cache_clear()
 
-        checkpoint_path = f"{config.SAVE_FOLDER}training_{self.name}/v.{self.version}/cp.cpkt"
+        checkpoint_path = f"{config.SAVE_PATH}training_{self.name}/v.{self.version}/cp.cpkt"
         cp_callback = ModelCheckpoint(filepath=checkpoint_path, save_weights_only=True, verbose=1)
 
         fit = self.model.fit(x, y, batch_size=config.BATCH_SIZE, epochs=config.EPOCHS, verbose=1, validation_split=config.VALIDATION_SPLIT, callbacks=[cp_callback])
@@ -127,19 +127,18 @@ class NeuralNetwork:
             [self.metrics[metric].append(fit.history[metric][i]) for i in range(config.EPOCHS)]
 
     def save_progress(self, best_agent=None):
-        with open(f"{config.SAVE_FOLDER}save.json", "r") as save_r:
-            loaded = json.loads(save_r.read())
-            
-            if best_agent: loaded["best_agent"] = best_agent
-            else:
-                self.version += 1
-                loaded[f"agent_{self.name}"]["version"] = self.version
-                loaded[f"agent_{self.name}"]["iterations"].append(config.TRAINING_ITERATIONS * config.EPOCHS)
-                for metric in self.metrics: loaded[f"agent_{self.name}"]["metrics"][metric] += self.metrics[metric]
-                self.metrics = {}
-                self.load = True
+        loaded = load_file("save.json")
+        
+        if best_agent: loaded["best_agent"] = best_agent
+        else:
+            self.version += 1
+            loaded[f"agent_{self.name}"]["version"] = self.version
+            loaded[f"agent_{self.name}"]["iterations"].append(config.TRAINING_ITERATIONS * config.EPOCHS)
+            for metric in self.metrics: loaded[f"agent_{self.name}"]["metrics"][metric] += self.metrics[metric]
+            self.metrics = {}
+            self.load = True
 
-            with open(f"{config.SAVE_FOLDER}save.json", "w") as save_w: save_w.write(json.dumps(loaded))
+        write("save.json", json.dumps(loaded))
 
     @cache
     def get_preds(self, node):
@@ -148,8 +147,11 @@ class NeuralNetwork:
 
         logits = p[0]
 
+        # v = [[0.3]]
+        # logits = np.array(list(range(42)))
+
         mask = np.full(logits.shape, True)
-        legal_moves = game.get_legal_moves(node.s, False)
+        legal_moves = game.get_legal_moves(node.s)
         mask[legal_moves] = False
 
         if max(logits) > 85: logits *= 85/max(logits)
