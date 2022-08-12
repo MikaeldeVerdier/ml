@@ -59,13 +59,6 @@ class Agent():
 
         pi /= np.sum(pi)
 
-        if pi[0] != pi[0]:
-            a = game.get_legal_moves(root.s)
-            b = game.get_legal_moves(self.mcts.s)
-            c = game.check_game_over(root.s)
-            d = game.check_game_over(self.mcts.s)
-            pass
-
         return pi, values
 
     def choose_action(self, pi, values, tau):
