@@ -130,7 +130,7 @@ def add_to_file(file, content, max_len):
     loaded += content
     loaded = loaded[-max_len:]
     write(file, json.dumps(loaded))
-    return len(loaded) == max_len, recent
+    return len(loaded), recent
 
 def make_backup(file, new_name=None):
     new_name = new_name if new_name else file

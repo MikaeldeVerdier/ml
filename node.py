@@ -3,9 +3,8 @@ import config
 import game
 
 class Node:
-    def __init__(self, state, action, player, tree):
+    def __init__(self, state, player, tree):
         self.s = state
-        self.action = action
         self.player = player
         self.tree = tree
 
@@ -22,7 +21,7 @@ class Node:
             # print("NODE EXISTED")
             new_node = self.tree.get_node(new_state)
         else:
-            new_node = Node(new_state, action, -self.player, self.tree)
+            new_node = Node(new_state, -self.player, self.tree)
             # self.add_node(new_node)
         
         return new_node
@@ -55,7 +54,8 @@ class Node:
             root = edge.out_node
         outcome = game.check_game_over(root.s)
         if outcome is None:
-            (v, p) = nn.get_preds(root, (self,) + tuple(edge.out_node for edge in breadcrumbs))
+            nodes = (self,) + tuple(edge.out_node for edge in breadcrumbs)
+            (v, p) = nn.get_preds(root, nodes)
             root.expand_fully(p)
         else: v = outcome * root.player
         root.backfill(v, breadcrumbs)
@@ -63,7 +63,6 @@ class Node:
     def expand_fully(self, prior):
         # for action in sorted(game.get_legal_moves(self.s)):
         for action in game.get_legal_moves(self.s):
-            # if action != -1:
             new_node = self.create_node(action)
             edge = Edge(self, new_node, action, prior[action])
             self.edges.append(edge)

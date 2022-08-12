@@ -32,7 +32,7 @@ def initiate():
     return agents, best_agent
 
 def setup_mcts(players):
-    for player in players: player.mcts = Node(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], None, 1, Tree())
+    for player in players: player.mcts = Node(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], 1, Tree())
 
 def play(players, games, training):
     game_count = 0
@@ -70,7 +70,10 @@ def play(players, games, training):
 
         if training:
             positions = [[game.generate_tutorial_game_state((position[0],), mirror).tolist()] + [game.mirror_board(position[1].tolist()) if mirror else position[1].tolist()] + [outcome * position[0].player] for position in training_set for mirror in [False, True]]
-            is_full, recent = add_to_file("positions.json", positions, config.POSITION_AMOUNT)
+            len_file, recent = add_to_file("positions.json", positions, config.POSITION_AMOUNT)
+            print(f"Position length is now: {len_file}")
+
+            is_full = len_file == config.POSITION_AMOUNT
             if is_full and recent: make_backup("positions.json", f"positions_{config.POSITION_AMOUNT}.json")
             
             if not is_full and game_count == games: games += 1
