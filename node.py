@@ -19,7 +19,7 @@ class Node:
     def create_node(self, action):
         new_state = game.move(self.s.copy(), action, self.player)
         if self.tree.check_state(new_state):
-            print("NODE EXISTED")
+            # print("NODE EXISTED")
             new_node = self.tree.get_node(new_state)
         else:
             new_node = Node(new_state, action, -self.player, self.tree)
