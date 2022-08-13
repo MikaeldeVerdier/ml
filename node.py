@@ -47,15 +47,14 @@ class Node:
         root = self
         while root.edges:
             p = root.probabilities2(root == self)
-            # print(p)
             edge = root.edges[np.random.choice(np.flatnonzero(p == np.max(p)))]
             # edge = root.edges[np.argmax(p)]
             breadcrumbs.append(edge)
             root = edge.out_node
         outcome = game.check_game_over(root.s)
         if outcome is None:
-            nodes = (self,) + tuple(edge.out_node for edge in breadcrumbs[:-1])
-            (v, p) = nn.get_preds(root, nodes)
+            nodes = (self,) + tuple(edge.out_node for edge in breadcrumbs)
+            (v, p) = nn.get_preds(nodes)
             root.expand_fully(p)
         else: v = outcome * root.player
         root.backfill(v, breadcrumbs)
@@ -75,7 +74,6 @@ class Node:
         else:
             epsilon = 0
             nu = [0] * len(self.edges)
-        # print(self.n - 1)
         nb = sum(edge.n for edge in self.edges)
         return [edge.q + edge.u(epsilon, nu[i], nb) for i, edge in enumerate(self.edges)]
 

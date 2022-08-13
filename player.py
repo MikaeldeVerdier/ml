@@ -42,9 +42,10 @@ class Agent():
         pi, values = self.getAV(self.mcts, tau)
         
         action, value = self.choose_action(pi, values, tau)
+        # action = sorted(game.get_legal_moves(self.mcts.s))[-1] #
         self.mcts = self.mcts.update_root(action)
 
-        nn_value = -self.nn.get_preds(self.mcts, ())[0]
+        nn_value = -self.nn.get_preds((self.mcts,))[0]
         self.print_move(self.mcts, pi, action, value, nn_value)
 
         return action, pi
