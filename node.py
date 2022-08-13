@@ -54,7 +54,7 @@ class Node:
             root = edge.out_node
         outcome = game.check_game_over(root.s)
         if outcome is None:
-            nodes = (self,) + tuple(edge.out_node for edge in breadcrumbs)
+            nodes = (self,) + tuple(edge.out_node for edge in breadcrumbs[:-1])
             (v, p) = nn.get_preds(root, nodes)
             root.expand_fully(p)
         else: v = outcome * root.player
