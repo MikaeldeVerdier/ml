@@ -90,7 +90,7 @@ def retrain_network(agent):
     agent.nn.version += 1
 
 def evaluate_network(agents):
-    results = [0, 0, 2] # play(agents, config.GAME_AMOUNT_EVALUATION, False)
+    play(agents, config.GAME_AMOUNT_EVALUATION, False)
     print(f"The results were: {results}")
     if results[-1] > results[1] * config.WINNING_THRESHOLD:
         agents[1].nn.copy_weights(agents[-1].nn)

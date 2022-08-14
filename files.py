@@ -3,7 +3,7 @@ import json
 import config
 from shutil import copyfile
 
-EMPTY_SAVE = {
+EMPTY_SAVE = json.dumps({
     "best_version": 0,
     "iterations": [
 
@@ -40,8 +40,8 @@ EMPTY_SAVE = {
 
         ]
     }
-}
-EMPTY_POSITIONS = []
+})
+EMPTY_POSITIONS = json.dumps([])
 EMPTY_LOG = ""
 
 EMPTY_FILES = {"save.json": EMPTY_SAVE, "positions.json": EMPTY_POSITIONS, "log.txt": EMPTY_LOG}
@@ -74,12 +74,12 @@ def load_file(file):
 
 def reset_file(file):
     make_backup(file)
-    write(file, json.dumps(EMPTY_FILES[file]))
+    write(file, EMPTY_FILES[file])
 
 def reset_key(file, key):
     loaded = load_file(file)
     loaded[key] = EMPTY_FILES[file][key]
-    write(file, json.dumps(loaded))
+    write(file, json.loads(loaded))
 
 def add_to_file(file, content, max_len):
     loaded = load_file(file)
