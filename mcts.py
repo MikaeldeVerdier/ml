@@ -2,6 +2,7 @@ import numpy as np
 import game
 import config
 
+
 class Node:
     def __init__(self, state, player, tree):
         self.s = state
@@ -89,6 +90,7 @@ class Node:
             edge.w += v * self.player * edge.player
             edge.q = edge.w / edge.n
 
+
 class Edge:
     def __init__(self, in_node, out_node, action, prior):
         self.in_node = in_node
@@ -103,6 +105,7 @@ class Edge:
 
     def u(self, epsilon, nuidx, nb):
         return config.CPUCT * ((1 - epsilon) * self.p + nuidx * epsilon) * np.sqrt(nb) / (1 + self.n)
+
 
 class Tree:
     def __init__(self):

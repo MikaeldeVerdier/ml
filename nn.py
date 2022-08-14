@@ -15,7 +15,7 @@ from keras.utils.vis_utils import plot_model
 
 try:
     from functools import cache
-    raise ImportError # functools cache is really slow for some reason
+    raise ImportError  # functools cache is really slow for some reason
 except ImportError:
     def cache(f):
         cache = {}
@@ -31,6 +31,7 @@ except ImportError:
         caching.cache_clear = cache.clear
 
         return caching
+
 
 class NeuralNetwork:
     def __init__(self, load, version):
@@ -133,6 +134,7 @@ class NeuralNetwork:
 
         return (v[0][0], probs)
 
+
 class BestNeuralNetwork(NeuralNetwork):
     @staticmethod
     def __init__(load, version):
@@ -149,6 +151,7 @@ class BestNeuralNetwork(NeuralNetwork):
         self.version = agent_nn.version
         checkpoint_path = f"{config.SAVE_PATH}training/v.{agent_nn.version}/cp.cpkt"
         self.model.load_weights(checkpoint_path).expect_partial()
+
 
 class CurrentNeuralNetwork(NeuralNetwork):
     def __init__(self, load, version):

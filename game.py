@@ -5,6 +5,7 @@ GAME_DIMENSIONS = (6, 7)
 IN_A_ROW = 4
 MOVE_AMOUNT = GAME_DIMENSIONS[1]
 
+
 def generate_game_state(node, mirror):
     root = node
     board_history = []
@@ -20,6 +21,7 @@ def generate_game_state(node, mirror):
     # board_history.append(np.array([[[node.player + 1]] * GAME_DIMENSIONS[1]] * GAME_DIMENSIONS[0]))
     game_state = np.moveaxis(np.array(board_history), 0, -1)
     return game_state
+
 
 def generate_tutorial_game_state(nodes, mirror):
     nodes = (None,) * (config.DEPTH - len(nodes)) + nodes
@@ -37,10 +39,12 @@ def generate_tutorial_game_state(nodes, mirror):
     game_state = np.reshape(board_history, (GAME_DIMENSIONS + (config.DEPTH * 2,)))
     return game_state
 
+
 def mirror_board(board):
     return [board[x + z * GAME_DIMENSIONS[1]] for z in range(GAME_DIMENSIONS[0]) for x in range(GAME_DIMENSIONS[1] - 1, -1, -1)]
 
-def get_legal_moves(board): # , all_moves):
+
+def get_legal_moves(board):  # , all_moves):
     if MOVE_AMOUNT != np.prod(GAME_DIMENSIONS):
         legal_moves = []
         for dim1 in range(GAME_DIMENSIONS[1]):
@@ -56,6 +60,7 @@ def get_legal_moves(board): # , all_moves):
         if len(legal_moves) != 0: legal_moves = legal_moves[0]
     return legal_moves
 
+
 def check_game_over(board):
     board = board.tolist()
     for player in [1, -1]:
@@ -67,9 +72,11 @@ def check_game_over(board):
 
     if np.count_nonzero(board) == np.prod(GAME_DIMENSIONS): return 0
 
+
 def move(board, a, player):
     board[a] = player
     return board
+
 
 def print_board(board):
     board = board.astype("<U1")
@@ -77,6 +84,7 @@ def print_board(board):
     board[board == "1"] = "X"
     board[board == "0"] = " "
     return board.reshape(GAME_DIMENSIONS)
+
 
 def print_values(values):
     return values.reshape(GAME_DIMENSIONS)

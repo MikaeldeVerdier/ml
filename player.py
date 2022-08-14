@@ -1,7 +1,7 @@
 import numpy as np
 import game
 import config
-from mcts import Node
+
 
 class User():
     def __init__(self):
@@ -26,6 +26,7 @@ class User():
         print(f"It's {player_dict[root.player]}'s turn")
         print(f"Move to make is: {action}")
         print(f"Position is now:\n{game.print_board(root.s)}\n")
+
 
 class Agent():
     def __init__(self, nn_class, load, version=None, name=None):
@@ -57,7 +58,7 @@ class Agent():
         values = np.zeros(np.prod(game.GAME_DIMENSIONS))
 
         for edge in root.edges:
-            pi[edge.action] = edge.n # ** 1/tau
+            pi[edge.action] = edge.n  # ** 1/tau
             values[edge.action] = edge.q
 
         pi /= np.sum(pi)

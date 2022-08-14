@@ -8,6 +8,7 @@ from nn import NeuralNetwork, BestNeuralNetwork, CurrentNeuralNetwork
 from mcts import Node, Tree
 from player import User, Agent
 
+
 def initiate():
     load = False
 
@@ -23,8 +24,10 @@ def initiate():
 
     return agents
 
+
 def setup_mcts(players):
     for player in players: player.mcts = Node(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], 1, Tree())
+
 
 def play(players, games, training):
     game_count = 0
@@ -72,10 +75,12 @@ def play(players, games, training):
 
     return outcomes
 
+
 def self_play(agent):
     results = play({1: agent, -1: agent}, config.GAME_AMOUNT_SELF_PLAY, True)
 
     print(f"The results from self-play were: {results}")
+
 
 def retrain_network(network):
     for _ in range(config.TRAINING_ITERATIONS):
@@ -90,6 +95,7 @@ def retrain_network(network):
     network.version += 1
     network.plot_metrics(False)
 
+
 def evaluate_network(agents):
     results = play(agents, config.GAME_AMOUNT_EVALUATION, False)
     print(f"The results were: {results}")
@@ -101,6 +107,7 @@ def evaluate_network(agents):
     log(agents, results)
 
     return agents
+
 
 def log(agents, results):
     names = [agents[1].get_name(), agents[-1].get_name()]
@@ -114,7 +121,8 @@ Results are: {results}
 
 """
     files.write("log.txt", message, "a")
-    
+
+
 def play_test(version, games):
     you = User()
     agents = {1: Agent(NeuralNetwork, True, version=version), -1: you}
@@ -122,6 +130,7 @@ def play_test(version, games):
 
     print(f"The results were: {results}")
     log(agents, results)
+
 
 def play_versions(versions, games):
     agents = {1 - 2 * i: Agent(NeuralNetwork, True, version=v) for i, v in enumerate(versions)}
@@ -131,6 +140,7 @@ def play_versions(versions, games):
     best = versions[np.argmax(results[1:])]
     print(f"The best version was: version {best}")
     log(agents, results)
+
 
 def main():
     agents = initiate()
@@ -143,6 +153,7 @@ def main():
     # play_versions([1, agents[1].nn.version)], config.GAME_AMOUNT_PLAY_VERSIONS)
     # play_test(agents[best_agent], config.GAME_AMOUNT_PLAY_TEST)
     # files.add_to_file("positions.json", files.load_file("poss.json"), config.POSITION_AMOUNT)
+
 
 if __name__ == "__main__":
     main()
