@@ -166,8 +166,6 @@ class CurrentNeuralNetwork(NeuralNetwork):
         for metric in fit.history:
             [self.metrics[metric].append(fit.history[metric][i]) for i in range(config.EPOCHS)]
 
-        self.plot_metrics(False)
-
     def plot_metrics(self, show_lines):
         _, axs = plt.subplots(4, sharey="row", figsize=(20, 15))
         plt.xlabel("Training Iteration")

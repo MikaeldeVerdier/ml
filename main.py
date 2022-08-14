@@ -77,7 +77,7 @@ def self_play(agent):
 
     print(f"The results from self-play were: {results}")
 
-def retrain_network(agent):
+def retrain_network(network):
     for _ in range(config.TRAINING_ITERATIONS):
         positions = files.load_file("positions.json")
         minibatch = random.sample(positions, config.BATCH_SIZE)
@@ -85,9 +85,10 @@ def retrain_network(agent):
         x = np.array([batch[0] for batch in minibatch])
         y = {"value_head": np.array([batch[2] for batch in minibatch], dtype="float64"), "policy_head": np.array([batch[1] for batch in minibatch])}
 
-        agent.nn.train(x, y)
+        network.nn.train(x, y)
 
-    agent.nn.version += 1
+    network.nn.version += 1
+    network.plot_metrics(False)
 
 def evaluate_network(agents):
     results = play(agents, config.GAME_AMOUNT_EVALUATION, False)
@@ -136,7 +137,7 @@ def main():
 
     for _ in range(config.LOOP_ITERATIONS):
         self_play(agents[1])
-        retrain_network(agents[-1])
+        retrain_network(agents[-1].nn)
         agents = evaluate_network(agents)
 
     # play_versions([1, agents[1].nn.version)], config.GAME_AMOUNT_PLAY_VERSIONS)
