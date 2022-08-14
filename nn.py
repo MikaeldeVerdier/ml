@@ -60,7 +60,8 @@ class NeuralNetwork:
 
         # self.model.summary()
 
-    def softmax_cross_entropy_with_logits(self, y_true, y_pred):
+    @staticmethod
+    def softmax_cross_entropy_with_logits(y_true, y_pred):
         p = y_pred
         pi = y_true
 
@@ -74,7 +75,8 @@ class NeuralNetwork:
 
         return loss
 
-    def convolutional_layer(self, x, filters, kernel_size):
+    @staticmethod
+    def convolutional_layer(x, filters, kernel_size):
         x = Conv2D(filters=filters, kernel_size=kernel_size, data_format="channels_last", padding="same", use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         x = BatchNormalization(axis=3)(x)
         x = LeakyReLU()(x)
@@ -88,7 +90,8 @@ class NeuralNetwork:
         x = LeakyReLU()(x)
         return (x)
 
-    def value_head(self, x):
+    @staticmethod
+    def value_head(x):
         x = Conv2D(filters=1, kernel_size=(1, 1), data_format="channels_last", padding="same", use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         x = BatchNormalization(axis=3)(x)
         x = LeakyReLU()(x)
@@ -98,7 +101,8 @@ class NeuralNetwork:
         x = Dense(1, use_bias=config.USE_BIAS, activation="tanh", kernel_regularizer=regularizers.l2(config.REG_CONST), name="value_head")(x)
         return (x)
 
-    def policy_head(self, x):
+    @staticmethod
+    def policy_head(x):
         x = Conv2D(filters=2, kernel_size=(1, 1), data_format="channels_last", padding="same", use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         x = BatchNormalization(axis=3)(x)
         x = LeakyReLU()(x)
@@ -130,7 +134,8 @@ class NeuralNetwork:
         return (v[0][0], probs)
 
 class BestNeuralNetwork(NeuralNetwork):
-    def __init__(self, load, version):
+    @staticmethod
+    def __init__(load, version):
         print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
         if version is None: version = files.load_file("save.json")["best_version"]
         super().__init__(load, version)
@@ -205,6 +210,5 @@ class CurrentNeuralNetwork(NeuralNetwork):
         loaded["best_version"] = self.version
         loaded["iterations"].append(config.TRAINING_ITERATIONS * config.EPOCHS)
         loaded["metrics"] = self.metrics
-        self.load = True
 
         files.write("save.json", json.dumps(loaded))

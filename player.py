@@ -20,7 +20,8 @@ class User():
 
         return action, None
 
-    def print_move(self, root, action):
+    @staticmethod
+    def print_move(root, action):
         player_dict = {1: "X", -1: "O"}
         print(f"It's {player_dict[root.player]}'s turn")
         print(f"Move to make is: {action}")
@@ -50,7 +51,8 @@ class Agent():
 
         return action, pi
 
-    def getAV(self, root, tau):
+    @staticmethod
+    def getAV(root, tau):
         pi = np.zeros(np.prod(game.GAME_DIMENSIONS))
         values = np.zeros(np.prod(game.GAME_DIMENSIONS))
 
@@ -62,7 +64,8 @@ class Agent():
 
         return pi, values
 
-    def choose_action(self, pi, values, tau):
+    @staticmethod
+    def choose_action(pi, values, tau):
         if tau == 1e-2:
             actions = np.flatnonzero(pi == np.max(pi))
             action = np.random.choice(actions)
@@ -71,7 +74,8 @@ class Agent():
 
         return action, value
     
-    def print_move(self, root, pi, action, mcts_value, nn_value):
+    @staticmethod
+    def print_move(root, pi, action, mcts_value, nn_value):
         player_dict = {1: "X", -1: "O"}
         print(f"It's {player_dict[root.player]}'s turn")
         print(f"Action values are:\n{np.round(game.print_values(pi), 3)}")
