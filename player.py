@@ -55,7 +55,7 @@ class Agent():
         values = np.zeros(np.prod(game.GAME_DIMENSIONS))
 
         for edge in root.edges:
-            pi[edge.action] = edge.n ** 1/tau
+            pi[edge.action] = edge.n # ** 1/tau
             values[edge.action] = edge.q
 
         pi /= np.sum(pi)
