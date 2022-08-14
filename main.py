@@ -2,24 +2,24 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 import datetime
-import config
 import game
-from node import *
-from player import *
-from files import *
+import config
+import files
+from mcts import Node, Tree
+from player import User, Agent
 
 def initiate():
     load = [False, False, False]
     loads = list(np.where(load[:-1])[0])
 
-    setup_files()
+    files.setup_files()
 
     if not load[2]:
-        reset_file("log.txt")
-        reset_file("positions.json")
+        files.reset_file("log.txt")
+        files.reset_file("positions.json")
 
     agents = {1: Agent(load[0], 1), -1: Agent(load[1], 2)}
-    loaded = load_file("save.json")
+    loaded = files.load_file("save.json")
 
     if not loads: best_agent = 1
     elif len(loads) == 1: best_agent = 1 - 2 * int(loads[0])
@@ -27,7 +27,7 @@ def initiate():
 
     loaded["best_agent"] = best_agent
     for agent in agents.values():
-        if not agent.nn.load: reset_key("save.json", f"agent_{agent.nn.name}")
+        if not agent.nn.load: files.reset_key("save.json", f"agent_{agent.nn.name}")
 
     return agents, best_agent
 
@@ -70,11 +70,11 @@ def play(players, games, training):
 
         if training:
             positions = [[game.generate_tutorial_game_state((position[0],), mirror).tolist()] + [game.mirror_board(position[1].tolist()) if mirror else position[1].tolist()] + [outcome * position[0].player] for position in training_set for mirror in [False, True]]
-            len_file, recent = add_to_file("positions.json", positions, config.POSITION_AMOUNT)
+            len_file, recent = files.add_to_file("positions.json", positions, config.POSITION_AMOUNT)
             print(f"Position length is now: {len_file}")
 
             is_full = len_file == config.POSITION_AMOUNT
-            if is_full and recent: make_backup("positions.json", f"positions_{config.POSITION_AMOUNT}.json")
+            if is_full and recent: files.make_backup("positions.json", f"positions_{config.POSITION_AMOUNT}.json")
             
             if not is_full and game_count == games: games += 1
 
@@ -87,7 +87,7 @@ def self_play(agent):
 
 def retrain_network(agent):
     for _ in range(config.TRAINING_ITERATIONS):
-        positions = load_file("positions.json")
+        positions = files.load_file("positions.json")
         minibatch = random.sample(positions, config.BATCH_SIZE)
 
         x = np.array([batch[0] for batch in minibatch])
@@ -116,7 +116,7 @@ Results are: {results}
 best_agent is: {best_agent}
 ------------------------------------------------------
 """
-    write("log.txt", message, "a")
+    files.write("log.txt", message, "a")
     
 def play_test(agent, games):
     you = User()
@@ -137,7 +137,7 @@ def play_versions(versions, games):
     log(agents, results, best)
 
 def plot_metrics_horizontal(agents, show_lines):
-    loaded = load_file("save.json")
+    loaded = files.load_file("save.json")
 
     _, axs = plt.subplots(4, 2, sharey="row", figsize=(25, 15))
     plt.xlabel("Training Iteration")
@@ -181,7 +181,7 @@ def main():
 
     # play_versions([(1, 1), (2, 1)], config.GAME_AMOUNT_PLAY_VERSIONS)
     # play_test(agents[best_agent], config.GAME_AMOUNT_PLAY_TEST)
-    # add_to_file("positions.json", load_file("poss.json"), config.POSITION_AMOUNT)
+    # files.add_to_file("positions.json", files.load_file("poss.json"), config.POSITION_AMOUNT)
 
 if __name__ == "__main__":
     main()

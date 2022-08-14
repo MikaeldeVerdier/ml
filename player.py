@@ -1,8 +1,8 @@
 import numpy as np
-import config
 import game
+import config
 from nn import NeuralNetwork
-from node import Node
+from mcts import Node
 
 class User():
     def __init__(self):

@@ -1,7 +1,7 @@
 import os
 import json
-from shutil import copyfile
 import config
+from shutil import copyfile
 
 EMPTY_SAVE = {
     "best_agent": 1,

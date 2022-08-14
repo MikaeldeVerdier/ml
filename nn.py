@@ -2,7 +2,7 @@ import numpy as np
 import json
 import config
 import game
-from files import *
+import files
 import tensorflow as tf
 from tensorflow.keras import regularizers
 from tensorflow.keras.models import Model
@@ -13,7 +13,6 @@ from keras.utils.vis_utils import plot_model
 
 try:
     from functools import cache
-    raise ImportError
 except ImportError:
     def cache(f):
         cache = {}
@@ -52,7 +51,7 @@ class NeuralNetwork:
         self.model.compile(loss={"value_head": "mean_squared_error", "policy_head": self.softmax_cross_entropy_with_logits}, optimizer=SGD(learning_rate=config.LEARNING_RATE, momentum=config.MOMENTUM), loss_weights={"value_head": 0.5, "policy_head": 0.5}, metrics="accuracy")
         
         if load:
-            if version is None: self.version = load_file("save.json")[f"agent_{self.name}"]["version"]
+            if version is None: self.version = files.load_file("save.json")[f"agent_{self.name}"]["version"]
             else: self.version = version + 1
             checkpoint_path = f"{config.SAVE_PATH}training_{self.name}/v.{self.version - 1}/cp.cpkt"
             self.model.load_weights(checkpoint_path).expect_partial()
@@ -127,7 +126,7 @@ class NeuralNetwork:
             [self.metrics[metric].append(fit.history[metric][i]) for i in range(config.EPOCHS)]
 
     def save_progress(self, best_agent=None):
-        loaded = load_file("save.json")
+        loaded = files.load_file("save.json")
         
         if best_agent: loaded["best_agent"] = best_agent
         else:
@@ -138,7 +137,7 @@ class NeuralNetwork:
             self.metrics = {}
             self.load = True
 
-        write("save.json", json.dumps(loaded))
+        files.write("save.json", json.dumps(loaded))
 
     @cache
     def get_preds(self, nodes):
