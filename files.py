@@ -4,82 +4,41 @@ import config
 from shutil import copyfile
 
 EMPTY_SAVE = {
-    "best_agent": 1,
-    "agent_1": {
-        "version": 1,
-        "iterations": [
+    "best_version": 0,
+    "iterations": [
+
+    ],
+    "metrics": {
+        "loss": [
 
         ],
-        "metrics": {
-            "loss": [
-
-            ],
-            "value_head_loss": [
-
-            ],
-            "policy_head_loss": [
-
-            ],
-            "value_head_accuracy": [
-
-            ],
-            "policy_head_accuracy": [
-
-            ],
-            "val_loss": [
-
-            ],
-            "val_value_head_loss": [
-
-            ],
-            "val_policy_head_loss": [
-
-            ],
-            "val_value_head_accuracy": [
-
-            ],
-            "val_policy_head_accuracy": [
-
-            ]
-        }
-    },
-    "agent_2": {
-        "version": 1,
-        "iterations": [
+        "value_head_loss": [
 
         ],
-        "metrics": {
-            "loss": [
+        "policy_head_loss": [
 
-            ],
-            "value_head_loss": [
+        ],
+        "value_head_accuracy": [
 
-            ],
-            "policy_head_loss": [
+        ],
+        "policy_head_accuracy": [
 
-            ],
-            "value_head_accuracy": [
+        ],
+        "val_loss": [
 
-            ],
-            "policy_head_accuracy": [
+        ],
+        "val_value_head_loss": [
 
-            ],
-            "val_loss": [
+        ],
+        "val_policy_head_loss": [
 
-            ],
-            "val_value_head_loss": [
+        ],
+        "val_value_head_accuracy": [
 
-            ],
-            "val_policy_head_loss": [
+        ],
+        "val_policy_head_accuracy": [
 
-            ],
-            "val_value_head_accuracy": [
-
-            ],
-            "val_policy_head_accuracy": [
-                
-            ]
-        }
+        ]
     }
 }
 EMPTY_POSITIONS = []
@@ -98,8 +57,6 @@ def setup_files():
 
     for file, func, *kwargs in [save_folder, backup_folder, save_file, positions_file, log_file]:
         if not os.path.exists(file): func(file, *kwargs)
-
-    reset_file("save.json")
 
 def get_path(file):
     return f"{config.SAVE_PATH}{file}"

@@ -1,35 +1,27 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import random
 import datetime
 import game
 import config
 import files
+from nn import NeuralNetwork, BestNeuralNetwork, CurrentNeuralNetwork
 from mcts import Node, Tree
 from player import User, Agent
 
 def initiate():
-    load = [False, False, False]
-    loads = list(np.where(load[:-1])[0])
+    load = False
 
     files.setup_files()
-
-    if not load[2]:
-        files.reset_file("log.txt")
+    if not load:
+        files.reset_file("save.json")
         files.reset_file("positions.json")
+        files.reset_file("log.txt")
 
-    agents = {1: Agent(load[0], 1), -1: Agent(load[1], 2)}
-    loaded = files.load_file("save.json")
+    best_agent = Agent(BestNeuralNetwork, load)
+    current_agent = Agent(CurrentNeuralNetwork, load)
+    agents = {1: best_agent, -1: current_agent}
 
-    if not loads: best_agent = 1
-    elif len(loads) == 1: best_agent = 1 - 2 * int(loads[0])
-    else: best_agent = loaded["best_agent"]
-
-    loaded["best_agent"] = best_agent
-    for agent in agents.values():
-        if not agent.nn.load: files.reset_key("save.json", f"agent_{agent.nn.name}")
-
-    return agents, best_agent
+    return agents
 
 def setup_mcts(players):
     for player in players: player.mcts = Node(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], 1, Tree())
@@ -54,8 +46,8 @@ def play(players, games, training):
 
             action, pi = players[player_turn].play_turn(action, tau)
 
-            outcome = game.check_game_over(players[player_turn].mcts.s)
             if training: training_set[-1].append(pi)
+            outcome = game.check_game_over(players[player_turn].mcts.s)
 
             turn += 1
             player_turn *= -1
@@ -95,91 +87,59 @@ def retrain_network(agent):
 
         agent.nn.train(x, y)
 
-    agent.nn.save_progress()
+    agent.nn.version += 1
 
-def evaluate_network(agents, best_agent):
-    results = play(agents, config.GAME_AMOUNT_EVALUATION, False)
+def evaluate_network(agents):
+    results = [0, 0, 2] # play(agents, config.GAME_AMOUNT_EVALUATION, False)
     print(f"The results were: {results}")
-    if results[-best_agent] > results[best_agent] * config.WINNING_THRESHOLD:
-        best_agent *= -1
-        print(f"{best_agent} is now best player!")
-        agents[1].nn.save_progress(best_agent)
+    if results[-1] > results[1] * config.WINNING_THRESHOLD:
+        agents[1].nn.copy_weights(agents[-1].nn)
+        agents[-1].nn.save_to_file()
+        print(f"The best_agent has copied the current_agent's weights")
 
-    log(agents, results, best_agent)
+    log(agents, results)
 
-    return best_agent
+    return agents
 
-def log(agents, results, best_agent):
+def log(agents, results):
+    names = [agents[1].get_name(), agents[-1].get_name()]
+
+    best_name = names[np.argmax(results[1:])]
+    best = f"{best_name[0]} {best_name[1]}" if results[1] != results[2] else "They both are" 
     message = f"""{datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')}:
------------------- {agents[1].get_full_name()} vs {agents[-1].get_full_name()} ------------------
+------------ {names[0][0]} vs {names[1][0]} ------------
 Results are: {results}
-best_agent is: {best_agent}
-------------------------------------------------------
+{best} the best!
+
 """
     files.write("log.txt", message, "a")
     
-def play_test(agent, games):
+def play_test(version, games):
     you = User()
-    agents = {1: agent, -1: you}
+    agents = {1: Agent(NeuralNetwork, True, version=version), -1: you}
     results = play(agents, games, False)
 
-    best = agents[np.argmax(results[1:])].full_name
     print(f"The results were: {results}")
-    log(agents, results, best)
+    log(agents, results)
 
 def play_versions(versions, games):
-    agents = {1 - 2 * i: Agent(True, name, version=v) for i, (name, v) in enumerate(versions)}
+    agents = {1 - 2 * i: Agent(NeuralNetwork, True, version=v) for i, v in enumerate(versions)}
     results = play(agents, games, False)
     
-    print(f"The results between {versions[0]} and {versions[1]} were: {results}")
+    print(f"The results between versions {versions[0]} and {versions[1]} were: {results}")
     best = versions[np.argmax(results[1:])]
-    print(f"The best version was: {best}")
-    log(agents, results, best)
-
-def plot_metrics_horizontal(agents, show_lines):
-    loaded = files.load_file("save.json")
-
-    _, axs = plt.subplots(4, 2, sharey="row", figsize=(25, 15))
-    plt.xlabel("Training Iteration")
-
-    for i, agent in enumerate(agents.values()):
-        for metric in loaded[f"agent_{agent.nn.name}"]["metrics"]:
-            data = loaded[f"agent_{agent.nn.name}"]["metrics"][metric]
-            if data:
-                ax_index = (2, 3) if "val_" in metric else (0, 1)
-                ax_index = ax_index[0] if "loss" in metric else ax_index[1]
-                ax = axs[ax_index, i]
-
-                ax.plot(data, label=metric)
-                ax.axhline(data[-1], color="black", linestyle=":")
-    
-    for ax_index, metric in enumerate(["Loss", "Accuracy", "Validation Loss", "Validation Accuracy"]):
-        for i, agent in enumerate(agents.values()):
-            ax = axs[ax_index, i]
-            ax.set_title(f"{agent.nn.name}: {metric}")
-            ax.set_ylabel(metric)
-            box = ax.get_position()
-            ax.set_position([box.x0 * ([0.6, 1] * 2)[i], box.y0, box.width, box.height])
-            ax.yaxis.set_tick_params(labelbottom=True)
-            ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
-            if show_lines:
-                iterations = loaded[f"agent_{agent.nn.name}"]["iterations"]
-                [ax.axvline(np.sum(iterations[:i2 + 1]) - 1, color="black", linestyle=":") for i2 in range(len(iterations))]
-
-    plt.savefig(f"{config.SAVE_PATH}metrics.png", dpi=300)
-    plt.pause(0.1)
-    plt.close("all")
+    print(f"The best version was: version {best}")
+    log(agents, results)
 
 def main():
-    agents, best_agent = initiate()
-        
-    for _ in range(config.LOOP_ITERATIONS):
-        self_play(agents[best_agent])
-        retrain_network(agents[-best_agent])
-        plot_metrics_horizontal(agents, False)
-        best_agent = evaluate_network(agents, best_agent)
+    agents = initiate()
 
-    # play_versions([(1, 1), (2, 1)], config.GAME_AMOUNT_PLAY_VERSIONS)
+    for _ in range(config.LOOP_ITERATIONS):
+        self_play(agents[1])
+        retrain_network(agents[-1])
+        agents = evaluate_network(agents)
+
+    # play_versions([1, agents[1].nn.version)], config.GAME_AMOUNT_PLAY_VERSIONS)
     # play_test(agents[best_agent], config.GAME_AMOUNT_PLAY_TEST)
     # files.add_to_file("positions.json", files.load_file("poss.json"), config.POSITION_AMOUNT)
 

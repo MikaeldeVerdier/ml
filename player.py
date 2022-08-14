@@ -1,38 +1,38 @@
 import numpy as np
 import game
 import config
-from nn import NeuralNetwork
 from mcts import Node
 
 class User():
     def __init__(self):
         pass
 
-    def get_full_name(self):
-        return "You"
+    def get_name(self):
+        return ("You", "are")
 
     def play_turn(self, action, tau):
         if action is not None: self.mcts = self.mcts.update_root(action)
         print(f"Legal moves for you are: {game.get_legal_moves(self.mcts.s)}")
         action = int(input("Make your move: "))
-        self.mcts = Node(game.move(self.mcts.s.copy(), action, self.mcts.player), self, action, -self.mcts.player, 0)
+        self.mcts = self.mcts.update_root(action)
 
-        self.print_move(self.mcts)
+        self.print_move(self.mcts, action)
 
         return action, None
 
-    def print_move(self, root):
+    def print_move(self, root, action):
         player_dict = {1: "X", -1: "O"}
         print(f"It's {player_dict[root.player]}'s turn")
-        print(f"Move to make is: {root.parent_action}")
-        print(f"Position is now:\n{game.print_board(root.s)}")
+        print(f"Move to make is: {action}")
+        print(f"Position is now:\n{game.print_board(root.s)}\n")
 
 class Agent():
-    def __init__(self, load, name, version=None):
-        self.nn = NeuralNetwork(load, name, version)
-    
-    def get_full_name(self):
-        return (self.nn.name, self.nn.version - 1)
+    def __init__(self, nn_class, load, version=None, name=None):
+        self.nn = nn_class(load, version)
+        self.name = name
+
+    def get_name(self):
+        return (f"Version {self.nn.version}" if not self.name else self.name, "is")
 
     def play_turn(self, action, tau):
         if action in game.get_legal_moves(self.mcts.s): self.mcts = self.mcts.update_root(action)

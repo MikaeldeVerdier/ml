@@ -1,5 +1,7 @@
+from ast import Import
 import numpy as np
 import json
+import matplotlib.pyplot as plt
 import config
 import game
 import files
@@ -13,6 +15,7 @@ from keras.utils.vis_utils import plot_model
 
 try:
     from functools import cache
+    raise ImportError # functools cache is really slow for some reason
 except ImportError:
     def cache(f):
         cache = {}
@@ -30,43 +33,32 @@ except ImportError:
         return caching
 
 class NeuralNetwork:
-    def __init__(self, load, name, version):
-        print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
-
-        self.load = load
-        self.name = name
+    def __init__(self, load, version):
         self.version = version
 
-        self.metrics = {}
-        
-        self.main_input = Input(shape=game.GAME_DIMENSIONS + (config.DEPTH * 2,), name="main_input")
+        main_input = Input(shape=game.GAME_DIMENSIONS + (config.DEPTH * 2,), name="main_input")
 
-        x = self.convolutional_layer(self.main_input, config.CONVOLUTIONAL_LAYER["filter_amount"], config.CONVOLUTIONAL_LAYER["kernel_size"])
+        x = self.convolutional_layer(main_input, config.CONVOLUTIONAL_LAYER["filter_amount"], config.CONVOLUTIONAL_LAYER["kernel_size"])
         for _ in range(config.RESIDUAL_LAYER["amount"]): x = self.residual_layer(x, config.RESIDUAL_LAYER["filter_amount"], config.RESIDUAL_LAYER["kernel_size"])
 
         vh = self.value_head(x)
         ph = self.policy_head(x)
 
-        self.model = Model(inputs=[self.main_input], outputs=[vh, ph])
+        self.model = Model(inputs=[main_input], outputs=[vh, ph])
         self.model.compile(loss={"value_head": "mean_squared_error", "policy_head": self.softmax_cross_entropy_with_logits}, optimizer=SGD(learning_rate=config.LEARNING_RATE, momentum=config.MOMENTUM), loss_weights={"value_head": 0.5, "policy_head": 0.5}, metrics="accuracy")
         
         if load:
-            if version is None: self.version = files.load_file("save.json")[f"agent_{self.name}"]["version"]
-            else: self.version = version + 1
-            checkpoint_path = f"{config.SAVE_PATH}training_{self.name}/v.{self.version - 1}/cp.cpkt"
-            self.model.load_weights(checkpoint_path).expect_partial()
-            print(f"NN with name: {name} now loaded version: {self.version - 1}")
+            if version:
+                checkpoint_path = f"{config.SAVE_PATH}training/v.{version}/cp.cpkt"
+                self.model.load_weights(checkpoint_path).expect_partial()
+                print(f"NN loaded with version: {version}")
         else:
-            if version is None: self.version = 1
             try:
                 plot_model(self.model, to_file=f"{config.SAVE_PATH}model.png", show_shapes=True, show_layer_names=True)
             except ImportError:
                 print("You need to download pydot and graphviz to plot model.")
 
         # self.model.summary()
-
-    def __hash__(self):
-        return hash((self.name, self.version - 1))
 
     def softmax_cross_entropy_with_logits(self, y_true, y_pred):
         p = y_pred
@@ -114,31 +106,6 @@ class NeuralNetwork:
         x = Dense(np.prod(game.GAME_DIMENSIONS), use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST), name="policy_head")(x)
         return (x)
 
-    def train(self, x, y):
-        self.get_preds.cache_clear()
-
-        checkpoint_path = f"{config.SAVE_PATH}training_{self.name}/v.{self.version}/cp.cpkt"
-        cp_callback = ModelCheckpoint(filepath=checkpoint_path, save_weights_only=True, verbose=1)
-
-        fit = self.model.fit(x, y, batch_size=config.BATCH_SIZE, epochs=config.EPOCHS, verbose=1, validation_split=config.VALIDATION_SPLIT, callbacks=[cp_callback])
-        for metric in fit.history:
-            if metric not in self.metrics: self.metrics[metric] = []
-            [self.metrics[metric].append(fit.history[metric][i]) for i in range(config.EPOCHS)]
-
-    def save_progress(self, best_agent=None):
-        loaded = files.load_file("save.json")
-        
-        if best_agent: loaded["best_agent"] = best_agent
-        else:
-            self.version += 1
-            loaded[f"agent_{self.name}"]["version"] = self.version
-            loaded[f"agent_{self.name}"]["iterations"].append(config.TRAINING_ITERATIONS * config.EPOCHS)
-            for metric in self.metrics: loaded[f"agent_{self.name}"]["metrics"][metric] += self.metrics[metric]
-            self.metrics = {}
-            self.load = True
-
-        files.write("save.json", json.dumps(loaded))
-
     @cache
     def get_preds(self, nodes):
         data = np.expand_dims(game.generate_tutorial_game_state(nodes, False), axis=0)
@@ -161,3 +128,85 @@ class NeuralNetwork:
         probs = odds / np.sum(odds)
 
         return (v[0][0], probs)
+
+class BestNeuralNetwork(NeuralNetwork):
+    def __init__(self, load, version):
+        print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
+        if version is None: version = files.load_file("save.json")["best_version"]
+        super().__init__(load, version)
+
+    def __hash__(self):
+        return hash(self.version)
+
+    def copy_weights(self, agent_nn):
+        self.get_preds.cache_clear()
+        
+        self.version = agent_nn.version
+        checkpoint_path = f"{config.SAVE_PATH}training/v.{agent_nn.version}/cp.cpkt"
+        self.model.load_weights(checkpoint_path).expect_partial()
+
+class CurrentNeuralNetwork(NeuralNetwork):
+    def __init__(self, load, version):
+        loaded = files.load_file("save.json")
+        self.metrics = loaded["metrics"]
+        self.iterations = loaded["iterations"]
+        if version is None: version = loaded["best_version"]
+        super().__init__(load, version)
+
+    def __hash__(self):
+        return hash(self.version)
+
+    def train(self, x, y):
+        self.get_preds.cache_clear()
+
+        checkpoint_path = f"{config.SAVE_PATH}training/v.{self.version + 1}/cp.cpkt"
+        cp_callback = ModelCheckpoint(filepath=checkpoint_path, save_weights_only=True, verbose=1)
+
+        fit = self.model.fit(x, y, batch_size=config.BATCH_SIZE, epochs=config.EPOCHS, verbose=1, validation_split=config.VALIDATION_SPLIT, callbacks=[cp_callback])
+        for metric in fit.history:
+            [self.metrics[metric].append(fit.history[metric][i]) for i in range(config.EPOCHS)]
+
+        self.plot_metrics(False)
+
+    def plot_metrics(self, show_lines):
+        _, axs = plt.subplots(4, sharey="row", figsize=(20, 15))
+        plt.xlabel("Training Iteration")
+
+        for metric in self.metrics:
+            data = self.metrics[metric]
+            if data:
+                ax_index = (2, 3) if "val_" in metric else (0, 1)
+                ax_index = ax_index[0] if "loss" in metric else ax_index[1]
+                ax = axs[ax_index]
+
+                ax.plot(data, label=metric)
+                ax.axhline(data[-1], color="black", linestyle=":")
+
+                deriv = (data[-1] - data[0]) / len(data)
+                y = [deriv * x + data[0] for x in range(len(data))]
+                ax.plot(y, color="black", linestyle="-.")
+
+        for ax_index, metric in enumerate(["Loss", "Accuracy", "Validation Loss", "Validation Accuracy"]):
+            ax = axs[ax_index]
+            ax.set_title(metric)
+            ax.set_ylabel(metric)
+            box = ax.get_position()
+            ax.set_position([box.x0, box.y0, box.width * 0.9, box.height])
+            ax.yaxis.set_tick_params(labelbottom=True)
+            ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
+            if show_lines:
+                iterations = self.iterations
+                [ax.axvline(np.sum(iterations[:i2 + 1]) - 1, color="black", linestyle=":") for i2 in range(len(iterations))]
+
+        plt.savefig(f"{config.SAVE_PATH}metrics.png", dpi=300)
+        plt.pause(0.1)
+        plt.close("all")
+
+    def save_to_file(self):
+        loaded = files.load_file("save.json")
+        loaded["best_version"] = self.version
+        loaded["iterations"].append(config.TRAINING_ITERATIONS * config.EPOCHS)
+        loaded["metrics"] = self.metrics
+        self.load = True
+
+        files.write("save.json", json.dumps(loaded))
