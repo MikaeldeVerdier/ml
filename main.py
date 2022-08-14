@@ -85,9 +85,9 @@ def retrain_network(network):
         x = np.array([batch[0] for batch in minibatch])
         y = {"value_head": np.array([batch[2] for batch in minibatch], dtype="float64"), "policy_head": np.array([batch[1] for batch in minibatch])}
 
-        network.nn.train(x, y)
+        network.train(x, y)
 
-    network.nn.version += 1
+    network.version += 1
     network.plot_metrics(False)
 
 def evaluate_network(agents):
