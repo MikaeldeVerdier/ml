@@ -162,7 +162,7 @@ class CurrentNeuralNetwork(NeuralNetwork):
         checkpoint_path = f"{config.SAVE_PATH}training/v.{self.version + 1}/cp.cpkt"
         cp_callback = ModelCheckpoint(filepath=checkpoint_path, save_weights_only=True, verbose=1)
 
-        fit = self.model.fit(x, y, batch_size=config.BATCH_SIZE, epochs=config.EPOCHS, verbose=1, validation_split=config.VALIDATION_SPLIT, callbacks=[cp_callback])
+        fit = self.model.fit(x, y, batch_size=32, epochs=config.EPOCHS, verbose=1, validation_split=config.VALIDATION_SPLIT, callbacks=[cp_callback])
         for metric in fit.history:
             [self.metrics[metric].append(fit.history[metric][i]) for i in range(config.EPOCHS)]
 
