@@ -92,6 +92,7 @@ def retrain_network(network):
 
         network.train(x, y)
 
+    network.iterations.append(config.TRAINING_ITERATIONS * config.EPOCHS)
     network.version += 1
     network.plot_metrics(False)
 

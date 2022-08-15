@@ -136,8 +136,7 @@ class NeuralNetwork:
 
 
 class BestNeuralNetwork(NeuralNetwork):
-    @staticmethod
-    def __init__(load, version):
+    def __init__(self, load, version):
         print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
         if version is None: version = files.load_file("save.json")["best_version"]
         super().__init__(load, version)
@@ -171,7 +170,6 @@ class CurrentNeuralNetwork(NeuralNetwork):
         cp_callback = ModelCheckpoint(filepath=checkpoint_path, save_weights_only=True, verbose=1)
 
         fit = self.model.fit(x, y, batch_size=32, epochs=config.EPOCHS, verbose=1, validation_split=config.VALIDATION_SPLIT, callbacks=[cp_callback])
-        self.iterations.append(config.TRAINING_ITERATIONS * config.EPOCHS)
         for metric in fit.history:
             [self.metrics[metric].append(fit.history[metric][i]) for i in range(config.EPOCHS)]
 
