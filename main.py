@@ -99,13 +99,13 @@ def retrain_network(network):
 
 def evaluate_network(agents):
     results = play(agents, config.GAME_AMOUNT_EVALUATION, False)
+    
+    log(agents, results)
     print(f"The results were: {results}")
     if results[-1] > results[1] * config.WINNING_THRESHOLD:
         agents[1].nn.copy_weights(agents[-1].nn)
         agents[-1].nn.save_to_file()
         print(f"The best_agent has copied the current_agent's weights")
-
-    log(agents, results)
 
     return agents
 
