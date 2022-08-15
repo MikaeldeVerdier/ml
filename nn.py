@@ -171,6 +171,7 @@ class CurrentNeuralNetwork(NeuralNetwork):
         cp_callback = ModelCheckpoint(filepath=checkpoint_path, save_weights_only=True, verbose=1)
 
         fit = self.model.fit(x, y, batch_size=32, epochs=config.EPOCHS, verbose=1, validation_split=config.VALIDATION_SPLIT, callbacks=[cp_callback])
+        self.iterations.append(config.TRAINING_ITERATIONS * config.EPOCHS)
         for metric in fit.history:
             [self.metrics[metric].append(fit.history[metric][i]) for i in range(config.EPOCHS)]
 
@@ -211,7 +212,7 @@ class CurrentNeuralNetwork(NeuralNetwork):
     def save_to_file(self):
         loaded = files.load_file("save.json")
         loaded["best_version"] = self.version
-        loaded["iterations"].append(config.TRAINING_ITERATIONS * config.EPOCHS)
+        loaded["iterations"] = self.iterations
         loaded["metrics"] = self.metrics
 
         files.write("save.json", json.dumps(loaded))
