@@ -82,7 +82,7 @@ def print_board(board):
     board = board.astype("<U1")
     board[board == "-"] = "O"
     board[board == "1"] = "X"
-    board[board == "0"] = " "
+    board[board == "0"] = "-"
     return board.reshape(GAME_DIMENSIONS)
 
 

@@ -173,7 +173,7 @@ class CurrentNeuralNetwork(NeuralNetwork):
         for metric in fit.history:
             [self.metrics[metric].append(fit.history[metric][i]) for i in range(config.EPOCHS)]
 
-    def plot_metrics(self, show_lines):
+    def plot_metrics(self, iteration_lines, derivative_lines):
         _, axs = plt.subplots(4, sharey="row", figsize=(20, 15))
         plt.xlabel("Training Iteration")
 
@@ -181,15 +181,16 @@ class CurrentNeuralNetwork(NeuralNetwork):
             data = self.metrics[metric]
             if data:
                 ax_index = (2, 3) if "val_" in metric else (0, 1)
-                ax_index = ax_index[0] if "loss" in metric else ax_index[1]
+                ax_index = ax_index[0 if "loss" in metric else 1]
                 ax = axs[ax_index]
 
                 ax.plot(data, label=metric)
                 ax.axhline(data[-1], color="black", linestyle=":")
 
-                deriv = (data[-1] - data[0]) / len(data)
-                y = [deriv * x + data[0] for x in range(len(data))]
-                ax.plot(y, color="black", linestyle="-.")
+                if derivative_lines:
+                    deriv = (data[-1] - data[0]) / len(data)
+                    y = [deriv * x + data[0] for x in range(len(data))]
+                    ax.plot(y, color="black", linestyle="-.")
 
         for ax_index, metric in enumerate(["Loss", "Accuracy", "Validation Loss", "Validation Accuracy"]):
             ax = axs[ax_index]
@@ -199,7 +200,7 @@ class CurrentNeuralNetwork(NeuralNetwork):
             ax.set_position([box.x0, box.y0, box.width * 0.9, box.height])
             ax.yaxis.set_tick_params(labelbottom=True)
             ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
-            if show_lines:
+            if iteration_lines:
                 iterations = self.iterations
                 [ax.axvline(np.sum(iterations[:i2 + 1]) - 1, color="black", linestyle=":") for i2 in range(len(iterations))]
 

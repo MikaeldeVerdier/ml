@@ -12,8 +12,13 @@ class User():
 
     def play_turn(self, action, tau):
         if action is not None: self.mcts = self.mcts.update_root(action)
-        print(f"Legal moves for you are: {game.get_legal_moves(self.mcts.s)}")
-        action = int(input("Make your move: "))
+        moves = game.get_legal_moves(self.mcts.s)
+        legal_moves = [move % game.MOVE_AMOUNT + 1 for move in moves]
+        user_move = None
+        while user_move not in legal_moves:
+            print(f"Legal moves for you are: {legal_moves}")
+            user_move = int(input("Make your move: "))
+        action = [move for move in moves if move % 7 + 1 == user_move][0]
         self.mcts = self.mcts.update_root(action)
 
         self.print_move(self.mcts, action)
@@ -24,7 +29,7 @@ class User():
     def print_move(root, action):
         player_dict = {1: "X", -1: "O"}
         print(f"It's {player_dict[root.player]}'s turn")
-        print(f"Move to make is: {action}")
+        print(f"Move to make is: {action} ({action % 7 + 1})")
         print(f"Position is now:\n{game.print_board(root.s)}\n")
 
 
@@ -80,7 +85,7 @@ class Agent():
         player_dict = {1: "X", -1: "O"}
         print(f"It's {player_dict[root.player]}'s turn")
         print(f"Action values are:\n{np.round(game.print_values(pi), 3)}")
-        print(f"Move to make is: {action}")
+        print(f"Move to make is: {action} ({action % 7 + 1})")
         print(f"Position is now:\n{game.print_board(root.s)}")
         print(f"MCTS percieved value is: {mcts_value:.3f}")
         print(f"NN percieved value is: {nn_value:.3f}\n")

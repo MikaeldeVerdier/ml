@@ -99,7 +99,7 @@ def retrain_network(network):
 
 def evaluate_network(agents):
     results = play(agents, config.GAME_AMOUNT_EVALUATION, False)
-    
+
     log(agents, results)
     print(f"The results were: {results}")
     if results[-1] > results[1] * config.WINNING_THRESHOLD:
@@ -146,13 +146,14 @@ def play_versions(versions, games):
 def main():
     agents = initiate()
 
-    for _ in range(config.LOOP_ITERATIONS):
+    for i in range(config.LOOP_ITERATIONS):
+        print(f"Now starting main loop iteration: {i}")
         self_play(agents[1])
         retrain_network(agents[-1].nn)
         agents = evaluate_network(agents)
 
-    # play_versions([1, agents[1].nn.version)], config.GAME_AMOUNT_PLAY_VERSIONS)
-    # play_test(agents[best_agent], config.GAME_AMOUNT_PLAY_TEST)
+    # play_versions([1, agents[1].nn.version], config.GAME_AMOUNT_PLAY_VERSIONS)
+    # play_test(agents[1].nn.version, config.GAME_AMOUNT_PLAY_TEST)
     # files.add_to_file("positions.json", files.load_file("poss.json"), config.POSITION_AMOUNT)
 
 
