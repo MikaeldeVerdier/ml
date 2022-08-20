@@ -124,8 +124,6 @@ class NeuralNetwork:
         mask = np.full(logits.shape, True)
         node = nodes[-1]
         legal_moves = game.get_legal_moves(node)
-        if 104 in legal_moves:
-            print("NU")
         mask[legal_moves] = False
 
         if max(logits) > 85: logits *= 85/max(logits)

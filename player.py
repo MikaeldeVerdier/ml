@@ -40,11 +40,18 @@ class Agent():
         return (f"Version {self.nn.version}" if not self.name else self.name, "is")
 
     def play_turn(self, tau):
-        for _ in range(config.MCTS_SIMS): self.mcts.simulate(self.nn)
+        legal_moves = game.get_legal_moves(self.mcts)
+        if len(legal_moves) == 1:
+            action = legal_moves[0]
+            pi = np.zeros(game.MOVE_AMOUNT)
+            pi[action] = 1
+            value = 0
+        else: 
+            for _ in range(config.MCTS_SIMS): self.mcts.simulate(self.nn)
 
-        pi, values = self.getAV(self.mcts, tau)
-        
-        action, value = self.choose_action(pi, values, tau)
+            pi, values = self.getAV(self.mcts, tau)
+            
+            action, value = self.choose_action(pi, values, tau)
         # action = sorted(game.get_legal_moves(self.mcts.s))[-1] #
         self.mcts = self.mcts.update_root(action)
 
