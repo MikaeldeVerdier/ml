@@ -26,60 +26,66 @@ def initiate():
 
 
 def setup_mcts(players):
-    for player in players: player.mcts = Node(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], 1, Tree())
+    for player in players: player.mcts = Node(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], list(range(1, game.GAME_DIMENSIONS[0] + 1)), Tree())
 
+
+def play_game(player, training):
+    player.mcts = Node(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], list(range(1, game.GAME_DIMENSIONS[0] + 1)), Tree())
+    
+    training_set = []
+    turn = 1
+    tau = 1 if training else 1e-2
+    outcome = None
+    while outcome is None:
+        if turn == config.TURNS_UNTIL_TAU: tau = 1e-2
+        if training: training_set.append([player.mcts])
+
+        pi = player.play_turn(tau)
+
+        if training: training_set[-1].append(pi)
+        outcome = game.check_game_over(player.mcts)
+
+        turn += 1
+    
+    return outcome, training_set
 
 def play(players, games, training):
+    players = set(players.values())
+
     game_count = 0
-    outcomes = [0, 0, 0]
+    total_outcomes = [[]] * len(players)
+    average_outcomes = [0] * len(players)
     starts = 1
     while game_count < games:
-        setup_mcts(set(players.values()))
-        action = None
-        player_turn = starts
-        turn = 1
-        if training:
-            tau = 1
-            training_set = []
-        else: tau = 1e-2
-        outcome = None
-        while outcome is None:
-            if turn == config.TURNS_UNTIL_TAU: tau = 1e-2
-            if training: training_set.append([players[player_turn].mcts])
+        for i, player in enumerate(players):
+            outcome, training_set = play_game(player, training)
 
-            action, pi = players[player_turn].play_turn(action, tau)
+            game_count += 1
+            total_outcomes[i] += [outcome]
+            average_outcomes[i] = sum(total_outcomes[i]) / len(total_outcomes[i])
+            starts *= -1
 
-            if training: training_set[-1].append(pi)
-            outcome = game.check_game_over(players[player_turn].mcts.s)
+            print(f"We are " + ("training" if training else "evaluating"))
+            print(f"Game outcome was: 1/{(1 / outcome):} = {outcome:.5f} (Agent: {i})")
+            print(f"Amount of games played is now: {game_count}\n")
 
-            turn += 1
-            player_turn *= -1
+            if training:
+                positions = [[np.array(game.generate_tutorial_game_state((position[0],))).tolist()] + [position[1].tolist()] + [outcome] for position in training_set]
+                len_file, recent = files.add_to_file("positions.json", positions, config.POSITION_AMOUNT)
+                print(f"Position length is now: {len_file}")
 
-        game_count += 1
-        outcomes[outcome * starts] += 1
-        starts *= -1
+                is_full = len_file == config.POSITION_AMOUNT
+                if is_full and recent: files.make_backup("positions.json", f"positions_{config.POSITION_AMOUNT}.json")
+                
+                if not is_full and game_count == games: games += 1
 
-        print(f"We are " + ("training" if training else "evaluating"))
-        print(f"Game outcome was: {outcome} (Agent: {outcome * -starts})")
-        print(f"Amount of games played is now: {game_count}\n")
-
-        if training:
-            positions = [[game.generate_tutorial_game_state((position[0],), mirror).tolist()] + [game.mirror_board(position[1].tolist()) if mirror else position[1].tolist()] + [outcome * position[0].player] for position in training_set for mirror in [False, True]]
-            len_file, recent = files.add_to_file("positions.json", positions, config.POSITION_AMOUNT)
-            print(f"Position length is now: {len_file}")
-
-            is_full = len_file == config.POSITION_AMOUNT
-            if is_full and recent: files.make_backup("positions.json", f"positions_{config.POSITION_AMOUNT}.json")
-            
-            if not is_full and game_count == games: games += 1
-
-    return outcomes
+    return average_outcomes
 
 
 def self_play(agent):
-    results = play({1: agent, -1: agent}, config.GAME_AMOUNT_SELF_PLAY, True)
+    outcome = play({1: agent, -1: agent}, config.GAME_AMOUNT_SELF_PLAY, True)
 
-    print(f"The results from self-play were: {results}")
+    print(f"The average outcome from self-play was: {outcome}")
 
 
 def retrain_network(network):
@@ -94,7 +100,7 @@ def retrain_network(network):
 
     network.iterations.append(config.TRAINING_ITERATIONS * config.EPOCHS)
     network.version += 1
-    network.plot_metrics(False)
+    network.plot_metrics(False, False)
 
 
 def evaluate_network(agents):
@@ -102,7 +108,7 @@ def evaluate_network(agents):
 
     log(agents, results)
     print(f"The results were: {results}")
-    if results[-1] > results[1] * config.WINNING_THRESHOLD:
+    if results[1] > results[0] * config.WINNING_THRESHOLD:
         agents[1].nn.copy_weights(agents[-1].nn)
         agents[-1].nn.save_to_file()
         print(f"The best_agent has copied the current_agent's weights")
@@ -113,8 +119,8 @@ def evaluate_network(agents):
 def log(agents, results):
     names = [agents[1].get_name(), agents[-1].get_name()]
 
-    best_name = names[np.argmax(results[1:])]
-    best = f"{best_name[0]} {best_name[1]}" if results[1] != results[2] else "They both are" 
+    best_name = names[np.argmax(results)]
+    best = f"{best_name[0]} {best_name[1]}" if results[0] != results[1] else "They both are" 
     message = f"""{datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')}:
 ------------ {names[0][0]} vs {names[1][0]} ------------
 Results are: {results}
@@ -138,7 +144,7 @@ def play_versions(versions, games):
     results = play(agents, games, False)
     
     print(f"The results between versions {versions[0]} and {versions[1]} were: {results}")
-    best = versions[np.argmax(results[1:])]
+    best = versions[np.argmax(results)]
     print(f"The best version was: version {best}")
     log(agents, results)
 

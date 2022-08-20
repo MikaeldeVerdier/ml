@@ -4,9 +4,9 @@ import config
 
 
 class Node:
-    def __init__(self, state, player, tree):
+    def __init__(self, state, deck, tree):
         self.s = state
-        self.player = player
+        self.deck = deck
         self.tree = tree
 
         self.edges = []
@@ -14,15 +14,15 @@ class Node:
         self.tree.add_node(self)
     
     def __hash__(self):
-        return hash(tuple(self.s))
+        return hash(tuple(self.s) + tuple(self.deck))
 
     def create_node(self, action):
-        new_state = game.move(self.s.copy(), action, self.player)
+        new_state, new_deck = game.make_move(self, action)
         if self.tree.check_state(new_state):
             # print("NODE EXISTED")
             new_node = self.tree.get_node(new_state)
         else:
-            new_node = Node(new_state, -self.player, self.tree)
+            new_node = Node(new_state, new_deck, self.tree)
             # self.add_node(new_node)
         
         return new_node
@@ -47,22 +47,24 @@ class Node:
         breadcrumbs = []
         root = self
         while root.edges:
-            p = root.probabilities2(root == self)
-            edge = root.edges[np.random.choice(np.flatnonzero(p == np.max(p)))]
-            # edge = root.edges[np.argmax(p)] #
+            if len(root.edges) > 1:
+                p = root.probabilities2(root == self)
+                edge = root.edges[np.random.choice(np.flatnonzero(p == np.max(p)))]
+                # edge = root.edges[np.argmax(p)] #
+            else: edge = root.edges[0]
             breadcrumbs.append(edge)
             root = edge.out_node
-        outcome = game.check_game_over(root.s)
+        outcome = game.check_game_over(root)
         if outcome is None:
             nodes = (self,) + tuple(edge.out_node for edge in breadcrumbs)
             (v, p) = nn.get_preds(nodes)
             root.expand_fully(p)
-        else: v = outcome * root.player
+        else: v = outcome
         root.backfill(v, breadcrumbs)
 
     def expand_fully(self, prior):
         # for action in sorted(game.get_legal_moves(self.s)): #
-        for action in game.get_legal_moves(self.s):
+        for action in game.get_legal_moves(self):
             new_node = self.create_node(action)
             edge = Edge(self, new_node, action, prior[action])
             self.edges.append(edge)
@@ -87,7 +89,7 @@ class Node:
     def backfill(self, v, breadcrumbs):
         for edge in breadcrumbs:
             edge.n += 1
-            edge.w += v * self.player * edge.player
+            edge.w += v
             edge.q = edge.w / edge.n
 
 
@@ -95,7 +97,6 @@ class Edge:
     def __init__(self, in_node, out_node, action, prior):
         self.in_node = in_node
         self.out_node = out_node
-        self.player = in_node.player
         self.action = action
         
         self.n = 0

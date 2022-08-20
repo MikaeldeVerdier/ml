@@ -37,7 +37,7 @@ class NeuralNetwork:
     def __init__(self, load, version):
         self.version = version
 
-        main_input = Input(shape=game.GAME_DIMENSIONS + (config.DEPTH * 2,), name="main_input")
+        main_input = Input(shape=game.GAME_DIMENSIONS * 2 + (config.DEPTH,), name="main_input")
 
         x = self.convolutional_layer(main_input, config.CONVOLUTIONAL_LAYER["filter_amount"], config.CONVOLUTIONAL_LAYER["kernel_size"])
         for _ in range(config.RESIDUAL_LAYER["amount"]): x = self.residual_layer(x, config.RESIDUAL_LAYER["filter_amount"], config.RESIDUAL_LAYER["kernel_size"])
@@ -108,12 +108,12 @@ class NeuralNetwork:
         x = BatchNormalization(axis=3)(x)
         x = LeakyReLU()(x)
         x = Flatten()(x)
-        x = Dense(np.prod(game.GAME_DIMENSIONS), use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST), name="policy_head")(x)
+        x = Dense(game.MOVE_AMOUNT, use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST), name="policy_head")(x)
         return (x)
 
     @cache
     def get_preds(self, nodes):
-        data = np.expand_dims(game.generate_tutorial_game_state(nodes, False), axis=0)
+        data = np.expand_dims(game.generate_tutorial_game_state(nodes), axis=0)
         (v, p) = self.model.predict(data)
 
         logits = p[0]
@@ -123,7 +123,9 @@ class NeuralNetwork:
 
         mask = np.full(logits.shape, True)
         node = nodes[-1]
-        legal_moves = game.get_legal_moves(node.s)
+        legal_moves = game.get_legal_moves(node)
+        if 104 in legal_moves:
+            print("NU")
         mask[legal_moves] = False
 
         if max(logits) > 85: logits *= 85/max(logits)

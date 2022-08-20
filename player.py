@@ -12,7 +12,7 @@ class User():
 
     def play_turn(self, action, tau):
         if action is not None: self.mcts = self.mcts.update_root(action)
-        moves = game.get_legal_moves(self.mcts.s)
+        moves = game.get_legal_moves(self.mcts)
         legal_moves = [move % game.MOVE_AMOUNT + 1 for move in moves]
         user_move = None
         while user_move not in legal_moves:
@@ -27,10 +27,9 @@ class User():
 
     @staticmethod
     def print_move(root, action):
-        player_dict = {1: "X", -1: "O"}
-        print(f"It's {player_dict[root.player]}'s turn")
-        print(f"Move to make is: {action} ({action % 7 + 1})")
+        print(f"Move to make is: {action}")
         print(f"Position is now:\n{game.print_board(root.s)}\n")
+        print(f"Deck length is now: {len(root.deck)}")
 
 
 class Agent():
@@ -41,9 +40,7 @@ class Agent():
     def get_name(self):
         return (f"Version {self.nn.version}" if not self.name else self.name, "is")
 
-    def play_turn(self, action, tau):
-        if action in game.get_legal_moves(self.mcts.s): self.mcts = self.mcts.update_root(action)
-        
+    def play_turn(self, tau):
         for _ in range(config.MCTS_SIMS): self.mcts.simulate(self.nn)
 
         pi, values = self.getAV(self.mcts, tau)
@@ -55,12 +52,12 @@ class Agent():
         nn_value = -self.nn.get_preds((self.mcts,))[0]
         self.print_move(self.mcts, pi, action, value, nn_value)
 
-        return action, pi
+        return pi
 
     @staticmethod
     def getAV(root, tau):
-        pi = np.zeros(np.prod(game.GAME_DIMENSIONS))
-        values = np.zeros(np.prod(game.GAME_DIMENSIONS))
+        pi = np.zeros(game.MOVE_AMOUNT)
+        values = np.zeros(game.MOVE_AMOUNT)
 
         for edge in root.edges:
             pi[edge.action] = edge.n  # ** 1/tau
@@ -82,10 +79,9 @@ class Agent():
     
     @staticmethod
     def print_move(root, pi, action, mcts_value, nn_value):
-        player_dict = {1: "X", -1: "O"}
-        print(f"It's {player_dict[root.player]}'s turn")
         print(f"Action values are:\n{np.round(game.print_values(pi), 3)}")
-        print(f"Move to make is: {action} ({action % 7 + 1})")
+        print(f"Move to make is: {action}")
         print(f"Position is now:\n{game.print_board(root.s)}")
+        print(f"Deck length is now: {len(root.deck)}")
         print(f"MCTS percieved value is: {mcts_value:.3f}")
         print(f"NN percieved value is: {nn_value:.3f}\n")

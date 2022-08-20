@@ -1,90 +1,87 @@
 import numpy as np
 import config
 
-GAME_DIMENSIONS = (6, 7)
-IN_A_ROW = 4
-MOVE_AMOUNT = GAME_DIMENSIONS[1]
+GAME_DIMENSIONS = (52,)
+MOVE_AMOUNT = GAME_DIMENSIONS[0] * 2 + 1
+SUIT_LENGTH = GAME_DIMENSIONS[0]/4
 
 
-def generate_game_state(node, mirror):
-    root = node
-    board_history = []
-    for player in [1, -1]:
-        node = root
-        for _ in range(config.DEPTH):
-            s = node.s if not mirror else mirror_board(node.s)
-            position = np.zeros(len(s))
-            position[s == player] = 1
-            board_history.append(position.reshape(GAME_DIMENSIONS))
-            if node.parent and node.parent.parent:
-                node = node.parent.parent
-    # board_history.append(np.array([[[node.player + 1]] * GAME_DIMENSIONS[1]] * GAME_DIMENSIONS[0]))
-    game_state = np.moveaxis(np.array(board_history), 0, -1)
-    return game_state
-
-
-def generate_tutorial_game_state(nodes, mirror):
+def generate_tutorial_game_state(nodes):
     nodes = (None,) * (config.DEPTH - len(nodes)) + nodes
-    root = nodes[-1]
+    node = nodes[-1]
     board_history = []
-    for player in [root.player, -root.player]:
-        node = root
-        for depth in range(config.DEPTH):
-            s = node.s if not mirror else np.array(mirror_board(node.s))
-            position = np.zeros(len(s))
-            position[s == player] = 1
-            board_history += position.tolist()
-            if nodes[-depth - 1]: node = nodes[-depth - 1]
+    for depth in range(config.DEPTH):
+        for i in range(1, 53):
+            position = np.zeros(len(node.s))
+            position[node.s == i] = 1
+            board_history.append(position)
+        if nodes[-depth - 1]: node = nodes[-depth - 1]
     # board_history.append(np.array([[[node.player + 1]] * GAME_DIMENSIONS[1]] * GAME_DIMENSIONS[0]))
-    game_state = np.reshape(board_history, (GAME_DIMENSIONS + (config.DEPTH * 2,)))
-    return game_state
+    # game_state = np.reshape(board_history, (GAME_DIMENSIONS + (config.DEPTH * 2,)))
+    return board_history
 
 
 def mirror_board(board):
     return [board[x + z * GAME_DIMENSIONS[1]] for z in range(GAME_DIMENSIONS[0]) for x in range(GAME_DIMENSIONS[1] - 1, -1, -1)]
 
 
-def get_legal_moves(board):  # , all_moves):
-    if MOVE_AMOUNT != np.prod(GAME_DIMENSIONS):
-        legal_moves = []
-        for dim1 in range(GAME_DIMENSIONS[1]):
-            for dim2 in range(GAME_DIMENSIONS[0]):
-                if board[dim1 + dim2 * GAME_DIMENSIONS[1]] != 0:
-                    if dim2 != 0: legal_moves.append(dim1 + (dim2 - 1) * GAME_DIMENSIONS[1])
-                    # elif all_moves: legal_moves.append(-1)
-                    # legal_moves.append(-1 if dim2 == 0 else dim1 + (dim2 - 1) * GAME_DIMENSIONS[1])
-                    break
-            else: legal_moves.append(dim1 + dim2 * GAME_DIMENSIONS[1])
-    else:
-        legal_moves = np.where(board == 0)
-        if len(legal_moves) != 0: legal_moves = legal_moves[0]
+def get_legal_moves(node):  # , all_moves):
+    legal_moves = [0] if len(node.deck) else []
+    checks = [1]
+    for i, pos in enumerate(node.s[1:], 1):
+        if pos == 0:
+            break
+        if i == 3: checks += [3]
+        for check in checks:
+            if can_move(pos, node.s[i - check]): legal_moves.append(int(2 * i + 0.5 + 0.5 * check))
+
     return legal_moves
 
 
-def check_game_over(board):
-    board = board.tolist()
-    for player in [1, -1]:
-        for checks in [[[GAME_DIMENSIONS[0], GAME_DIMENSIONS[1] - IN_A_ROW + 1], list(range(IN_A_ROW))], [[GAME_DIMENSIONS[0] - IN_A_ROW + 1, GAME_DIMENSIONS[1]], [element * GAME_DIMENSIONS[1] for element in list(range(IN_A_ROW))]], [[GAME_DIMENSIONS[0] - IN_A_ROW + 1, GAME_DIMENSIONS[1] - IN_A_ROW + 1], [element * (GAME_DIMENSIONS[1] - 1) + IN_A_ROW - 1 for element in list(range(IN_A_ROW))]], [[GAME_DIMENSIONS[0] - IN_A_ROW + 1, GAME_DIMENSIONS[1] - IN_A_ROW + 1], [element * (GAME_DIMENSIONS[1] + 1) for element in list(range(IN_A_ROW))]]]:
-            for i in range(checks[0][0]):
-                for i2 in range(checks[0][1]):
-                    pos = [board[i * GAME_DIMENSIONS[1] + i2 + i3] == player for i3 in checks[1]]
-                    if pos.count(True) == IN_A_ROW: return player
-
-    if np.count_nonzero(board) == np.prod(GAME_DIMENSIONS): return 0
+def can_move(card1, card2):
+    if card1 % SUIT_LENGTH == card2 % SUIT_LENGTH:
+        return True
+    elif np.floor((card1 - 1) / SUIT_LENGTH) == np.floor((card2 - 1) / SUIT_LENGTH):
+        return True
+    else:
+        return False
 
 
-def move(board, a, player):
-    board[a] = player
-    return board
+def check_game_over(node):
+    if not node.deck and not len(get_legal_moves(node)):
+        if node.s[1] == 0:
+            pass
+        return 1 / np.where(node.s == 0)[0][0]
+
+
+def make_move(node, move):
+    board = node.s.copy()
+    deck = node.deck.copy()
+    if move == 0:
+        rand_index = np.random.randint(0, len(deck))
+        index = np.where(board == 0)[0][0]
+        board[index] = node.deck[rand_index]
+        deck.pop(rand_index)
+        # node.deck = np.delete(node.deck, rand_index)
+    else:
+        index = int(np.ceil(move / 2)) - 1
+        kind = 3 - 2 * (move % 2)
+        board[index - kind] = board[index]
+        board = np.delete(board, index)
+        board = np.append(board, 0)
+    return board, deck
 
 
 def print_board(board):
-    board = board.astype("<U1")
-    board[board == "-"] = "O"
-    board[board == "1"] = "X"
-    board[board == "0"] = "-"
+    board = board.astype("<U4")
+    board[board == "0.0"] = "-"
+    suit_dict = {0: "sp", 1: "hj", 2: "ru", 3: "kl"}
+    for i, value in enumerate(board):
+        if value != "-":
+            suit = np.floor((int(float(value)) - 1) / SUIT_LENGTH)
+            board[i] = f"{suit_dict[suit]}{int(int(float(value)) % SUIT_LENGTH) + 1}"
     return board.reshape(GAME_DIMENSIONS)
 
 
 def print_values(values):
-    return values.reshape(GAME_DIMENSIONS)
+    return values.reshape(MOVE_AMOUNT)
