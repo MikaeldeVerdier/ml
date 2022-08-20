@@ -55,21 +55,29 @@ def check_game_over(node):
 
 
 def make_move(node, move):
-    board = node.s.copy()
-    deck = node.deck.copy()
+    node_info = []
     if move == 0:
-        rand_index = np.random.randint(0, len(deck))
-        index = np.where(board == 0)[0][0]
-        board[index] = node.deck[rand_index]
-        deck.pop(rand_index)
+        for card in node.deck:
+            board = node.s.copy()
+            deck = node.deck.copy()
+
+            index = np.where(board == 0)[0][0]
+            board[index] = card
+            deck.remove(card)
+
+            node_info.append((board, deck))
         # node.deck = np.delete(node.deck, rand_index)
     else:
+        board = node.s.copy()
+        
         index = int(np.ceil(move / 2)) - 1
         kind = 3 - 2 * (move % 2)
         board[index - kind] = board[index]
         board = np.delete(board, index)
         board = np.append(board, 0)
-    return board, deck
+
+        node_info.append((board, node.deck.copy()))
+    return node_info
 
 
 def print_board(board):

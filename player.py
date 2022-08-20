@@ -11,7 +11,6 @@ class User():
         return ("You", "are")
 
     def play_turn(self, action, tau):
-        if action is not None: self.mcts = self.mcts.update_root(action)
         moves = game.get_legal_moves(self.mcts)
         legal_moves = [move % game.MOVE_AMOUNT + 1 for move in moves]
         user_move = None

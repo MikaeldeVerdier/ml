@@ -17,18 +17,20 @@ class Node:
         return hash(tuple(self.s) + tuple(self.deck))
 
     def create_node(self, action):
-        new_state, new_deck = game.make_move(self, action)
-        if self.tree.check_state(new_state):
-            # print("NODE EXISTED")
-            new_node = self.tree.get_node(new_state)
-        else:
-            new_node = Node(new_state, new_deck, self.tree)
-            # self.add_node(new_node)
-        
-        return new_node
+        new_node_info = game.make_move(self, action)
+        new_nodes = []
+        for new_state, new_deck in new_node_info:
+            if self.tree.check_state(new_state):
+                # print("NODE EXISTED")
+                new_nodes.append(self.tree.get_node(new_state))
+            else:
+                new_nodes.append(Node(new_state, new_deck, self.tree))
+                # self.add_node(new_node)
+            
+        return new_nodes
 
     def update_root(self, action):
-        return self.create_node(action)
+        return np.random.choice(self.create_node(action))
 
     """def simulate2(self, nn):
         if self.children:
@@ -44,7 +46,8 @@ class Node:
                 self.backfill(v)"""
 
     def simulate(self, nn):
-        breadcrumbs = []
+        breadcrumb_edges = []
+        breadcrumb_roots = []
         root = self
         while root.edges:
             if len(root.edges) > 1:
@@ -52,21 +55,22 @@ class Node:
                 edge = root.edges[np.random.choice(np.flatnonzero(p == np.max(p)))]
                 # edge = root.edges[np.argmax(p)] #
             else: edge = root.edges[0]
-            breadcrumbs.append(edge)
-            root = edge.out_node
+            root = np.random.choice(edge.out_nodes)
+            breadcrumb_edges.append(edge)
+            breadcrumb_roots.append(root)
         outcome = game.check_game_over(root)
         if outcome is None:
-            nodes = (self,) + tuple(edge.out_node for edge in breadcrumbs)
+            nodes = (self,) + tuple(breadcrumb_roots)
             (v, p) = nn.get_preds(nodes)
             root.expand_fully(p)
         else: v = outcome
-        root.backfill(v, breadcrumbs)
+        root.backfill(v, breadcrumb_edges)
 
     def expand_fully(self, prior):
         # for action in sorted(game.get_legal_moves(self.s)): #
         for action in game.get_legal_moves(self):
-            new_node = self.create_node(action)
-            edge = Edge(self, new_node, action, prior[action])
+            new_nodes = self.create_node(action)
+            edge = Edge(self, new_nodes, action, prior[action])
             self.edges.append(edge)
 
     def probabilities2(self, is_root):
@@ -94,9 +98,9 @@ class Node:
 
 
 class Edge:
-    def __init__(self, in_node, out_node, action, prior):
+    def __init__(self, in_node, out_nodes, action, prior):
         self.in_node = in_node
-        self.out_node = out_node
+        self.out_nodes = out_nodes
         self.action = action
         
         self.n = 0
@@ -120,4 +124,3 @@ class Tree:
     
     def get_node(self, state):
         return self.saved_nodes[hash(tuple(state))]
-
