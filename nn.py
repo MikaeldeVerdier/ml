@@ -118,7 +118,7 @@ class NeuralNetwork:
 
         logits = p[0]
 
-        # v = [[0.3]] #
+        # v = [[0.3]] # 
         # logits = np.array(list(range(42))) #
 
         mask = np.full(logits.shape, True)
@@ -137,7 +137,7 @@ class NeuralNetwork:
 
 class BestNeuralNetwork(NeuralNetwork):
     def __init__(self, load, version):
-        print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
+        print(f"Num GPUs Available: {len(tf.config.list_physical_devices('GPU'))}")
         if version is None: version = files.load_file("save.json")["best_version"]
         super().__init__(load, version)
 

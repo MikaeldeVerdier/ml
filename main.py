@@ -25,30 +25,6 @@ def initiate():
     return agents
 
 
-def setup_mcts(players):
-    for player in players: player.mcts = Node(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], list(range(1, game.GAME_DIMENSIONS[0] + 1)), Tree())
-
-
-def play_game(player, training):
-    player.mcts = Node(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], list(range(1, game.GAME_DIMENSIONS[0] + 1)), Tree())
-    
-    training_set = []
-    turn = 1
-    tau = 1 if training else 1e-2
-    outcome = None
-    while outcome is None:
-        if turn == config.TURNS_UNTIL_TAU: tau = 1e-2
-        if training: training_set.append([player.mcts])
-
-        pi = player.play_turn(tau)
-
-        if training: training_set[-1].append(pi)
-        outcome = game.check_game_over(player.mcts)
-
-        turn += 1
-    
-    return outcome, training_set
-
 def play(players, games, training):
     players = set(players.values())
 
@@ -58,7 +34,24 @@ def play(players, games, training):
     starts = 1
     while game_count < games:
         for i, player in enumerate(players):
-            outcome, training_set = play_game(player, training)
+            player.mcts = Node(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], list(range(1, game.GAME_DIMENSIONS[0] + 1)), Tree())
+    
+            turn = 1
+            if training:
+                training_set = []
+                tau = 1
+            else: tau = 1e-2
+            outcome = None
+            while outcome is None:
+                if turn == config.TURNS_UNTIL_TAU: tau = 1e-2
+                if training: training_set.append([player.mcts])
+
+                pi = player.play_turn(tau)
+
+                if training: training_set[-1].append(pi)
+                outcome = game.check_game_over(player.mcts)
+
+                turn += 1
 
             game_count += 1
             total_outcomes[i] += [outcome]

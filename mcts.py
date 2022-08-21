@@ -50,11 +50,10 @@ class Node:
         breadcrumb_roots = []
         root = self
         while root.edges:
-            if len(root.edges) > 1:
+            if len(root.edges) == 1: edge = root.edges[0]
+            else:
                 p = root.probabilities2(root == self)
                 edge = root.edges[np.random.choice(np.flatnonzero(p == np.max(p)))]
-                # edge = root.edges[np.argmax(p)] #
-            else: edge = root.edges[0]
             root = np.random.choice(edge.out_nodes)
             breadcrumb_edges.append(edge)
             breadcrumb_roots.append(root)
@@ -84,7 +83,7 @@ class Node:
             epsilon = 0
             nu = [0] * len(self.edges)
         nb = sum(edge.n for edge in self.edges)
-        return [(edge.q + edge.u(epsilon, nu[i], nb)) * np.sqrt(len(edge.out_nodes)) for i, edge in enumerate(self.edges)]
+        return [edge.q + edge.u(epsilon, nu[i], nb) for i, edge in enumerate(self.edges)]
 
     """def backfill2(self, v):
         self.n += 1
