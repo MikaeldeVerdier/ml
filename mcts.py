@@ -84,7 +84,7 @@ class Node:
             epsilon = 0
             nu = [0] * len(self.edges)
         nb = sum(edge.n for edge in self.edges)
-        return [edge.q + edge.u(epsilon, nu[i], nb) for i, edge in enumerate(self.edges)]
+        return [(edge.q + edge.u(epsilon, nu[i], nb)) * np.sqrt(len(edge.out_nodes)) for i, edge in enumerate(self.edges)]
 
     """def backfill2(self, v):
         self.n += 1
