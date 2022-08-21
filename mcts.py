@@ -58,12 +58,14 @@ class Node:
             root = np.random.choice(edge.out_nodes)
             breadcrumb_edges.append(edge)
             breadcrumb_roots.append(root)
+
         outcome = game.check_game_over(root)
         if outcome is None:
             nodes = (self,) + tuple(breadcrumb_roots)
             (v, p) = nn.get_preds(nodes)
             root.expand_fully(p)
         else: v = outcome
+        
         root.backfill(v, breadcrumb_edges)
 
     def expand_fully(self, prior):

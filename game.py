@@ -38,13 +38,18 @@ def get_legal_moves(node):  # , all_moves):
     return legal_moves
 
 
+def get_card(value):
+    suit = np.floor((value - 1) / SUIT_LENGTH)
+    value %= SUIT_LENGTH
+    return suit, value
+
+
 def can_move(card1, card2):
-    if card1 % SUIT_LENGTH == card2 % SUIT_LENGTH:
-        return True
-    elif np.floor((card1 - 1) / SUIT_LENGTH) == np.floor((card2 - 1) / SUIT_LENGTH):
-        return True
-    else:
-        return False
+    card1 = get_card(card1)
+    card2 = get_card(card2)
+    for i in range(2):
+        if card1[i] == card2[i]: return True
+    return False
 
 
 def check_game_over(node):
@@ -69,7 +74,7 @@ def make_move(node, move):
         # node.deck = np.delete(node.deck, rand_index)
     else:
         board = node.s.copy()
-        
+
         index = int(np.ceil(move / 2)) - 1
         kind = 3 - 2 * (move % 2)
         board[index - kind] = board[index]
@@ -84,10 +89,10 @@ def print_board(board):
     board = board.astype("<U4")
     board[board == "0.0"] = "-"
     suit_dict = {0: "sp", 1: "hj", 2: "ru", 3: "kl"}
-    for i, value in enumerate(board):
-        if value != "-":
-            suit = np.floor((int(float(value)) - 1) / SUIT_LENGTH)
-            board[i] = f"{suit_dict[suit]}{int(int(float(value)) % SUIT_LENGTH) + 1}"
+    for i, pos in enumerate(board):
+        if pos != "-":
+            suit, value = get_card(float(pos))
+            board[i] = f"{suit_dict[suit]}{int(value % SUIT_LENGTH) + 1}"
     return board.reshape(GAME_DIMENSIONS)
 
 

@@ -45,49 +45,44 @@ class Agent():
             action = legal_moves[0]
             pi = np.zeros(game.MOVE_AMOUNT)
             pi[action] = 1
-            value = 0
         else: 
             for _ in range(config.MCTS_SIMS): self.mcts.simulate(self.nn)
 
-            pi, values = self.getAV(self.mcts, tau)
+            pi = self.getAV(self.mcts, tau)
             
-            action, value = self.choose_action(pi, values, tau)
+            action = self.choose_action(pi, tau)
         # action = sorted(game.get_legal_moves(self.mcts.s))[-1] #
         self.mcts = self.mcts.update_root(action)
 
         nn_value = -self.nn.get_preds((self.mcts,))[0]
-        self.print_move(self.mcts, pi, action, value, nn_value)
+        self.print_move(self.mcts, pi, action, nn_value)
 
         return pi
 
     @staticmethod
     def getAV(root, tau):
         pi = np.zeros(game.MOVE_AMOUNT)
-        values = np.zeros(game.MOVE_AMOUNT)
 
         for edge in root.edges:
             pi[edge.action] = edge.n  # ** 1/tau
-            values[edge.action] = edge.q
 
         pi /= np.sum(pi)
 
-        return pi, values
+        return pi
 
     @staticmethod
-    def choose_action(pi, values, tau):
+    def choose_action(pi, tau):
         if tau == 1e-2:
             actions = np.flatnonzero(pi == np.max(pi))
             action = np.random.choice(actions)
         else: action = np.where(np.random.multinomial(1, pi) == 1)[0][0]
-        value = values[action]
 
-        return action, value
+        return action
     
     @staticmethod
-    def print_move(root, pi, action, mcts_value, nn_value):
+    def print_move(root, pi, action, nn_value):
         print(f"Action values are:\n{np.round(game.print_values(pi), 3)}")
         print(f"Move to make is: {action}")
         print(f"Position is now:\n{game.print_board(root.s)}")
         print(f"Deck length is now: {len(root.deck)}")
-        print(f"MCTS percieved value is: {mcts_value:.3f}")
-        print(f"NN percieved value is: {nn_value:.3f}\n")
+        print(f"NN percieved value is: {nn_value:.3f}")
