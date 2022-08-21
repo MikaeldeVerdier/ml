@@ -1,9 +1,9 @@
 # Main loop
-LOOP_ITERATIONS = 50
+LOOP_ITERATIONS = 45
 
 # Network architecture
 CONVOLUTIONAL_LAYER = {"filter_amount": 75, "kernel_size": (4, 4)}
-RESIDUAL_LAYER = {"amount": 5, "filter_amount": 75, "kernel_size": (4, 4)}
+RESIDUAL_LAYER = {"amount": 8, "filter_amount": 75, "kernel_size": (4, 4)}
 DENSE_VALUE_HEAD = 20
 USE_BIAS = False
 

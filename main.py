@@ -10,7 +10,7 @@ from player import User, Agent
 
 
 def initiate():
-    load = False
+    load = True
 
     files.setup_files()
     if not load:
@@ -94,7 +94,7 @@ def retrain_network(network):
 
     network.iterations.append(config.TRAINING_ITERATIONS * config.EPOCHS)
     network.version += 1
-    network.plot_metrics(False)
+    network.plot_metrics(False, False)
 
 
 def evaluate_network(agents):

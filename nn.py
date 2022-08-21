@@ -1,4 +1,4 @@
-from ast import Import
+import os
 import numpy as np
 import json
 import matplotlib.pyplot as plt
@@ -12,6 +12,7 @@ from tensorflow.keras.layers import Input, Dense, Conv2D, Flatten, BatchNormaliz
 from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.callbacks import ModelCheckpoint
 from keras.utils.vis_utils import plot_model
+
 
 try:
     from functools import cache
@@ -36,6 +37,14 @@ except ImportError:
 class NeuralNetwork:
     def __init__(self, load, version):
         self.version = version
+
+        if load:
+            checkpoint_path = f"{config.SAVE_PATH}training/v.{version}"
+            if not os.path.exists(checkpoint_path):
+                with tf.keras.utils.custom_object_scope({"softmax_cross_entropy_with_logits": self.softmax_cross_entropy_with_logits}):
+                    self.model = tf.keras.models.load_model(f"model_v{version}")
+                print(f"Tensorflow model loded with version: {version}")
+                return
 
         main_input = Input(shape=game.GAME_DIMENSIONS + (config.DEPTH * 2,), name="main_input")
 
