@@ -2,6 +2,7 @@ import numpy as np
 import config
 
 GAME_DIMENSIONS = (52,)
+NN_INPUT_DIMENSIONS = GAME_DIMENSIONS * 2 + (1,)
 MOVE_AMOUNT = GAME_DIMENSIONS[0] * 2 + 1
 SUIT_LENGTH = GAME_DIMENSIONS[0]/4
 
@@ -17,7 +18,7 @@ def generate_tutorial_game_state(nodes):
             board_history.append(position)
         if nodes[-depth - 1]: node = nodes[-depth - 1]
     # board_history.append(np.array([[[node.player + 1]] * GAME_DIMENSIONS[1]] * GAME_DIMENSIONS[0]))
-    # game_state = np.reshape(board_history, (GAME_DIMENSIONS + (config.DEPTH * 2,)))
+    # game_state = np.reshape(board_history, NN_INPUT_DIMENSIONS)
     return board_history
 
 

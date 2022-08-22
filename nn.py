@@ -37,7 +37,7 @@ class NeuralNetwork:
     def __init__(self, load, version):
         self.version = version
 
-        main_input = Input(shape=game.GAME_DIMENSIONS * 2 + (config.DEPTH,), name="main_input")
+        main_input = Input(shape=game.NN_INPUT_DIMENSIONS, name="main_input")
 
         x = self.convolutional_layer(main_input, config.CONVOLUTIONAL_LAYER["filter_amount"], config.CONVOLUTIONAL_LAYER["kernel_size"])
         for _ in range(config.RESIDUAL_LAYER["amount"]): x = self.residual_layer(x, config.RESIDUAL_LAYER["filter_amount"], config.RESIDUAL_LAYER["kernel_size"])

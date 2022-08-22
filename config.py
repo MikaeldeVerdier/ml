@@ -5,7 +5,7 @@ LOOP_ITERATIONS = 50
 CONVOLUTIONAL_LAYER = {"filter_amount": 75, "kernel_size": (3, 3)}
 RESIDUAL_LAYER = {"amount": 20, "filter_amount": 75, "kernel_size": (3, 3)}
 DENSE_VALUE_HEAD = 20
-USE_BIAS = False
+USE_BIAS = True
 
 # Self-play
 GAME_AMOUNT_SELF_PLAY = 30
