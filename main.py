@@ -87,7 +87,7 @@ def retrain_network(network):
         minibatch = random.sample(positions, config.BATCH_SIZE)
 
         x = np.array([batch[0] for batch in minibatch])
-        y = {"value_head": np.array([batch[2] for batch in minibatch], dtype="float64"), "policy_head": np.array([batch[1] for batch in minibatch])}
+        y = {"value_head": np.array([batch[2] for batch in minibatch]), "policy_head": np.array([batch[1] for batch in minibatch])}
 
         network.train(x, y)
 
