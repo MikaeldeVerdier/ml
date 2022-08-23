@@ -28,6 +28,7 @@ MOMENTUM = 0.9
 
 # Evaluating network
 GAME_AMOUNT_EVALUATION = 10
+EVALUATION_FREQUENCY = 1
 WINNING_THRESHOLD = 1.3
 
 # Play versions

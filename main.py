@@ -149,7 +149,7 @@ def main():
         print(f"Now starting main loop iteration: {i}")
         self_play(agents[1])
         retrain_network(agents[-1].nn)
-        agents = evaluate_network(agents)
+        if i != 0 and i % config.EVALUATION_FREQUENCY == 0: agents = evaluate_network(agents)
 
     # play_versions([1, agents[1].nn.version], config.GAME_AMOUNT_PLAY_VERSIONS)
     # play_test(agents[1].nn.version, config.GAME_AMOUNT_PLAY_TEST)
