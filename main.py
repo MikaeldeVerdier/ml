@@ -149,11 +149,11 @@ def main():
         print(f"Now starting main loop iteration: {i}")
         self_play(agents[1])
         retrain_network(agents[-1].nn)
-        if i != 0 and i % config.EVALUATION_FREQUENCY == 0: agents = evaluate_network(agents)
+        if i % config.EVALUATION_FREQUENCY == 0: agents = evaluate_network(agents)
 
     # play_versions([1, agents[1].nn.version], config.GAME_AMOUNT_PLAY_VERSIONS)
     # play_test(agents[1].nn.version, config.GAME_AMOUNT_PLAY_TEST)
-    # files.add_to_file("positions.json", files.load_file("poss.json"), config.POSITION_AMOUNT)
+    # print(files.add_to_file("positions.json", files.load_file("poss.json"), config.POSITION_AMOUNT)[0])
 
 
 if __name__ == "__main__":
