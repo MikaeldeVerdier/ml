@@ -45,7 +45,7 @@ class NeuralNetwork:
         ph = self.policy_head(x)
 
         self.model = Model(inputs=[main_input], outputs=[vh, ph])
-        self.model.compile(loss={"value_head": "mean_squared_error", "policy_head": self.softmax_cross_entropy_with_logits}, optimizer=SGD(learning_rate=config.LEARNING_RATE, momentum=config.MOMENTUM), loss_weights={"value_head": 0.5, "policy_head": 0.5}, metrics="accuracy")
+        self.model.compile(loss={"value_head": "mean_absolute_error", "policy_head": self.softmax_cross_entropy_with_logits}, optimizer=SGD(learning_rate=config.LEARNING_RATE, momentum=config.MOMENTUM), loss_weights={"value_head": 0.5, "policy_head": 0.5}, metrics="accuracy")
         
         if load:
             if version:
