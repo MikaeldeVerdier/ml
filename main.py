@@ -29,8 +29,6 @@ def play(players, games, training):
     players = set(players.values())
 
     game_count = 0
-    total_outcomes = [[]] * len(players)
-    average_outcomes = [0] * len(players)
     starts = 1
     while game_count < games:
         for i, player in enumerate(players):
@@ -54,8 +52,8 @@ def play(players, games, training):
                 turn += 1
 
             game_count += 1
-            total_outcomes[i] += [outcome]
-            average_outcomes[i] = sum(total_outcomes[i]) / len(total_outcomes[i])
+            player.outcome_len += 1
+            player.average_outcome = (player.average_outcome * (player.outcome_len - 1) + outcome) / player.outcome_len
             starts *= -1
 
             print(f"We are " + ("training" if training else "evaluating"))
@@ -71,8 +69,6 @@ def play(players, games, training):
                 if is_full and recent: files.make_backup("positions.json", f"positions_{config.POSITION_AMOUNT}.json")
                 
                 if not is_full and game_count == games: games += 1
-
-    return average_outcomes
 
 
 def self_play(agent):
@@ -97,12 +93,15 @@ def retrain_network(network):
 
 
 def evaluate_network(agents):
-    results = play(agents, config.GAME_AMOUNT_EVALUATION, False)
+    agents = [agent for agent in agents if agent.outcome_len != config.GAME_AMOUNT_EVALUATION]
+    play(agents, config.GAME_AMOUNT_EVALUATION, False)
+    
+    results = [agent.average_outcome for agent in agents]
 
     log(agents, results)
     print(f"The results were: {results}")
     if results[1] > results[0] * config.WINNING_THRESHOLD:
-        agents[1].nn.copy_weights(agents[-1].nn)
+        agents[1].copy_weights(agents[-1].nn)
         agents[-1].nn.save_to_file()
         print(f"The best_agent has copied the current_agent's weights")
 

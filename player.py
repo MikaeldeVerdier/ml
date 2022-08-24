@@ -36,6 +36,9 @@ class Agent():
         self.nn = nn_class(load, version)
         self.name = name
 
+        self.outcome_len = 0
+        self.average_outcome = 0
+
     def get_name(self):
         return (f"Version {self.nn.version}" if not self.name else self.name, "is")
 
@@ -78,6 +81,12 @@ class Agent():
         else: action = np.where(np.random.multinomial(1, pi) == 1)[0][0]
 
         return action
+
+    def copy_weights(self, network):
+        self.average_outcome = 0
+        self.outcome_len = 0
+
+        self.nn.copy_weights(network)
     
     @staticmethod
     def print_move(root, pi, action, nn_value):
