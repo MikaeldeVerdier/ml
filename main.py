@@ -97,10 +97,10 @@ def retrain_network(agent):
 
 
 def evaluate_network(agents):
-    playing_agents = [agent for agent in agents.values() if agent.outcome_len != config.GAME_AMOUNT_EVALUATION]
+    playing_agents = {index: agent for index, agent in agents.items() if agent.outcome_len != config.GAME_AMOUNT_EVALUATION}
     play(playing_agents, config.GAME_AMOUNT_EVALUATION, False)
     
-    results = [agent.average_outcome for agent in agents]
+    results = [agent.average_outcome for agent in agents.values()]
 
     log(agents, results)
     print(f"The results were: {results}")

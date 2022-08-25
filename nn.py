@@ -60,7 +60,7 @@ class NeuralNetwork:
         # self.model.summary()
 
     def load_version(self, version):
-        self.model = load_model(f"{config.SAVE_PATH}/training/v.{version}", custom_objects={"softmax_cross_entropy_with_logits", self.softmax_cross_entropy_with_logits})
+        self.model = load_model(f"{config.SAVE_PATH}/training/v.{version}", custom_objects={"softmax_cross_entropy_with_logits": self.softmax_cross_entropy_with_logits})
 
     @staticmethod
     def softmax_cross_entropy_with_logits(y_true, y_pred):
