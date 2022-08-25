@@ -37,7 +37,7 @@ class NeuralNetwork:
         self.version = version
 
         if load:
-            load_model(f"{config.SAVE_PATH}/training/v.{version}")
+            self.load_version(version)
             print(f"NN loaded with version: {version}")
             return
 
@@ -58,6 +58,9 @@ class NeuralNetwork:
             print("You need to download pydot and graphviz to plot model.")
 
         # self.model.summary()
+
+    def load_version(self, version):
+        self.model = load_model(f"{config.SAVE_PATH}/training/v.{version}", custom_objects={"softmax_cross_entropy_with_logits", self.softmax_cross_entropy_with_logits})
 
     @staticmethod
     def softmax_cross_entropy_with_logits(y_true, y_pred):
@@ -202,7 +205,7 @@ class BestNeuralNetwork(NeuralNetwork):
         print(f"Num GPUs Available: {len(tf.config.list_physical_devices('GPU'))}")
         if version is None: version = files.load_file("save.json")["best_version"]
 
-        super().__init__(load, version)
+        super().__init__(True, version)
 
     def __hash__(self):
         return hash(self.version)
@@ -211,4 +214,4 @@ class BestNeuralNetwork(NeuralNetwork):
         self.get_preds.cache_clear()
         
         self.version = agent_nn.version
-        self.model = load_model(f"{config.SAVE_PATH}/training/v.{self.version}")
+        self.load_version(self.version)

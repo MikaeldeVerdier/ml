@@ -19,7 +19,7 @@ def initiate():
         files.reset_file("log.txt")
 
     current_agent = Agent(CurrentNeuralNetwork, load)
-    best_agent = Agent(BestNeuralNetwork, load)
+    best_agent = Agent(BestNeuralNetwork, None)
     agents = {1: best_agent, -1: current_agent}
 
     return agents
@@ -52,9 +52,11 @@ def play(players, games, training):
                 turn += 1
 
             game_count += 1
-            player.outcome_len += 1
-            player.average_outcome = (player.average_outcome * (player.outcome_len - 1) + outcome) / player.outcome_len
             starts *= -1
+
+            if not training:
+                player.outcome_len += 1
+                player.average_outcome = (player.average_outcome * (player.outcome_len - 1) + outcome) / player.outcome_len
 
             print(f"We are " + ("training" if training else "evaluating"))
             print(f"Game outcome was: 1/{(1 / outcome):} = {outcome:.5f} (Agent: {i})")
@@ -95,8 +97,8 @@ def retrain_network(agent):
 
 
 def evaluate_network(agents):
-    agents = [agent for agent in agents if agent.outcome_len != config.GAME_AMOUNT_EVALUATION]
-    play(agents, config.GAME_AMOUNT_EVALUATION, False)
+    playing_agents = [agent for agent in agents.values() if agent.outcome_len != config.GAME_AMOUNT_EVALUATION]
+    play(playing_agents, config.GAME_AMOUNT_EVALUATION, False)
     
     results = [agent.average_outcome for agent in agents]
 
