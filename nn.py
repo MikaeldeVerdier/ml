@@ -6,7 +6,7 @@ import game
 import files
 import tensorflow as tf
 from tensorflow.keras import regularizers
-from tensorflow.keras.models import Model
+from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.layers import Input, Dense, Conv2D, Flatten, BatchNormalization, LeakyReLU, add
 from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.callbacks import ModelCheckpoint
@@ -36,6 +36,11 @@ class NeuralNetwork:
     def __init__(self, load, version):
         self.version = version
 
+        if load:
+            load_model(f"{config.SAVE_PATH}/training/v.{version}")
+            print(f"NN loaded with version: {version}")
+            return
+
         main_input = Input(shape=game.NN_INPUT_DIMENSIONS, name="main_input")
 
         x = self.convolutional_layer(main_input, config.CONVOLUTIONAL_LAYER["filter_amount"], config.CONVOLUTIONAL_LAYER["kernel_size"])
@@ -47,16 +52,10 @@ class NeuralNetwork:
         self.model = Model(inputs=[main_input], outputs=[vh, ph])
         self.model.compile(loss={"value_head": "mean_absolute_error", "policy_head": self.softmax_cross_entropy_with_logits}, optimizer=SGD(learning_rate=config.LEARNING_RATE, momentum=config.MOMENTUM), loss_weights={"value_head": 0.5, "policy_head": 0.5}, metrics="accuracy")
         
-        if load:
-            if version:
-                checkpoint_path = f"{config.SAVE_PATH}training/v.{version}/cp.cpkt"
-                self.model.load_weights(checkpoint_path).expect_partial()
-                print(f"NN loaded with version: {version}")
-        else:
-            try:
-                plot_model(self.model, to_file=f"{config.SAVE_PATH}model.png", show_shapes=True, show_layer_names=True)
-            except ImportError:
-                print("You need to download pydot and graphviz to plot model.")
+        try:
+            plot_model(self.model, to_file=f"{config.SAVE_PATH}model.png", show_shapes=True, show_layer_names=True)
+        except ImportError:
+            print("You need to download pydot and graphviz to plot model.")
 
         # self.model.summary()
 
@@ -134,30 +133,15 @@ class NeuralNetwork:
         return (v[0][0], probs)
 
 
-class BestNeuralNetwork(NeuralNetwork):
-    def __init__(self, load, version):
-        print(f"Num GPUs Available: {len(tf.config.list_physical_devices('GPU'))}")
-        if version is None: version = files.load_file("save.json")["best_version"]
-        super().__init__(load, version)
-
-    def __hash__(self):
-        return hash(self.version)
-
-    def copy_weights(self, agent_nn):
-        self.get_preds.cache_clear()
-        
-        self.version = agent_nn.version
-        checkpoint_path = f"{config.SAVE_PATH}training/v.{agent_nn.version}/cp.cpkt"
-        self.model.load_weights(checkpoint_path).expect_partial()
-
-
 class CurrentNeuralNetwork(NeuralNetwork):
     def __init__(self, load, version):
         loaded = files.load_file("save.json")
         self.metrics = loaded["metrics"]
         self.iterations = loaded["iterations"]
         if version is None: version = loaded["best_version"]
+
         super().__init__(load, version)
+        self.model.save(f"{config.SAVE_PATH}/training/v.{version}")
 
     def __hash__(self):
         return hash(self.version)
@@ -165,10 +149,7 @@ class CurrentNeuralNetwork(NeuralNetwork):
     def train(self, x, y):
         self.get_preds.cache_clear()
 
-        checkpoint_path = f"{config.SAVE_PATH}training/v.{self.version + 1}/cp.cpkt"
-        cp_callback = ModelCheckpoint(filepath=checkpoint_path, save_weights_only=True, verbose=1)
-
-        fit = self.model.fit(x, y, batch_size=32, epochs=config.EPOCHS, verbose=1, validation_split=config.VALIDATION_SPLIT, callbacks=[cp_callback])
+        fit = self.model.fit(x, y, batch_size=32, epochs=config.EPOCHS, verbose=1, validation_split=config.VALIDATION_SPLIT)
         for metric in fit.history:
             [self.metrics[metric].append(fit.history[metric][i]) for i in range(config.EPOCHS)]
 
@@ -214,3 +195,20 @@ class CurrentNeuralNetwork(NeuralNetwork):
         loaded["metrics"] = self.metrics
 
         files.write("save.json", json.dumps(loaded))
+
+
+class BestNeuralNetwork(NeuralNetwork):
+    def __init__(self, load, version):
+        print(f"Num GPUs Available: {len(tf.config.list_physical_devices('GPU'))}")
+        if version is None: version = files.load_file("save.json")["best_version"]
+
+        super().__init__(load, version)
+
+    def __hash__(self):
+        return hash(self.version)
+
+    def copy_weights(self, agent_nn):
+        self.get_preds.cache_clear()
+        
+        self.version = agent_nn.version
+        self.model = load_model(f"{config.SAVE_PATH}/training/v.{self.version}")

@@ -18,8 +18,8 @@ def initiate():
         files.reset_file("positions.json")
         files.reset_file("log.txt")
 
-    best_agent = Agent(BestNeuralNetwork, load)
     current_agent = Agent(CurrentNeuralNetwork, load)
+    best_agent = Agent(BestNeuralNetwork, load)
     agents = {1: best_agent, -1: current_agent}
 
     return agents
@@ -77,7 +77,7 @@ def self_play(agent):
     print(f"The average outcome from self-play was: {outcome}")
 
 
-def retrain_network(network):
+def retrain_network(agent):
     for _ in range(config.TRAINING_ITERATIONS):
         positions = files.load_file("positions.json")
         minibatch = random.sample(positions, config.BATCH_SIZE)
@@ -85,11 +85,13 @@ def retrain_network(network):
         x = np.array([batch[0] for batch in minibatch])
         y = {"value_head": np.array([batch[2] for batch in minibatch]), "policy_head": np.array([batch[1] for batch in minibatch])}
 
-        network.train(x, y)
+        agent.nn.train(x, y)
 
-    network.iterations.append(config.TRAINING_ITERATIONS * config.EPOCHS)
-    network.version += 1
-    network.plot_metrics(False, False)
+    agent.nn.iterations.append(config.TRAINING_ITERATIONS * config.EPOCHS)
+    agent.nn.version += 1
+    agent.nn.model.save(f"{config.SAVE_PATH}/training/v.{agent.nn.version}")
+    agent.reset_outcomes()
+    agent.nn.plot_metrics(False, False)
 
 
 def evaluate_network(agents):
@@ -101,7 +103,8 @@ def evaluate_network(agents):
     log(agents, results)
     print(f"The results were: {results}")
     if results[1] > results[0] * config.WINNING_THRESHOLD:
-        agents[1].copy_weights(agents[-1].nn)
+        agents[-1].reset_outcomes()
+        agents[1].nn.copy_weights(agents[-1].nn)
         agents[-1].nn.save_to_file()
         print(f"The best_agent has copied the current_agent's weights")
 
@@ -147,7 +150,7 @@ def main():
     for i in range(config.LOOP_ITERATIONS):
         print(f"Now starting main loop iteration: {i}")
         self_play(agents[1])
-        retrain_network(agents[-1].nn)
+        retrain_network(agents[-1])
         if i % config.EVALUATION_FREQUENCY == 0: agents = evaluate_network(agents)
 
     # play_versions([1, agents[1].nn.version], config.GAME_AMOUNT_PLAY_VERSIONS)
