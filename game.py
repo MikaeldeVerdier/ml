@@ -22,10 +22,6 @@ def generate_tutorial_game_state(nodes):
     return board_history
 
 
-def mirror_board(board):
-    return [board[x + z * GAME_DIMENSIONS[1]] for z in range(GAME_DIMENSIONS[0]) for x in range(GAME_DIMENSIONS[1] - 1, -1, -1)]
-
-
 def get_legal_moves(node):  # , all_moves):
     legal_moves = [0] if len(node.deck) else []
     checks = [1]
@@ -57,7 +53,7 @@ def check_game_over(node):
     if not node.deck and not len(get_legal_moves(node)):
         if node.s[1] == 0:
             pass
-        return 1 / np.where(node.s == 0)[0][0]
+        return 5 / np.where(node.s == 0)[0][0]
 
 
 def make_move(node, move):
