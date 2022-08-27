@@ -50,13 +50,11 @@ def can_move(card1, card2):
 
 
 def check_game_over(node):
-    if not node.deck and not len(get_legal_moves(node)):
-        if node.s[1] == 0:
-            pass
-        return 5 / np.where(node.s == 0)[0][0]
+    if not node.deck and not len(get_legal_moves(node)): return 5 / np.where(node.s == 0)[0][0]
+        # return -0.1 * np.where(node.s == 0)[0][0] + 5.2
 
 
-def make_move(node, move):
+def take_action(node, move):
     node_info = []
     if move == 0:
         for card in node.deck:

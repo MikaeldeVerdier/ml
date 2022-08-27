@@ -17,7 +17,7 @@ class Node:
         return hash(tuple(self.s) + tuple(self.deck))
 
     def create_node(self, action):
-        new_node_info = game.make_move(self, action)
+        new_node_info = game.take_action(self, action)
         new_nodes = []
         for new_state, new_deck in new_node_info:
             if self.tree.check_state(new_state):
