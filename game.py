@@ -2,7 +2,7 @@ import numpy as np
 import config
 
 GAME_DIMENSIONS = (52,)
-NN_INPUT_DIMENSIONS = GAME_DIMENSIONS * 2 + (1,)
+NN_INPUT_DIMENSIONS = (GAME_DIMENSIONS[0] + 1, GAME_DIMENSIONS[0]) + (1,)
 MOVE_AMOUNT = GAME_DIMENSIONS[0] * 2 + 1
 SUIT_LENGTH = GAME_DIMENSIONS[0]/4
 
@@ -10,16 +10,20 @@ SUIT_LENGTH = GAME_DIMENSIONS[0]/4
 def generate_tutorial_game_state(nodes):
     nodes = (None,) * (config.DEPTH - len(nodes)) + nodes
     node = nodes[-1]
-    board_history = []
+    game_state = []
     for depth in range(config.DEPTH):
         for i in range(1, 53):
             position = np.zeros(len(node.s))
             position[node.s == i] = 1
-            board_history.append(position)
+            game_state.append(position)
+
+        deck = np.zeros(GAME_DIMENSIONS[0])
+        for card in node.deck: deck[card - 1] = 1
+        game_state.append(deck)
         if nodes[-depth - 1]: node = nodes[-depth - 1]
     # board_history.append(np.array([[[node.player + 1]] * GAME_DIMENSIONS[1]] * GAME_DIMENSIONS[0]))
     # game_state = np.reshape(board_history, NN_INPUT_DIMENSIONS)
-    return board_history
+    return game_state
 
 
 def get_legal_moves(node):  # , all_moves):
