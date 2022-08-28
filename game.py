@@ -26,8 +26,7 @@ def get_legal_moves(node):  # , all_moves):
     legal_moves = [0] if len(node.deck) else []
     checks = [1]
     for i, pos in enumerate(node.s[1:], 1):
-        if pos == 0:
-            break
+        if pos == 0: break
         if i == 3: checks += [3]
         for check in checks:
             if can_move(pos, node.s[i - check]): legal_moves.append(int(2 * i + 0.5 + 0.5 * check))

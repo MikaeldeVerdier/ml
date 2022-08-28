@@ -59,7 +59,7 @@ def play(players, games, training):
                 player.average_outcome = (player.average_outcome * (player.outcome_len - 1) + outcome) / player.outcome_len
 
             print(f"We are " + ("training" if training else "evaluating"))
-            print(f"Game outcome was: 1/{(1 / outcome):} = {outcome:.5f} (Agent: {i})")
+            print(f"Game outcome was: 5/{(5 / outcome):} = {outcome:.5f} (Agent: {i})")
             print(f"Amount of games played is now: {game_count}\n")
 
             if training:
@@ -97,15 +97,14 @@ def retrain_network(agent):
 
 
 def evaluate_network(agents):
-    playing_agents = {index: agent for index, agent in agents.items() if agent.outcome_len != config.GAME_AMOUNT_EVALUATION}
-    play(playing_agents, config.GAME_AMOUNT_EVALUATION, False)
+    play(agents, config.GAME_AMOUNT_EVALUATION, False)
     
     results = [agent.average_outcome for agent in agents.values()]
 
     log(agents, results)
     print(f"The results were: {results}")
     if results[1] > results[0] * config.WINNING_THRESHOLD:
-        agents[-1].reset_outcomes()
+        agents[1].reset_outcomes()
         agents[1].nn.copy_weights(agents[-1].nn)
         agents[-1].nn.save_to_file()
         print(f"The best_agent has copied the current_agent's weights")
