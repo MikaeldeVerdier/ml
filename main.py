@@ -10,16 +10,16 @@ from player import User, Agent
 
 
 def initiate():
-    load = False
+    load = [False, False]
 
     files.setup_files()
-    if not load:
+    if not any(load):
         files.reset_file("save.json")
         files.reset_file("positions.json")
         files.reset_file("log.txt")
 
-    current_agent = Agent(CurrentNeuralNetwork, load)
-    best_agent = Agent(BestNeuralNetwork, None)
+    current_agent = Agent(CurrentNeuralNetwork, load[0])
+    best_agent = Agent(BestNeuralNetwork, load[1])
     agents = {1: best_agent, -1: current_agent}
 
     return agents
@@ -74,9 +74,10 @@ def play(players, games, training):
 
 
 def self_play(agent):
-    outcome = play({1: agent, -1: agent}, config.GAME_AMOUNT_SELF_PLAY, True)
+    play({1: agent, -1: agent}, config.GAME_AMOUNT_SELF_PLAY, True)
 
-    print(f"The average outcome from self-play was: {outcome}")
+    # outcome = agent.average_outcome
+    # print(f"The average outcome from self-play was: {outcome}")
 
 
 def retrain_network(agent):
@@ -92,6 +93,7 @@ def retrain_network(agent):
     agent.nn.iterations.append(config.TRAINING_ITERATIONS * config.EPOCHS)
     agent.nn.version += 1
     agent.nn.model.save(f"{config.SAVE_PATH}/training/v.{agent.nn.version}")
+    agent.nn.save_to_file("current_agent")
     agent.reset_outcomes()
     agent.nn.plot_metrics(False, False)
 
@@ -104,9 +106,8 @@ def evaluate_network(agents):
     log(agents, results)
     print(f"The results were: {results}")
     if results[1] > results[0] * config.WINNING_THRESHOLD:
-        agents[1].reset_outcomes()
-        agents[1].nn.copy_weights(agents[-1].nn)
-        agents[-1].nn.save_to_file()
+        agents[1].copy_profile(agents[-1])
+        agents[-1].nn.save_to_file("best_agent")
         print(f"The best_agent has copied the current_agent's weights")
 
     return agents

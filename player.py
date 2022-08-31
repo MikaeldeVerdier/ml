@@ -1,3 +1,4 @@
+from tkinter import W
 import numpy as np
 import game
 import config
@@ -57,7 +58,6 @@ class Agent():
             pi = self.getAV(self.mcts, tau)
             
             action = self.choose_action(pi, tau)
-        # action = sorted(game.get_legal_moves(self.mcts.s))[-1] #
         self.mcts = self.mcts.update_root(action)
 
         nn_value = self.nn.get_preds((self.mcts,))[0]
@@ -84,6 +84,12 @@ class Agent():
         else: action = np.where(np.random.multinomial(1, pi) == 1)[0][0]
 
         return action
+
+    def copy_profile(self, agent):
+        self.average_outcome = agent.average_outcome
+        self.outcome_len = agent.outcome_len
+
+        self.nn.copy_weights(agent.nn)
     
     @staticmethod
     def print_move(root, pi, action, nn_value):

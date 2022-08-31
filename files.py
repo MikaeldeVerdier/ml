@@ -4,41 +4,81 @@ import config
 from shutil import copyfile
 
 EMPTY_SAVE = json.dumps({
-    "best_version": 0,
-    "iterations": [
-
-    ],
-    "metrics": {
-        "loss": [
+    "best_agent": {
+        "version": 0,
+        "iterations": [
 
         ],
-        "value_head_loss": [
+        "metrics": {
+            "loss": [
+
+            ],
+            "value_head_loss": [
+
+            ],
+            "policy_head_loss": [
+
+            ],
+            "value_head_accuracy": [
+
+            ],
+            "policy_head_accuracy": [
+
+            ],
+            "val_loss": [
+
+            ],
+            "val_value_head_loss": [
+
+            ],
+            "val_policy_head_loss": [
+
+            ],
+            "val_value_head_accuracy": [
+
+            ],
+            "val_policy_head_accuracy": [
+
+            ]
+        }
+    },
+    "current_agent": {
+        "version": 0,
+        "iterations": [
 
         ],
-        "policy_head_loss": [
+        "metrics": {
+            "loss": [
 
-        ],
-        "value_head_accuracy": [
+            ],
+            "value_head_loss": [
 
-        ],
-        "policy_head_accuracy": [
+            ],
+            "policy_head_loss": [
 
-        ],
-        "val_loss": [
+            ],
+            "value_head_accuracy": [
 
-        ],
-        "val_value_head_loss": [
+            ],
+            "policy_head_accuracy": [
 
-        ],
-        "val_policy_head_loss": [
+            ],
+            "val_loss": [
 
-        ],
-        "val_value_head_accuracy": [
+            ],
+            "val_value_head_loss": [
 
-        ],
-        "val_policy_head_accuracy": [
+            ],
+            "val_policy_head_loss": [
 
-        ]
+            ],
+            "val_value_head_accuracy": [
+
+            ],
+            "val_policy_head_accuracy": [
+
+            ]
+        }
     }
 })
 EMPTY_POSITIONS = json.dumps([])

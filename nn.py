@@ -138,10 +138,10 @@ class NeuralNetwork:
 
 class CurrentNeuralNetwork(NeuralNetwork):
     def __init__(self, load, version):
-        loaded = files.load_file("save.json")
+        loaded = files.load_file("save.json")["current_agent"]
         self.metrics = loaded["metrics"]
         self.iterations = loaded["iterations"]
-        if version is None: version = loaded["best_version"]
+        if version is None: version = loaded["version"]
 
         super().__init__(load, version)
         self.model.save(f"{config.SAVE_PATH}/training/v.{version}")
@@ -191,11 +191,11 @@ class CurrentNeuralNetwork(NeuralNetwork):
         plt.pause(0.1)
         plt.close("all")
 
-    def save_to_file(self):
+    def save_to_file(self, agent_kind):
         loaded = files.load_file("save.json")
-        loaded["best_version"] = self.version
-        loaded["iterations"] = self.iterations
-        loaded["metrics"] = self.metrics
+        loaded[agent_kind]["best_version"] = self.version
+        loaded[agent_kind]["iterations"] = self.iterations
+        loaded[agent_kind]["metrics"] = self.metrics
 
         files.write("save.json", json.dumps(loaded))
 
@@ -203,7 +203,10 @@ class CurrentNeuralNetwork(NeuralNetwork):
 class BestNeuralNetwork(NeuralNetwork):
     def __init__(self, load, version):
         print(f"Num GPUs Available: {len(tf.config.list_physical_devices('GPU'))}")
-        if version is None: version = files.load_file("save.json")["best_version"]
+
+        if version is None:
+            loaded = files.load_file("save.json")["best_agent" if load else "current_agent"]
+            version = loaded["version"]
 
         super().__init__(True, version)
 
