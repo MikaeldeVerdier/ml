@@ -51,7 +51,7 @@ def can_move(card1, card2):
 
 
 def check_game_over(node):
-    if not node.deck and not len(get_legal_moves(node)): return 5 / np.where(node.s == 0)[0][0]
+    if not node.deck and not len(get_legal_moves(node)): return 1 / np.where(node.s == 0)[0][0]
         # return -0.1 * np.where(node.s == 0)[0][0] + 5.2
 
 

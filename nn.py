@@ -53,7 +53,8 @@ class NeuralNetwork:
         self.model.compile(loss={"value_head": "mean_absolute_error", "policy_head": self.softmax_cross_entropy_with_logits}, optimizer=SGD(learning_rate=config.LEARNING_RATE, momentum=config.MOMENTUM), loss_weights={"value_head": 0.5, "policy_head": 0.5}, metrics="accuracy")
         
         try:
-            plot_model(self.model, to_file=f"{config.SAVE_PATH}model.png", show_shapes=True, show_layer_names=True)
+            pass
+            # plot_model(self.model, to_file=f"{config.SAVE_PATH}model.png", show_shapes=True, show_layer_names=True)
         except ImportError:
             print("You need to download pydot and graphviz to plot model.")
 
@@ -127,7 +128,7 @@ class NeuralNetwork:
         legal_moves = game.get_legal_moves(node)
         mask[legal_moves] = False
 
-        if max(logits) > 85: logits *= 85/max(logits)
+        if max(logits) > 85: logits *= 85 / max(logits)
         logits[mask] = -100
 
         odds = np.exp(logits)

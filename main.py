@@ -28,6 +28,8 @@ def initiate():
 def play(players, games, training):
     players = set(players.values())
 
+    if training: training_data = [[]]
+
     game_count = 0
     starts = 1
     while game_count < games:
@@ -35,18 +37,16 @@ def play(players, games, training):
             player.mcts = Node(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], list(range(1, game.GAME_DIMENSIONS[0] + 1)), Tree())
     
             turn = 1
-            if training:
-                training_set = []
-                tau = 1
-            else: tau = 1e-2
+            tau = 1 if training else 1e-2
+
             outcome = None
             while outcome is None:
                 if turn == config.TURNS_UNTIL_TAU: tau = 1e-2
-                if training: training_set.append([player.mcts])
+                if training: training_data[-1].append([player.mcts])
 
                 pi = player.play_turn(tau)
 
-                if training: training_set[-1].append(pi)
+                if training: training_data[-1][-1].append(pi)
                 outcome = game.check_game_over(player.mcts)
 
                 turn += 1
@@ -57,20 +57,26 @@ def play(players, games, training):
             if not training:
                 player.outcome_len += 1
                 player.average_outcome = (player.average_outcome * (player.outcome_len - 1) + outcome) / player.outcome_len
+            else: 
+                for data in training_data[-1]: data.append(outcome)
 
             print(f"We are " + ("training" if training else "evaluating"))
-            print(f"Game outcome was: 5/{(5 / outcome):} = {outcome:.5f} (Agent: {i})")
+            print(f"Game outcome was: 1/{(1 / outcome):} = {outcome:.5f} (Agent: {i})")
             print(f"Amount of games played is now: {game_count}\n")
 
-            if training:
-                positions = [[np.array(game.generate_tutorial_game_state((position[0],))).tolist()] + [position[1].tolist()] + [outcome] for position in training_set]
-                len_file, recent = files.add_to_file("positions.json", positions, config.POSITION_AMOUNT)
-                print(f"Position length is now: {len_file}")
+    if training:
+        for game_data in training_data:
+            for data in game_data:
+                data[0] = np.array(game.generate_tutorial_game_state((data[0],))).tolist()
+                data[1] = data[1].tolist()
+        training_data = np.vstack(training_data).tolist()[0]
+        len_file, recent = files.add_to_file("positions.json", training_data, config.POSITION_AMOUNT)
+        print(f"Position length is now: {len_file}")
 
-                is_full = len_file == config.POSITION_AMOUNT
-                if is_full and recent: files.make_backup("positions.json", f"positions_{config.POSITION_AMOUNT}.json")
-                
-                if not is_full and game_count == games: games += 1
+        is_full = len_file == config.POSITION_AMOUNT
+        if is_full and recent: files.make_backup("positions.json", f"positions_{config.POSITION_AMOUNT}.json")
+        
+        if not is_full and game_count == games: games += 1
 
 
 def self_play(agent):
