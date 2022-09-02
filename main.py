@@ -70,12 +70,13 @@ def play(players, games, training):
             else: 
                 for data in training_data[-1]: data.append(outcome)
 
-                if len(loaded) + len(np.vstack(training_data)) < config.POSITION_AMOUNT and games == game_count:
-                    games += 1
+                pos_length = len(loaded) + len(np.vstack(training_data))
+                if pos_length < config.POSITION_AMOUNT and games == game_count: games += 1
 
             print(f"We are " + ("training" if training else "evaluating"))
             print(f"Game outcome was: 1/{(1 / outcome):} = {outcome:.5f} (Agent: {i})")
             print(f"Amount of games played is now: {game_count}\n")
+            print(f"Position length is now: {pos_length}")
 
     if training:
         for game_data in training_data:
