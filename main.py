@@ -63,8 +63,8 @@ def play(players, games, training):
                 player.outcomes["length"] += 1
                 player.outcomes["average"] = (player.outcomes["average"] * (player.outcomes["length"] - 1) + outcome) / player.outcomes["length"]
                 
-                if outcome in player.outcomes["piles"]: player.outcomes["piles"][1 / outcome] += 1
-                else: player.outcomes["piles"][1 / outcome] = 0
+                if outcome in player.outcomes["piles"]: player.outcomes["piles"][int(1 / outcome)] += 1  # int() is maybe redundant but w/e
+                else: player.outcomes["piles"][int(1 / outcome)] = 0
             else: 
                 for data in training_data[-1]: data.append(outcome)
 

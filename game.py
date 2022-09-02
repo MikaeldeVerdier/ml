@@ -24,7 +24,7 @@ def get_legal_moves(node):  # , all_moves):
         for check in checks:
             if can_move(pos, node.s[i - check]): legal_moves.append(int(2 * i + 0.5 + 0.5 * check))
 
-    return legal_moves if len(legal_moves) and len(node.deck) else [0]
+    return legal_moves if len(legal_moves) or not len(node.deck) else [0]  # ??? surely this can be done better
 
 
 def get_card(value):
