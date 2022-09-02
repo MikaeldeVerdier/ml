@@ -60,8 +60,9 @@ def play(players, games, training):
             if not training:
                 player.outcomes["length"] += 1
                 player.outcomes["average"] = (player.outcomes["average"] * (player.outcomes["length"] - 1) + outcome) / player.outcomes["length"]
-                if outcome == 1:
-                    player.outcomes["wins"] += 1
+                
+                if outcome in player.outcomes["piles"]: player.outcomes["piles"][1 / outcome] += 1
+                else: player.outcomes["piles"][1 / outcome] = 0
             else: 
                 for data in training_data[-1]: data.append(outcome)
 
@@ -85,7 +86,7 @@ def play(players, games, training):
 
 
 def self_play(agent):
-    play({1: agent, -1: agent}, config.GAME_AMOUNT_SELF_PLAY, True)
+    play({1: agent, -1: agent}, config.GAME_AMOUNT_SELF_PLAY, False)
 
     # outcome = agent.outcomes["average"]
     # print(f"The average outcome from self-play was: {outcome}")

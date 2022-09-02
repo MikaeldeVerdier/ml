@@ -3,6 +3,7 @@ import json
 import config
 from shutil import copyfile
 
+
 EMPTY_SAVE = json.dumps({
     "best_agent": {
         "version": 0,

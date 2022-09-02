@@ -9,8 +9,7 @@ from tensorflow.keras import regularizers
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.layers import Input, Dense, Conv2D, Flatten, BatchNormalization, LeakyReLU, add
 from tensorflow.keras.optimizers import SGD
-from tensorflow.keras.callbacks import ModelCheckpoint
-from keras.utils.vis_utils import plot_model
+# from keras.utils.vis_utils import plot_model
 
 try:
     from functools import cache
@@ -120,9 +119,6 @@ class NeuralNetwork:
 
         logits = p[0]
 
-        # v = [[0.3]] # 
-        # logits = np.array(list(range(42))) #
-
         mask = np.full(logits.shape, True)
         legal_moves = game.get_legal_moves(node)
         mask[legal_moves] = False
@@ -145,9 +141,6 @@ class CurrentNeuralNetwork(NeuralNetwork):
 
         super().__init__(load, version)
         self.model.save(f"{config.SAVE_PATH}/training/v.{version}")
-
-    def __hash__(self):
-        return hash(self.version)
 
     def train(self, x, y):
         self.get_preds.cache_clear()

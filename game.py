@@ -1,5 +1,5 @@
 import numpy as np
-import config
+
 
 GAME_DIMENSIONS = (52,)
 NN_INPUT_DIMENSIONS = GAME_DIMENSIONS + (2,) + (1,)
