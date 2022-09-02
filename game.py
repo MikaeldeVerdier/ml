@@ -16,7 +16,7 @@ def generate_tutorial_game_state(node):
 
 
 def get_legal_moves(node):  # , all_moves):
-    legal_moves = [0] if len(node.deck) else []
+    legal_moves = []
     checks = [1]
     for i, pos in enumerate(node.s[1:], 1):
         if pos == 0: break
@@ -24,7 +24,7 @@ def get_legal_moves(node):  # , all_moves):
         for check in checks:
             if can_move(pos, node.s[i - check]): legal_moves.append(int(2 * i + 0.5 + 0.5 * check))
 
-    return legal_moves
+    return legal_moves if len(legal_moves) and len(node.deck) else [0]
 
 
 def get_card(value):

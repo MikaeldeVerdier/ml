@@ -82,8 +82,7 @@ class Agent():
         return action
 
     def copy_profile(self, agent):
-        self.outcomes["average"] = agent.outcomes["average"]
-        self.outcomes["length"] = agent.outcomes["length"]
+        self.outcomes = agent.outcomes
 
         self.nn.copy_weights(agent.nn)
     

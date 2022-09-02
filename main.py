@@ -48,6 +48,8 @@ def play(players, games, training):
                 if training: training_data[-1].append([player.mcts])
 
                 pi = player.play_turn(tau)
+                legal_moves = game.get_legal_moves(player.mcts)
+                print(legal_moves)
 
                 if training: training_data[-1][-1].append(pi)
                 outcome = game.check_game_over(player.mcts)
