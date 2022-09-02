@@ -114,8 +114,8 @@ class NeuralNetwork:
         return (x)
 
     @cache
-    def get_preds(self, nodes):
-        data = np.expand_dims(game.generate_tutorial_game_state(nodes), axis=0)
+    def get_preds(self, node):
+        data = np.expand_dims(game.generate_tutorial_game_state(node), axis=0)
         (v, p) = self.model.predict(data)
 
         logits = p[0]
@@ -124,7 +124,6 @@ class NeuralNetwork:
         # logits = np.array(list(range(42))) #
 
         mask = np.full(logits.shape, True)
-        node = nodes[-1]
         legal_moves = game.get_legal_moves(node)
         mask[legal_moves] = False
 

@@ -7,20 +7,11 @@ MOVE_AMOUNT = GAME_DIMENSIONS[0] * 2 + 1
 SUIT_LENGTH = GAME_DIMENSIONS[0]/4
 
 
-def generate_tutorial_game_state(nodes):
-    nodes = (None,) * (config.DEPTH - len(nodes)) + nodes
-    node = nodes[-1]
-    game_state = []
-    for depth in range(config.DEPTH):
-        game_state.append(np.array(node.s) / GAME_DIMENSIONS[0])
+def generate_tutorial_game_state(node):
+    deck = np.zeros(GAME_DIMENSIONS[0])
+    for card in node.deck: deck[card - 1] = 1
 
-        deck = np.zeros(GAME_DIMENSIONS[0])
-        for card in node.deck: deck[card - 1] = 1
-        game_state.append(deck)
-
-        if nodes[-depth - 1]: node = nodes[-depth - 1]
-    # board_history.append(np.array([[[node.player + 1]] * GAME_DIMENSIONS[1]] * GAME_DIMENSIONS[0]))
-    game_state = np.moveaxis(game_state, 0, 1)
+    game_state = np.moveaxis([np.array(node.s) / GAME_DIMENSIONS[0], deck], 0, 1)
     return game_state
 
 

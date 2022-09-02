@@ -56,7 +56,7 @@ class Agent():
             action = self.choose_action(pi, tau)
         self.mcts = self.mcts.update_root(action)
 
-        nn_value = self.nn.get_preds((self.mcts,))[0]
+        nn_value = self.nn.get_preds(self.mcts)[0]
         self.print_move(self.mcts, pi, action, nn_value)
 
         return pi

@@ -72,7 +72,7 @@ def play(players, games, training):
     if training:
         for game_data in training_data:
             for data in game_data:
-                data[0] = np.array(game.generate_tutorial_game_state((data[0],))).tolist()
+                data[0] = np.array(game.generate_tutorial_game_state(data[0])).tolist()
                 data[1] = data[1].tolist()
         training_data = np.vstack(training_data).tolist()[0]
         len_file, recent = files.add_to_file("positions.json", training_data, config.POSITION_AMOUNT)
