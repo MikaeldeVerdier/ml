@@ -36,12 +36,8 @@ class Agent():
     def __init__(self, nn_class, load, version=None, name=None):
         self.nn = nn_class(load, version)
         self.name = name
-
-        self.reset_outcomes()
-
-    def reset_outcomes(self):
-        self.average_outcome = 0
-        self.outcome_len = 0
+        
+        self.outcomes = {"wins": 0, "average": 0, "length": 0}
 
     def get_name(self):
         return (f"Version {self.nn.version}" if not self.name else self.name, "is")
@@ -86,8 +82,8 @@ class Agent():
         return action
 
     def copy_profile(self, agent):
-        self.average_outcome = agent.average_outcome
-        self.outcome_len = agent.outcome_len
+        self.outcomes["average"] = agent.outcomes["average"]
+        self.outcomes["length"] = agent.outcomes["length"]
 
         self.nn.copy_weights(agent.nn)
     

@@ -28,7 +28,7 @@ def initiate():
 def play(players, games, training):
     players = set(players.values())
 
-    if training: training_data = [[]]
+    if training: training_data = []
 
     game_count = 0
     starts = 1
@@ -37,7 +37,10 @@ def play(players, games, training):
             player.mcts = Node(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], list(range(1, game.GAME_DIMENSIONS[0] + 1)), Tree())
     
             turn = 1
-            tau = 1 if training else 1e-2
+            if training:
+                training_data.append([])
+                tau = 1
+            else: tau = 1e-2
 
             outcome = None
             while outcome is None:
@@ -55,8 +58,10 @@ def play(players, games, training):
             starts *= -1
 
             if not training:
-                player.outcome_len += 1
-                player.average_outcome = (player.average_outcome * (player.outcome_len - 1) + outcome) / player.outcome_len
+                player.outcomes["length"] += 1
+                player.outcomes["average"] = (player.outcomes["average"] * (player.outcomes["length"] - 1) + outcome) / player.outcomes["length"]
+                if outcome == 1:
+                    player.outcomes["wins"] += 1
             else: 
                 for data in training_data[-1]: data.append(outcome)
 
@@ -75,14 +80,14 @@ def play(players, games, training):
 
         is_full = len_file == config.POSITION_AMOUNT
         if is_full and recent: files.make_backup("positions.json", f"positions_{config.POSITION_AMOUNT}.json")
-        
+
         if not is_full and game_count == games: games += 1
 
 
 def self_play(agent):
     play({1: agent, -1: agent}, config.GAME_AMOUNT_SELF_PLAY, True)
 
-    # outcome = agent.average_outcome
+    # outcome = agent.outcomes["average"]
     # print(f"The average outcome from self-play was: {outcome}")
 
 
@@ -100,14 +105,14 @@ def retrain_network(agent):
     agent.nn.version += 1
     agent.nn.model.save(f"{config.SAVE_PATH}/training/v.{agent.nn.version}")
     agent.nn.save_to_file("current_agent")
-    agent.reset_outcomes()
+    agent.outcomes = {"wins": 0, "average": 0, "length": 0}
     agent.nn.plot_metrics(False, False)
 
 
 def evaluate_network(agents):
     play(agents, config.GAME_AMOUNT_EVALUATION, False)
     
-    results = [agent.average_outcome for agent in agents.values()]
+    results = [agent.outcomes["average"] for agent in agents.values()]
 
     log(agents, results)
     print(f"The results were: {results}")
