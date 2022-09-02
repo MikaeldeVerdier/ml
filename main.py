@@ -1,3 +1,4 @@
+import json
 import numpy as np
 import random
 import datetime
@@ -29,6 +30,7 @@ def play(players, games, training):
     players = set(players.values())
 
     if training: training_data = []
+    loaded = files.load_file("positions.json")
 
     game_count = 0
     starts = 1
@@ -68,6 +70,9 @@ def play(players, games, training):
             else: 
                 for data in training_data[-1]: data.append(outcome)
 
+                if len(loaded) + len(np.vstack(training_data)) < config.POSITION_AMOUNT and games == game_count:
+                    games += 1
+
             print(f"We are " + ("training" if training else "evaluating"))
             print(f"Game outcome was: 1/{(1 / outcome):} = {outcome:.5f} (Agent: {i})")
             print(f"Amount of games played is now: {game_count}\n")
@@ -78,17 +83,18 @@ def play(players, games, training):
                 data[0] = np.array(game.generate_tutorial_game_state(data[0])).tolist()
                 data[1] = data[1].tolist()
         training_data = np.vstack(training_data).tolist()[0]
-        len_file, recent = files.add_to_file("positions.json", training_data, config.POSITION_AMOUNT)
-        print(f"Position length is now: {len_file}")
+        
+        recent = len(loaded) != config.POSITION_AMOUNT
+        loaded += training_data
+        loaded = loaded[-config.POSITION_AMOUNT:]
+        files.write("positions.json", json.dumps(loaded))
+        print(f"Position length is now: {len(loaded)}")
 
-        is_full = len_file == config.POSITION_AMOUNT
+        is_full = len(loaded) == config.POSITION_AMOUNT
         if is_full and recent: files.make_backup("positions.json", f"positions_{config.POSITION_AMOUNT}.json")
 
-        if not is_full and game_count == games: games += 1
-
-
 def self_play(agent):
-    play({1: agent, -1: agent}, config.GAME_AMOUNT_SELF_PLAY, False)
+    play({1: agent, -1: agent}, config.GAME_AMOUNT_SELF_PLAY, True)
 
     # outcome = agent.outcomes["average"]
     # print(f"The average outcome from self-play was: {outcome}")

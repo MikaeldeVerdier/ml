@@ -130,7 +130,7 @@ def reset_key(file, key):
 
 def add_to_file(file, content, max_len):
     loaded = load_file(file)
-    recent = len(loaded) != config.POSITION_AMOUNT
+    recent = len(loaded) != max_len
     loaded += content
     loaded = loaded[-max_len:]
     write(file, json.dumps(loaded))
