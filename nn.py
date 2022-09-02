@@ -194,7 +194,7 @@ class CurrentNeuralNetwork(NeuralNetwork):
 
     def save_to_file(self, agent_kind):
         loaded = files.load_file("save.json")
-        loaded[agent_kind]["best_version"] = self.version
+        loaded[agent_kind]["version"] = self.version
         loaded[agent_kind]["iterations"] = self.iterations
         loaded[agent_kind]["metrics"] = self.metrics
 
