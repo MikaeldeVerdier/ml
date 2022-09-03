@@ -2,9 +2,10 @@
 LOOP_ITERATIONS = 50
 
 # Network architecture
-CONVOLUTIONAL_LAYER = {"filter_amount": 256, "kernel_size": (3, 3)}
-RESIDUAL_LAYER = {"amount": 20, "filter_amount": 256, "kernel_size": (3, 3)}
-DENSE_VALUE_HEAD = 20
+CONVOLUTIONAL_LAYER = {"filter_amount": 128, "kernel_size": (3, 3)}
+RESIDUAL_LAYER = {"amount": 10, "filter_amount": 128, "kernel_size": (3, 3)}
+DENSE_VALUE_HEAD = [32, 32]
+DENSE_POLICY_HEAD = [350, 350, 100]
 USE_BIAS = True
 
 # Self-play
