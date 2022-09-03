@@ -61,6 +61,10 @@ def play(players, games, training):
             game_count += 1
             starts *= -1
 
+            print(f"We are " + ("training" if training else "evaluating"))
+            print(f"Game outcome was: 1/{(1 / outcome):} = {outcome:.5f} (Agent: {i})")
+            print(f"Amount of games played is now: {game_count}\n")
+
             if not training:
                 player.outcomes["length"] += 1
                 player.outcomes["average"] = (player.outcomes["average"] * (player.outcomes["length"] - 1) + outcome) / player.outcomes["length"]
@@ -71,6 +75,8 @@ def play(players, games, training):
                 for data in training_data[-1]: data.append(outcome)
 
                 training_length = len(np.vstack(training_data))
+                print(f"Position length is now: {len(loaded) + training_length}")
+
                 if len(loaded) + training_length < config.POSITION_AMOUNT:
                     if len(loaded) + training_length < config.POSITION_AMOUNT and games == game_count: games += 1
 
@@ -91,11 +97,6 @@ def play(players, games, training):
                     if is_full and recent: files.make_backup("positions.json", f"positions_{config.POSITION_AMOUNT}.json")
 
                     training_data = []
-
-            print(f"We are " + ("training" if training else "evaluating"))
-            print(f"Game outcome was: 1/{(1 / outcome):} = {outcome:.5f} (Agent: {i})")
-            print(f"Amount of games played is now: {game_count}\n")
-            print(f"Position length is now: {len(loaded) + training_length}")
 
 
 def self_play(agent):
