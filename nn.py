@@ -100,7 +100,7 @@ class NeuralNetwork:
         x = Flatten()(x)
         x = Dense(config.DENSE_VALUE_HEAD, use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         x = LeakyReLU()(x)
-        x = Dense(1, use_bias=config.USE_BIAS, activation="tanh", kernel_regularizer=regularizers.l2(config.REG_CONST), name="value_head")(x)
+        x = Dense(1, use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST), name="value_head")(x)
         return (x)
 
     @staticmethod
@@ -109,7 +109,7 @@ class NeuralNetwork:
         x = BatchNormalization(axis=3)(x)
         x = LeakyReLU()(x)
         x = Flatten()(x)
-        x = Dense(game.MOVE_AMOUNT, use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST), name="policy_head")(x)
+        x = Dense(game.MOVE_AMOUNT, use_bias=config.USE_BIAS, activation="sigmoid", kernel_regularizer=regularizers.l2(config.REG_CONST), name="policy_head")(x)
         return (x)
 
     @cache

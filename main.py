@@ -81,7 +81,7 @@ def play(players, games, training):
                     if len(loaded) + training_length < config.POSITION_AMOUNT and games == game_count: games += 1
 
                 away_from_full = config.POSITION_AMOUNT - len(loaded)
-                if training_length > config.POSITION_AMOUNT / 250 or away_from_full and training_length >= away_from_full:
+                if training_length > config.POSITION_AMOUNT / 25 or away_from_full and training_length >= away_from_full:
                     for game_data in training_data:
                         for data in game_data:
                             data[0] = np.array(game.generate_tutorial_game_state(data[0])).tolist()
