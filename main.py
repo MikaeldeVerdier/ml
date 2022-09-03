@@ -50,10 +50,12 @@ def play(players, games, training):
                 if training: training_data[-1].append([player.mcts])
 
                 pi = player.play_turn(tau)
-                legal_moves = game.get_legal_moves(player.mcts)
-                print(legal_moves)
 
-                if training: training_data[-1][-1].append(pi)
+                if training:
+                    length = len(np.where(pi != 0)[0])
+                    if length > 1:
+                        training_data[-1][-1].append(pi)
+                    else: del training_data[-1][-1] 
                 outcome = game.check_game_over(player.mcts)
 
                 turn += 1
