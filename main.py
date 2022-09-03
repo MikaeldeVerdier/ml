@@ -119,7 +119,7 @@ def retrain_network(agent):
     agent.nn.version += 1
     agent.nn.model.save(f"{config.SAVE_PATH}/training/v.{agent.nn.version}")
     agent.nn.save_to_file("current_agent")
-    agent.outcomes = {"wins": 0, "average": 0, "length": 0}
+    agent.outcomes = {"piles": 0, "average": 0, "length": 0}
     agent.nn.plot_metrics(False, False)
 
 
