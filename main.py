@@ -72,25 +72,25 @@ def play(players, games, training):
 
                 training_length = len(np.vstack(training_data))
                 if len(loaded) + training_length < config.POSITION_AMOUNT:
-                    if games == game_count: games += 1
+                    if len(loaded) + training_length < config.POSITION_AMOUNT and games == game_count: games += 1
+
+                away_from_full = config.POSITION_AMOUNT - len(loaded)
+                if training_length > config.POSITION_AMOUNT / 250 or away_from_full and training_length >= away_from_full:
+                    for game_data in training_data:
+                        for data in game_data:
+                            data[0] = np.array(game.generate_tutorial_game_state(data[0])).tolist()
+                            data[1] = data[1].tolist()
+                    training_data = np.vstack(training_data).tolist()
                     
-                    if training_length > 1000:
-                        for game_data in training_data:
-                            for data in game_data:
-                                data[0] = np.array(game.generate_tutorial_game_state(data[0])).tolist()
-                                data[1] = data[1].tolist()
-                        training_data = np.vstack(training_data).tolist()[0]
-                        
-                        recent = len(loaded) != config.POSITION_AMOUNT
-                        loaded += training_data
-                        loaded = loaded[-config.POSITION_AMOUNT:]
-                        files.write("positions.json", json.dumps(loaded))
-                        print(f"Position length is now: {len(loaded)}")
+                    recent = len(loaded) != config.POSITION_AMOUNT
+                    loaded += training_data
+                    loaded = loaded[-config.POSITION_AMOUNT:]
+                    files.write("positions.json", json.dumps(loaded))
 
-                        is_full = len(loaded) == config.POSITION_AMOUNT
-                        if is_full and recent: files.make_backup("positions.json", f"positions_{config.POSITION_AMOUNT}.json")
+                    is_full = len(loaded) == config.POSITION_AMOUNT
+                    if is_full and recent: files.make_backup("positions.json", f"positions_{config.POSITION_AMOUNT}.json")
 
-                        training_data = []
+                    training_data = []
 
             print(f"We are " + ("training" if training else "evaluating"))
             print(f"Game outcome was: 1/{(1 / outcome):} = {outcome:.5f} (Agent: {i})")
