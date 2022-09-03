@@ -69,8 +69,8 @@ def play(players, games, training):
                 player.outcomes["length"] += 1
                 player.outcomes["average"] = (player.outcomes["average"] * (player.outcomes["length"] - 1) + outcome) / player.outcomes["length"]
                 
-                if outcome in player.outcomes["piles"]: player.outcomes["piles"][int(1 / outcome)] += 1  # int() is maybe redundant but w/e
-                else: player.outcomes["piles"][int(1 / outcome)] = 0
+                if outcome in player.outcomes["piles"]: player.outcomes["piles"][round(1 / outcome)] += 1  # int() is maybe redundant but w/e
+                else: player.outcomes["piles"][round(1 / outcome)] = 0
             else: 
                 for data in training_data[-1]: data.append(outcome)
 
@@ -120,7 +120,7 @@ def retrain_network(agent):
     agent.nn.version += 1
     agent.nn.model.save(f"{config.SAVE_PATH}/training/v.{agent.nn.version}")
     agent.nn.save_to_file("current_agent")
-    agent.outcomes = {"piles": 0, "average": 0, "length": 0}
+    agent.outcomes = {"piles": {}, "average": 0, "length": 0}
     agent.nn.plot_metrics(False, False)
 
 
