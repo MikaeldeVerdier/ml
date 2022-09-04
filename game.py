@@ -2,16 +2,26 @@ import numpy as np
 
 
 GAME_DIMENSIONS = (52,)
-NN_INPUT_DIMENSIONS = GAME_DIMENSIONS + (2,) + (1,)
+# NN_INPUT_DIMENSIONS = GAME_DIMENSIONS + (2,) + (1,)
+NN_INPUT_DIMENSIONS = (GAME_DIMENSIONS[0] + 1, GAME_DIMENSIONS[0]) + (1,)
 MOVE_AMOUNT = GAME_DIMENSIONS[0] * 2 + 1
 SUIT_LENGTH = GAME_DIMENSIONS[0]/4
 
 
 def generate_tutorial_game_state(node):
+    game_state = []
+    for i in range(1, 53):
+        position = np.zeros(len(node.s))
+        position[node.s == i] = 1
+        game_state.append(position)
+
     deck = np.zeros(GAME_DIMENSIONS[0])
     for card in node.deck: deck[card - 1] = 1
+    game_state.append(deck)
 
-    game_state = np.moveaxis([np.array(node.s) / GAME_DIMENSIONS[0], deck], 0, 1)
+    # board_history.append(np.array([[[node.player + 1]] * GAME_DIMENSIONS[1]] * GAME_DIMENSIONS[0]))
+    # game_state = np.reshape(board_history, NN_INPUT_DIMENSIONS)
+    # game_state = np.moveaxis(game_state, 0, 1)
     return game_state
 
 
