@@ -2,14 +2,14 @@
 LOOP_ITERATIONS = 50
 
 # Network architecture
-CONVOLUTIONAL_LAYER = {"filter_amount": 128, "kernel_size": (3, 3)}
-RESIDUAL_LAYER = {"amount": 10, "filter_amount": 128, "kernel_size": (3, 3)}
+CONVOLUTIONAL_LAYER = [(64, (3, 3)), (128, (3, 3)), (256, (3, 3)), (512, (3, 3))]
+DENSE_SHARED = [512, 512]
 DENSE_VALUE_HEAD = [32, 32]
-DENSE_POLICY_HEAD = [350, 350, 100]
+DENSE_POLICY_HEAD = [512, 512]
 USE_BIAS = True
 
 # Self-play
-GAME_AMOUNT_SELF_PLAY = 30
+GAME_AMOUNT_SELF_PLAY = 100
 POSITION_AMOUNT = 30000
 MCTS_SIMS = 50
 TURNS_UNTIL_TAU = 25

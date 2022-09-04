@@ -7,9 +7,9 @@ import files
 import tensorflow as tf
 from tensorflow.keras import regularizers
 from tensorflow.keras.models import Model, load_model
-from tensorflow.keras.layers import Input, Dense, Conv2D, Flatten, BatchNormalization, LeakyReLU, add
+from tensorflow.keras.layers import Input, Dense, Conv2D, Flatten, BatchNormalization, ReLU, add
 from tensorflow.keras.optimizers import SGD
-# from keras.utils.vis_utils import plot_model
+#  from keras.utils.vis_utils import plot_model
 
 try:
     from functools import cache
@@ -42,8 +42,10 @@ class NeuralNetwork:
 
         main_input = Input(shape=game.NN_INPUT_DIMENSIONS, name="main_input")
 
-        x = self.convolutional_layer(main_input, config.CONVOLUTIONAL_LAYER["filter_amount"], config.CONVOLUTIONAL_LAYER["kernel_size"])
-        for _ in range(config.RESIDUAL_LAYER["amount"]): x = self.residual_layer(x, config.RESIDUAL_LAYER["filter_amount"], config.RESIDUAL_LAYER["kernel_size"])
+        x = main_input
+        for filter_amount, kernel_size in config.CONVOLUTIONAL_LAYER: x = self.convolutional_layer(x, filter_amount, kernel_size)
+        x = Flatten()(x)
+        for neuron_amount in config.DENSE_SHARED: x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
 
         vh = self.value_head(x)
         ph = self.policy_head(x)
@@ -81,38 +83,18 @@ class NeuralNetwork:
     def convolutional_layer(x, filters, kernel_size):
         x = Conv2D(filters=filters, kernel_size=kernel_size, data_format="channels_last", padding="same", use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         x = BatchNormalization(axis=3)(x)
-        x = LeakyReLU()(x)
-        return (x)
-
-    def residual_layer(self, input_block, filters, kernel_size):
-        x = self.convolutional_layer(input_block, filters, kernel_size)
-        x = Conv2D(filters=filters, kernel_size=kernel_size, data_format="channels_last", padding="same", use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
-        x = BatchNormalization(axis=3)(x)
-        x = add([input_block, x])
-        x = LeakyReLU()(x)
+        x = ReLU()(x)
         return (x)
 
     @staticmethod
     def value_head(x):
-        x = Conv2D(filters=1, kernel_size=(1, 1), data_format="channels_last", padding="same", use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
-        x = BatchNormalization(axis=3)(x)
-        x = LeakyReLU()(x)
-        x = Flatten()(x)
-        for amount in config.DENSE_VALUE_HEAD:
-            x = Dense(amount, use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
-            x = LeakyReLU()(x)
+        for amount in config.DENSE_VALUE_HEAD: x = Dense(amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         x = Dense(1, use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST), name="value_head")(x)
         return (x)
 
     @staticmethod
     def policy_head(x):
-        x = Conv2D(filters=2, kernel_size=(1, 1), data_format="channels_last", padding="same", use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
-        x = BatchNormalization(axis=3)(x)
-        x = LeakyReLU()(x)
-        x = Flatten()(x)
-        for amount in config.DENSE_POLICY_HEAD:
-            x = Dense(amount, use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
-            x = LeakyReLU()(x)
+        for amount in config.DENSE_POLICY_HEAD: x = Dense(amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         x = Dense(game.MOVE_AMOUNT, use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST), name="policy_head")(x)
         return (x)
 
@@ -121,19 +103,7 @@ class NeuralNetwork:
         data = np.expand_dims(game.generate_tutorial_game_state(node), axis=0)
         (v, p) = self.model.predict(data)
 
-        logits = p[0]
-
-        mask = np.full(logits.shape, True)
-        legal_moves = game.get_legal_moves(node)
-        mask[legal_moves] = False
-
-        if max(logits) > 85: logits *= 85 / max(logits)
-        logits[mask] = -100
-
-        odds = np.exp(logits)
-        probs = odds / np.sum(odds)
-
-        return (v[0][0], probs)
+        return (v[0][0], p[0])
 
 
 class CurrentNeuralNetwork(NeuralNetwork):
