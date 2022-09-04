@@ -88,13 +88,13 @@ class NeuralNetwork:
 
     @staticmethod
     def value_head(x):
-        for amount in config.DENSE_VALUE_HEAD: x = Dense(amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
+        for neuron_amount in config.DENSE_VALUE_HEAD: x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         x = Dense(1, use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST), name="value_head")(x)
         return (x)
 
     @staticmethod
     def policy_head(x):
-        for amount in config.DENSE_POLICY_HEAD: x = Dense(amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
+        for neuron_amount in config.DENSE_POLICY_HEAD: x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         x = Dense(game.MOVE_AMOUNT, use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST), name="policy_head")(x)
         return (x)
 
@@ -103,7 +103,19 @@ class NeuralNetwork:
         data = np.expand_dims(game.generate_tutorial_game_state(node), axis=0)
         (v, p) = self.model.predict(data)
 
-        return (v[0][0], p[0])
+        logits = p[0]
+
+        mask = np.full(logits.shape, True)
+        legal_moves = game.get_legal_moves(node)
+        mask[legal_moves] = False
+
+        if max(logits) > 85: logits *= 85 / max(logits)
+        logits[mask] = -100
+
+        odds = np.exp(logits)
+        probs = odds / np.sum(odds)
+
+        return (v[0][0], probs)
 
 
 class CurrentNeuralNetwork(NeuralNetwork):
