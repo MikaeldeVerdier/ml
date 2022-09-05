@@ -178,11 +178,10 @@ def play_versions(versions, games):
 def main():
     agents = initiate()
 
-    for i in range(config.LOOP_ITERATIONS):
-        print(f"Now starting main loop iteration: {i}")
+    for _ in range(config.LOOP_ITERATIONS):
         self_play(agents[1])
         retrain_network(agents[-1])
-        if i % config.EVALUATION_FREQUENCY == 0: agents = evaluate_network(agents)
+        if agents[-1].nn.version % config.EVALUATION_FREQUENCY == 0: agents = evaluate_network(agents)
 
     # play_versions([1, agents[1].nn.version], config.GAME_AMOUNT_PLAY_VERSIONS)
     # play_test(agents[1].nn.version, config.GAME_AMOUNT_PLAY_TEST)
