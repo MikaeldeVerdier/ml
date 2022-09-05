@@ -1,4 +1,5 @@
 import json
+import os
 import numpy as np
 import random
 import datetime
@@ -89,13 +90,12 @@ def play(players, games, training):
                             data[1] = data[1].tolist()
                     training_data = np.vstack(training_data).tolist()
                     
-                    recent = len(loaded) != config.POSITION_AMOUNT
                     loaded += training_data
                     loaded = loaded[-config.POSITION_AMOUNT:]
                     files.write("positions.json", json.dumps(loaded))
 
                     is_full = len(loaded) == config.POSITION_AMOUNT
-                    if is_full and recent: files.make_backup("positions.json", f"positions_{config.POSITION_AMOUNT}.json")
+                    if is_full and not os.path.exists(f"{config.SAVE_PATH}/backup/positions_{config.POSITION_AMOUNT}.json"): files.make_backup("positions.json", f"positions_{config.POSITION_AMOUNT}.json")
 
                     training_data = []
                 
