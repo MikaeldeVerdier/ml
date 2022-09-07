@@ -2,7 +2,7 @@
 LOOP_ITERATIONS = 50
 
 # Network architecture
-CONVOLUTIONAL_LAYER = [(64, (3, 3)), (128, (3, 3)), (256, (3, 3))]
+CONVOLUTIONAL_LAYER = [(64, (3, 3)), (128, (3, 3))]
 DENSE_SHARED = [512, 512]
 DENSE_VALUE_HEAD = [32, 32]
 DENSE_POLICY_HEAD = [512, 512]
