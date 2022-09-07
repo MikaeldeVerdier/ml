@@ -1,7 +1,6 @@
 import json
 import os
 import numpy as np
-import random
 import datetime
 import game
 import config
@@ -37,7 +36,8 @@ def play(players, games, training):
     starts = 1
     while game_count < games:
         for i, player in enumerate(players):
-            player.mcts = Node(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], list(range(1, game.GAME_DIMENSIONS[0] + 1)), Tree())
+            deck = list(range(1, 53))
+            player.mcts = Node(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], deck, np.random.choice(deck), Tree())
     
             turn = 1
             if training:
@@ -112,7 +112,7 @@ def self_play(agent):
 def retrain_network(agent):
     for _ in range(config.TRAINING_ITERATIONS):
         positions = files.load_file("positions.json")
-        minibatch = random.sample(positions, config.BATCH_SIZE)
+        minibatch = np.random.sample(positions, config.BATCH_SIZE)
 
         x = np.array([batch[0] for batch in minibatch])
         y = {"value_head": np.array([batch[2] for batch in minibatch]), "policy_head": np.array([batch[1] for batch in minibatch])}
