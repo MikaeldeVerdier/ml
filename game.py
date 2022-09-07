@@ -97,7 +97,7 @@ def get_score(cards):
     
 
 def check_game_over(node):
-    if len(node.deck) == 52 - np.prod(GAME_DIMENSIONS) - REPLACE_CARDS:
+    if len(node.deck) == 52 - np.prod(GAME_DIMENSIONS) - REPLACE_CARDS - 1:
         score = 0
         # node.s = np.full((5, 5), 1)
         # node.s[0] = [13, 12, 11, 10, 8]
