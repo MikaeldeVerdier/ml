@@ -74,7 +74,7 @@ def play(players, games, training):
             if not training:
                 player.outcomes["length"] += 1
                 player.outcomes["average"] = (player.outcomes["average"] * (player.outcomes["length"] - 1) + outcome) / player.outcomes["length"]
-            else: 
+            else:
                 for data in training_data[-1]: data.append(outcome)
 
                 training_length = len(np.vstack(training_data))
@@ -83,22 +83,22 @@ def play(players, games, training):
                     if len(loaded) + training_length < config.POSITION_AMOUNT and games == game_count: games += 1
 
                 away_from_full = config.POSITION_AMOUNT - len(loaded)
-                if training_length > config.POSITION_AMOUNT / 25 or away_from_full and training_length >= away_from_full:
-                    for game_data in training_data:
-                        for data in game_data:
-                            data[0] = np.array(game.generate_tutorial_game_state(data[0])).tolist()
-                            data[1] = data[1].tolist()
-                    training_data = np.vstack(training_data).tolist()
-                    
-                    loaded += training_data
-                    loaded = loaded[-config.POSITION_AMOUNT:]
-                    files.write("positions.json", json.dumps(loaded))
-
-                    is_full = len(loaded) == config.POSITION_AMOUNT
-                    if is_full and not os.path.exists(f"{config.SAVE_PATH}/backup/positions_{config.POSITION_AMOUNT}.json"): files.make_backup("positions.json", f"positions_{config.POSITION_AMOUNT}.json")
-
-                    training_data = []
+                # if training_length > config.POSITION_AMOUNT / 25 or away_from_full and training_length >= away_from_full:
+                for game_data in training_data:
+                    for data in game_data:
+                        data[0] = np.array(game.generate_tutorial_game_state(data[0])).tolist()
+                        data[1] = data[1].tolist()
+                training_data = np.vstack(training_data).tolist()
                 
+                loaded += training_data
+                loaded = loaded[-config.POSITION_AMOUNT:]
+                files.write("positions.json", json.dumps(loaded))
+
+                is_full = len(loaded) == config.POSITION_AMOUNT
+                if is_full and not os.path.exists(f"{config.SAVE_PATH}/backup/positions_{config.POSITION_AMOUNT}.json"): files.make_backup("positions.json", f"positions_{config.POSITION_AMOUNT}.json")
+
+                training_data = []
+            
                 print(f"Position length is now: {len(loaded) + training_length}")
 
 

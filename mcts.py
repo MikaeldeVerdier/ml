@@ -68,7 +68,11 @@ class Node:
             epsilon = 0
             nu = [0] * len(self.edges)
         nb = sum(edge.n for edge in self.edges)
-        return [edge.q + edge.u(epsilon, nu[i], nb) for i, edge in enumerate(self.edges)]
+        probs = np.array([edge.q + edge.u(epsilon, nu[i], nb) for i, edge in enumerate(self.edges)])
+        non_visited = [i for i, edge in enumerate(self.edges) if edge.n == 0]
+        probs[non_visited] = max(probs) + 1
+
+        return probs
 
     def backfill(self, v, breadcrumbs):
         for edge in breadcrumbs:
