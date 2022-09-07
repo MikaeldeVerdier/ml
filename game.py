@@ -135,5 +135,4 @@ def print_board(board):
 
 
 def print_values(values):
-    print(f"Action values are: {values[:-1].reshape(GAME_DIMENSIONS)}")
-    print([values[-1]])
+    print(f"Action values are: {[values[-1]]}\n{values[:-1].reshape(GAME_DIMENSIONS)}")
