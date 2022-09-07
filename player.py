@@ -37,7 +37,7 @@ class Agent():
         self.nn = nn_class(load, version)
         self.name = name
         
-        self.outcomes = {"piles": {}, "average": 0, "length": 0}
+        self.outcomes = {"average": 0, "length": 0}
 
     def get_name(self):
         return (f"Version {self.nn.version}" if not self.name else self.name, "is")
