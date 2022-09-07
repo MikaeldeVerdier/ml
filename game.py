@@ -3,7 +3,7 @@ import numpy as np
 
 GAME_DIMENSIONS = (5, 5)
 NN_INPUT_DIMENSIONS = (1, 27, 52)
-MOVE_AMOUNT = np.prod(GAME_DIMENSIONS)
+MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
 REPLACE_CARDS = 3
 
 
@@ -37,8 +37,11 @@ def check_index(board, index, checking_index, checking_func, multiplier_func, mu
 
 
 def get_legal_moves(node):  # , all_moves):
-    if node.replace_card or not len(np.where(node.s != 0)[0]):
+    if not len(np.where(node.s != 0)[0]):
         return list(range(np.prod(GAME_DIMENSIONS)))
+
+    if node.replace_card:
+        return list(range(np.prod(GAME_DIMENSIONS))) + [25]
 
     legal_moves = []
 
@@ -67,7 +70,7 @@ def get_card(value):
 def get_score(cards):
     values = [get_card(card)[1] for card in cards]
     
-    histo_dict = {(4, 1): 20, (3, 2): 15, (3, 1, 1): 8, (2, 2, 1): 4, (2, 1, 1, 1): 2}
+    histo_dict = {(1, 4): 20, (2, 3): 15, (1, 1, 3): 8, (1, 2, 2): 4, (1, 1, 1, 2): 2}
 
     histo = []
     for value in set(values):
@@ -94,19 +97,17 @@ def get_score(cards):
     
 
 def check_game_over(node):
-    # if len(node.deck) == 52 - np.prod(GAME_DIMENSIONS) - REPLACE_CARDS:
+    if len(node.deck) == 52 - np.prod(GAME_DIMENSIONS) - REPLACE_CARDS:
         score = 0
-        node.s = np.full((5, 5), 1)
-        node.s[0] = [52, 51, 50, 49, 48]
-        node.s[1] = [1, 2, 3, 4, 5]
-        node.s[2] = [6, 7, 8, 9, 10]
-        node.s[3 ] = [11, 12, 13, 14, 15]
+        # node.s = np.full((5, 5), 1)
+        # node.s[0] = [13, 12, 11, 10, 8]
         board = node.s.reshape(GAME_DIMENSIONS)
-        print(print_board(board.flatten()))
+        # print(print_board(board.flatten()))
         for rowcol in [board, board.T]:
             for row in rowcol:
-                score = get_score(row)
-                pass
+                score += get_score(row)
+        
+        return score
 
 def take_action(node, action):
     node_info = []
@@ -114,7 +115,9 @@ def take_action(node, action):
         board = node.s.copy()
         deck = node.deck.copy()
 
-        board[action] = node.drawn_card
+        if action != 25: board[action] = node.drawn_card
+
+        deck.remove(card)
 
         node_info.append((board, deck, card))
     return node_info
@@ -122,14 +125,15 @@ def take_action(node, action):
 
 def print_board(board):
     board = board.astype("<U4")
-    board[board == "0.0"] = "-"
+    board[board == "0.0"] = "---"
     suit_dict = {0: "sp", 1: "hj", 2: "ru", 3: "kl"}
     for i, pos in enumerate(board):
-        if pos != "-":
+        if pos != "---":
             suit, value = get_card(float(pos))
-            board[i] = f"{suit_dict[suit]}{value}"
+            board[i] = f"{suit_dict[suit]}{int(value)}"
     return board.reshape(GAME_DIMENSIONS)
 
 
 def print_values(values):
-    return values.reshape(MOVE_AMOUNT)
+    print(f"Action values are: {values[:-1].reshape(GAME_DIMENSIONS)}")
+    print([values[-1]])

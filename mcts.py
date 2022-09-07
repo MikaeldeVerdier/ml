@@ -10,7 +10,7 @@ class Node:
         self.drawn_card = drawn_card
         self.tree = tree
 
-        self.replace_card = not len(np.where(state == 0))
+        self.replace_card = not len(np.where(state == 0)[0])
         self.edges = []
 
         self.tree.add_node(self)

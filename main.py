@@ -37,7 +37,9 @@ def play(players, games, training):
     while game_count < games:
         for i, player in enumerate(players):
             deck = list(range(1, 53))
-            player.mcts = Node(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], deck, np.random.choice(deck), Tree())
+            drawn_card = np.random.choice(deck)
+            deck.remove(drawn_card)
+            player.mcts = Node(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], deck, drawn_card, Tree())
     
             turn = 1
             if training:
@@ -53,10 +55,11 @@ def play(players, games, training):
                 pi = player.play_turn(tau)
 
                 if training:
-                    length = len(np.where(pi != 0)[0])
+                    training_data[-1][-1].append(pi)
+                    """length = len(np.where(pi != 0)[0])
                     if length > 1:
                         training_data[-1][-1].append(pi)
-                    else: del training_data[-1][-1] 
+                    else: del training_data[-1][-1] """
                 outcome = game.check_game_over(player.mcts)
 
                 turn += 1
@@ -65,15 +68,12 @@ def play(players, games, training):
             starts *= -1
 
             print(f"We are " + ("training" if training else "evaluating"))
-            print(f"Game outcome was: 1/{(1 / outcome):} = {outcome:.5f} (Agent: {i})")
+            print(f"Game outcome was: {outcome} (Agent: {i})")
             print(f"Amount of games played is now: {game_count}\n")
 
             if not training:
                 player.outcomes["length"] += 1
                 player.outcomes["average"] = (player.outcomes["average"] * (player.outcomes["length"] - 1) + outcome) / player.outcomes["length"]
-                
-                if outcome in player.outcomes["piles"]: player.outcomes["piles"][round(1 / outcome)] += 1  # int() is maybe redundant but w/e
-                else: player.outcomes["piles"][round(1 / outcome)] = 0
             else: 
                 for data in training_data[-1]: data.append(outcome)
 

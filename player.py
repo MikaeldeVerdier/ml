@@ -88,7 +88,7 @@ class Agent():
     
     @staticmethod
     def print_move(root, pi, action, nn_value):
-        print(f"Action values are:\n{np.round(game.print_values(pi), 3)}")
+        game.print_values(pi)
         print(f"Move to make is: {action}")
         print(f"Position is now:\n{game.print_board(root.s)}")
         print(f"Deck length is now: {len(root.deck)}")
