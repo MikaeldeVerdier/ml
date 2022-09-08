@@ -2,6 +2,7 @@ import json
 import os
 import numpy as np
 import datetime
+import random
 import game
 import config
 import files
@@ -116,7 +117,7 @@ def self_play(agent):
 def retrain_network(agent):
     for _ in range(config.TRAINING_ITERATIONS):
         positions = files.load_file("positions.json")
-        minibatch = np.random.sample(positions, config.BATCH_SIZE)
+        minibatch = random.sample(positions, config.BATCH_SIZE)
 
         x = np.array([batch[0] for batch in minibatch])
         y = {"value_head": np.array([batch[2] for batch in minibatch]), "policy_head": np.array([batch[1] for batch in minibatch])}
