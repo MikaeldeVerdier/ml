@@ -104,7 +104,7 @@ def play(players, games, training):
 
                 training_data = []
             
-                print(f"Position length is now: {len(loaded) + training_length}")
+                print(f"Position length is now: {len(loaded)}")
 
 
 def self_play(agent):
