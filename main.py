@@ -82,15 +82,19 @@ def play(players, games, training):
                 if len(loaded) + training_length < config.POSITION_AMOUNT:
                     if len(loaded) + training_length < config.POSITION_AMOUNT and games == game_count: games += 1
 
-                away_from_full = config.POSITION_AMOUNT - len(loaded)
+                # away_from_full = config.POSITION_AMOUNT - len(loaded)
                 # if training_length > config.POSITION_AMOUNT / 25 or away_from_full and training_length >= away_from_full:
+                product = []
                 for game_data in training_data:
                     for data in game_data:
-                        data[0] = np.array(game.generate_tutorial_game_state(data[0])).tolist()
-                        data[1] = data[1].tolist()
-                training_data = np.vstack(training_data).tolist()
-                
-                loaded += training_data
+                        state = np.array(game.generate_tutorial_game_state(data[0], True)).tolist()
+                        for flip in state: product.append([flip, data[1].tolist(), data[2]])
+                        # product.append()
+                        # data[0] = np.array(game.generate_tutorial_game_state(data[0])).tolist()
+                        # data[1] = data[1].tolist()
+                # training_data = np.vstack(training_data).tolist()
+
+                loaded += product
                 loaded = loaded[-config.POSITION_AMOUNT:]
                 files.write("positions.json", json.dumps(loaded))
 

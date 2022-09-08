@@ -7,7 +7,7 @@ MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
 REPLACE_CARDS = 3
 
 
-def generate_tutorial_game_state(node):
+def generate_tutorial_game_state(node, mirror=False):
     game_state = []
     for i in range(1, 53):
         position = np.zeros(len(node.s))
@@ -26,7 +26,12 @@ def generate_tutorial_game_state(node):
     # board_history.append(np.array([[[node.player + 1]] * GAME_DIMENSIONS[1]] * GAME_DIMENSIONS[0]))
     # game_state = np.reshape(board_history, NN_INPUT_DIMENSIONS)
     # game_state = np.moveaxis(game_state, 0, 1)
-    return [game_state]
+    game_state = [[game_state]]
+
+    if mirror:
+        for flips in [0, 1, (0, 1)]: game_state.append([np.flip(game_state, flips).tolist()])
+
+    return game_state
 
 
 def check_index(board, index, checking_index, checking_func, multiplier_func, multiplier):
@@ -108,6 +113,7 @@ def check_game_over(node):
                 score += get_score(row)
         
         return score
+
 
 def take_action(node, action):
     node_info = []
