@@ -8,28 +8,31 @@ REPLACE_CARDS = 3
 
 
 def generate_tutorial_game_state(node, mirror=False):
+    flips = [None, 0, 1, (0, 1)] if mirror else [None]
+
     game_state = []
-    for i in range(1, 53):
-        position = np.zeros(len(node.s))
-        position[node.s == i] = 1
-        game_state.append(position)
-    game_state = np.array(game_state).reshape((25, 52)).tolist()
+    for flip in flips:
+        s = node.s if flip is None else np.flip(node.s.reshape(GAME_DIMENSIONS), flip).flatten()
+        state = []
+        for i in range(1, 53):
+            position = np.zeros(len(s))
+            position[s == i] = 1
+            state.append(position)
+        state = np.array(state).reshape((25, 52)).tolist()
 
-    deck = np.zeros(52)
-    for card in node.deck: deck[card - 1] = 1
-    game_state.append(deck.tolist())
+        deck = np.zeros(52)
+        for card in node.deck: deck[card - 1] = 1
+        state.append(deck.tolist())
 
-    drawn_card = np.zeros(52)
-    drawn_card[node.drawn_card - 1] = 1
-    game_state.append(drawn_card.tolist())
+        drawn_card = np.zeros(52)
+        drawn_card[node.drawn_card - 1] = 1
+        state.append(drawn_card.tolist())
+
+        game_state.append([state])
 
     # board_history.append(np.array([[[node.player + 1]] * GAME_DIMENSIONS[1]] * GAME_DIMENSIONS[0]))
     # game_state = np.reshape(board_history, NN_INPUT_DIMENSIONS)
     # game_state = np.moveaxis(game_state, 0, 1)
-    game_state = [[game_state]]
-
-    if mirror:
-        for flips in [0, 1, (0, 1)]: game_state.append([np.flip(game_state, flips).tolist()])
 
     return game_state
 
