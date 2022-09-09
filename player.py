@@ -112,6 +112,8 @@ class BestAgent(Agent):
         loaded = files.load_file("save.json")
         loaded["best_agent"] = loaded["current_agent"]
 
+        files.write("save.json", json.dumps(loaded))
+
         self.nn.get_preds.cache_clear()
-        self.nn.version = agent.version
+        self.nn.version = agent.nn.version
         self.nn.load_version(self.nn.version)
