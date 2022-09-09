@@ -170,14 +170,13 @@ class CurrentNeuralNetwork(NeuralNetwork):
         plt.pause(0.1)
         plt.close("all")
 
-    def save_to_file(self, agent_kind):
+    def save_metrics(self, agent_kind):
         loaded = files.load_file("save.json")
         loaded[agent_kind]["version"] = self.version
         loaded[agent_kind]["iterations"] = self.iterations
         loaded[agent_kind]["metrics"] = self.metrics
 
         files.write("save.json", json.dumps(loaded))
-
 
 class BestNeuralNetwork(NeuralNetwork):
     def __init__(self, load, version):
@@ -191,9 +190,3 @@ class BestNeuralNetwork(NeuralNetwork):
 
     def __hash__(self):
         return hash(self.version)
-
-    def copy_weights(self, agent_nn):
-        self.get_preds.cache_clear()
-        
-        self.version = agent_nn.version
-        self.load_version(self.version)

@@ -7,6 +7,9 @@ from shutil import copyfile
 EMPTY_SAVE = json.dumps({
     "best_agent": {
         "version": 0,
+        "version_outcomes": {
+            
+        },
         "iterations": [
 
         ],
@@ -45,6 +48,9 @@ EMPTY_SAVE = json.dumps({
     },
     "current_agent": {
         "version": 0,
+        "version_outcomes": {
+            
+        },
         "iterations": [
 
         ],

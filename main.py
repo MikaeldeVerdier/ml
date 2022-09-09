@@ -6,9 +6,9 @@ import random
 import game
 import config
 import files
-from nn import NeuralNetwork, BestNeuralNetwork, CurrentNeuralNetwork
+from nn import NeuralNetwork, CurrentNeuralNetwork, BestNeuralNetwork
 from mcts import Node, Tree
-from player import User, Agent
+from player import User, Agent, CurrentAgent, BestAgent
 
 
 def initiate():
@@ -20,8 +20,8 @@ def initiate():
         files.reset_file("positions.json")
         files.reset_file("log.txt")
 
-    current_agent = Agent(CurrentNeuralNetwork, load[0])
-    best_agent = Agent(BestNeuralNetwork, load[1])
+    current_agent = CurrentAgent(CurrentNeuralNetwork, load[0])
+    best_agent = BestAgent(BestNeuralNetwork, load[1])
     agents = {1: best_agent, -1: current_agent}
 
     return agents
@@ -127,7 +127,7 @@ def retrain_network(agent):
     agent.nn.iterations.append(config.TRAINING_ITERATIONS * config.EPOCHS)
     agent.nn.version += 1
     agent.nn.model.save(f"{config.SAVE_PATH}/training/v.{agent.nn.version}")
-    agent.nn.save_to_file("current_agent")
+    agent.nn.save_metrics("current_agent")
     agent.outcomes = {"average": 0, "length": 0}
     agent.nn.plot_metrics(False, False)
 
@@ -136,13 +136,13 @@ def evaluate_network(agents):
     play(agents, config.GAME_AMOUNT_EVALUATION, False)
     
     results = [agent.outcomes["average"] for agent in agents.values()]
-
+    agents[-1].save_outcomes("current_agent")
     log(agents, results)
+
     print(f"The results were: {results}")
     if results[1] > results[0] * config.WINNING_THRESHOLD:
         agents[1].copy_profile(agents[-1])
-        agents[-1].nn.save_to_file("best_agent")
-        print(f"The best_agent has copied the current_agent's weights")
+        print(f"The best_agent has copied the current_agent's profile")
 
     return agents
 

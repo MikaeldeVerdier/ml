@@ -1,7 +1,8 @@
-from tkinter import W
+import json
 import numpy as np
 import game
 import config
+import files
 
 
 class User():
@@ -80,11 +81,6 @@ class Agent():
         else: action = np.where(np.random.multinomial(1, pi) == 1)[0][0]
 
         return action
-
-    def copy_profile(self, agent):
-        self.outcomes = agent.outcomes
-
-        self.nn.copy_weights(agent.nn)
     
     @staticmethod
     def print_move(root, pi, action, nn_value):
@@ -93,3 +89,29 @@ class Agent():
         print(f"Position is now:\n{game.print_board(root.s)}")
         print(f"Deck length is now: {len(root.deck)}")
         print(f"NN percieved value is: {nn_value:.3f}")
+
+
+class CurrentAgent(Agent):
+    def __init__(self, nn_class, load, version=None, name=None):
+        super().__init__(nn_class, load, version, name)
+
+    def save_outcomes(self, agent_kind):
+        loaded = files.load_file("save.json")
+        loaded[agent_kind]["version_outcomes"][self.nn.version] = self.outcomes["average"]
+
+        files.write("save.json", json.dumps(loaded))
+
+
+class BestAgent(Agent):
+    def __init__(self, nn_class, load, version=None, name=None):
+        super().__init__(nn_class, load, version, name)
+    
+    def copy_profile(self, agent):
+        self.outcomes = agent.outcomes
+
+        loaded = files.load_file("save.json")
+        loaded["best_agent"] = loaded["current_agent"]
+
+        self.nn.get_preds.cache_clear()
+        self.nn.version = agent.version
+        self.nn.load_version(self.nn.version)
