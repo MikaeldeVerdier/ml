@@ -27,7 +27,7 @@ def initiate():
     return agents
 
 
-def play(players, games, training):
+def play(players, games, training=False):
     players = set(players.values())
 
     if training: training_data = []
@@ -133,7 +133,7 @@ def retrain_network(agent):
 
 
 def evaluate_network(agents):
-    play(agents, config.GAME_AMOUNT_EVALUATION, False)
+    play(agents, config.GAME_AMOUNT_EVALUATION)
     
     results = []
     for agent in agents.values():
@@ -167,7 +167,7 @@ Results are: {results}
 def play_test(version, games):
     you = User()
     agents = {1: Agent(NeuralNetwork, True, version=version), -1: you}
-    results = play(agents, games, False)
+    results = play(agents, games)
 
     print(f"The results were: {results}")
     log(agents, results)
@@ -175,7 +175,7 @@ def play_test(version, games):
 
 def play_versions(versions, games):
     agents = {1 - 2 * i: Agent(NeuralNetwork, True, version=v) for i, v in enumerate(versions)}
-    results = play(agents, games, False)
+    results = play(agents, games)
     
     print(f"The results between versions {versions[0]} and {versions[1]} were: {results}")
     best = versions[np.argmax(results)]
