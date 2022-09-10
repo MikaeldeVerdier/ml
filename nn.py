@@ -169,6 +169,24 @@ class CurrentNeuralNetwork(NeuralNetwork):
         plt.savefig(f"{config.SAVE_PATH}metrics.png", dpi=300)
         plt.pause(0.1)
         plt.close("all")
+    
+    def plot_outcomes(self, derivative_line):
+        loaded = files.load_file("save.json")
+        data = list(loaded["current_agent"]["version_outcomes"].values()) 
+
+        plt.plot(data)
+
+        if derivative_line:
+            """deriv = (data[-1] - data[0]) / len(data)
+            y = [deriv * x + data[0] for x in range(len(data))]
+            plt.plot(y, color="black", linestyle="-.")"""
+            x = [0, len(data) - 1]
+            y = [data[0], data[-1]]
+            plt.plot(x, y)
+        
+        plt.savefig(f"{config.SAVE_PATH}outcomes.png", dpi=300)
+        plt.pause(0.1)
+        plt.close("all")
 
     def save_metrics(self, agent_kind):
         loaded = files.load_file("save.json")

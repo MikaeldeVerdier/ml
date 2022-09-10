@@ -81,6 +81,12 @@ class Agent():
         else: action = np.where(np.random.multinomial(1, pi) == 1)[0][0]
 
         return action
+
+    def save_outcomes(self, agent_kind):
+        loaded = files.load_file("save.json")
+        loaded[agent_kind]["version_outcomes"][self.nn.version] = self.outcomes["average"]
+
+        files.write("save.json", json.dumps(loaded))
     
     @staticmethod
     def print_move(root, pi, action, nn_value):
@@ -91,15 +97,9 @@ class Agent():
         print(f"NN percieved value is: {nn_value:.3f}")
 
 
-class CurrentAgent(Agent):
+class CurrentAgent(Agent):  # Useless, currently
     def __init__(self, nn_class, load, version=None, name=None):
         super().__init__(nn_class, load, version, name)
-
-    def save_outcomes(self, agent_kind):
-        loaded = files.load_file("save.json")
-        loaded[agent_kind]["version_outcomes"][self.nn.version] = self.outcomes["average"]
-
-        files.write("save.json", json.dumps(loaded))
 
 
 class BestAgent(Agent):

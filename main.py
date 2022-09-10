@@ -135,12 +135,12 @@ def retrain_network(agent):
 def evaluate_network(agents):
     play(agents, config.GAME_AMOUNT_EVALUATION, False)
     
-    results = [agent.outcomes["average"] for agent in agents.values()]
-
-    results = [0, 1]
-
-    agents[-1].save_outcomes("current_agent")
+    results = []
+    for agent in agents.values():
+        results.append(agent.outcomes["average"])
+        agent.save_outcomes("current_agent")
     log(agents, results)
+    agents[-1].nn.plot_outcomes(True)
 
     print(f"The results were: {results}")
     if results[1] > results[0] * config.WINNING_THRESHOLD:
@@ -189,7 +189,7 @@ def main():
     for _ in range(config.LOOP_ITERATIONS):
         self_play(agents[1])
         retrain_network(agents[-1])
-        if agents[-1].nn.version - 1 % config.EVALUATION_FREQUENCY == 0: agents = evaluate_network(agents)
+        if (agents[-1].nn.version - 1) % config.EVALUATION_FREQUENCY == 0: agents = evaluate_network(agents)
 
     # play_versions([1, agents[1].nn.version], config.GAME_AMOUNT_PLAY_VERSIONS)
     # play_test(agents[1].nn.version, config.GAME_AMOUNT_PLAY_TEST)
