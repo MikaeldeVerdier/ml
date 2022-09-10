@@ -135,7 +135,7 @@ class CurrentNeuralNetwork(NeuralNetwork):
         for metric in fit.history:
             [self.metrics[metric].append(fit.history[metric][i]) for i in range(config.EPOCHS)]
 
-    def plot_metrics(self, iteration_lines, derivative_lines):
+    def plot_metrics(self, iteration_lines=False, derivative_lines=False):
         _, axs = plt.subplots(4, sharey="row", figsize=(20, 15))
         plt.xlabel("Training Iteration")
 
@@ -170,11 +170,16 @@ class CurrentNeuralNetwork(NeuralNetwork):
         plt.pause(0.1)
         plt.close("all")
     
-    def plot_outcomes(self, derivative_line):
+    def plot_outcomes(self, derivative_line=False):
         loaded = files.load_file("save.json")
-        data = list(loaded["current_agent"]["version_outcomes"].values()) 
+        data = loaded["current_agent"]["version_outcomes"] 
 
-        plt.plot(data)
+        x = list(data.keys())
+        data = list(data.values())
+        plt.plot(x, data)
+        plt.xlabel("Version")
+        plt.ylabel("Average outcome")
+        plt.title("Average outcome for versions")
 
         if derivative_line:
             """deriv = (data[-1] - data[0]) / len(data)
@@ -182,7 +187,7 @@ class CurrentNeuralNetwork(NeuralNetwork):
             plt.plot(y, color="black", linestyle="-.")"""
             x = [0, len(data) - 1]
             y = [data[0], data[-1]]
-            plt.plot(x, y)
+            plt.plot(x, y, color="black", linestyle="-.")
         
         plt.savefig(f"{config.SAVE_PATH}outcomes.png", dpi=300)
         plt.pause(0.1)
