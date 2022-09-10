@@ -96,7 +96,7 @@ class Agent():
         print(f"NN percieved value is: {nn_value:.3f}")
 
 
-class CurrentAgent(Agent):  # Useless, currently
+class CurrentAgent(Agent):  # Redundant currently
     def __init__(self, nn_class, load, version=None, name=None):
         super().__init__(nn_class, load, version, name)
 
