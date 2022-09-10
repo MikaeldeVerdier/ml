@@ -36,10 +36,10 @@ def play(players, games, training=False):
     game_count = 0
     starts = 1
     while game_count < games:
+        deck = list(range(1, 53))
+        random.shuffle(deck)
+        drawn_card = deck.pop()
         for i, player in enumerate(players):
-            deck = list(range(1, 53))
-            drawn_card = np.random.choice(deck)
-            deck.remove(drawn_card)
             player.mcts = Node(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], deck, drawn_card, Tree())
     
             turn = 1

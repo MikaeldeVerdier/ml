@@ -119,9 +119,10 @@ def check_game_over(node):
 
 
 def take_action(node, action):
+    board = node.s.copy()
+
     node_info = []
     for card in node.deck:
-        board = node.s.copy()
         deck = node.deck.copy()
 
         if action != 25: board[action] = node.drawn_card

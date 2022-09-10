@@ -33,7 +33,7 @@ class Node:
         return new_nodes
 
     def update_root(self, action):
-        return np.random.choice(self.create_node(action))
+        return self.create_node(action)[-1]
 
     def simulate(self, nn):
         breadcrumbs = []

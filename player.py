@@ -58,6 +58,7 @@ class Agent():
         self.mcts = self.mcts.update_root(action)
 
         nn_value = self.nn.get_preds(self.mcts)[0]
+        print(self.mcts.drawn_card)
         self.print_move(self.mcts, pi, action, nn_value)
 
         return pi
