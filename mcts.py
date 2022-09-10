@@ -16,7 +16,7 @@ class Node:
         self.tree.add_node(self)
     
     def __hash__(self):
-        return hash(tuple(self.s) + tuple(self.deck))
+        return hash(tuple(self.s) + tuple(self.deck) + (self.drawn_card,))
 
     def create_node(self, action):
         new_node_info = game.take_action(self, action)

@@ -52,22 +52,20 @@ class Agent():
         else: 
             for _ in range(config.MCTS_SIMS): self.mcts.simulate(self.nn)
 
-            pi = self.getAV(self.mcts, tau)
-            
+            pi = self.getAV(tau)
+
             action = self.choose_action(pi, tau)
         self.mcts = self.mcts.update_root(action)
 
         nn_value = self.nn.get_preds(self.mcts)[0]
-        print(self.mcts.drawn_card)
         self.print_move(self.mcts, pi, action, nn_value)
 
         return pi
 
-    @staticmethod
-    def getAV(root, tau):
+    def getAV(self, tau):
         pi = np.zeros(game.MOVE_AMOUNT)
 
-        for edge in root.edges:
+        for edge in self.mcts.edges:
             pi[edge.action] = edge.n  # ** 1/tau
 
         pi /= np.sum(pi)
