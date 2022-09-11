@@ -69,7 +69,7 @@ def play(players, games, training=False):
             starts *= -1
 
             print(f"We are " + ("training" if training else "evaluating"))
-            print(f"Game outcome was: {outcome} (Agent name: {player.get_full_name()})")
+            print(f"Game outcome was: {outcome} (Agent name: {player.get_name()[0]})")
             print(f"Amount of games played is now: {game_count}\n")
 
             if not training:
