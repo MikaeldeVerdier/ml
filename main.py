@@ -39,7 +39,7 @@ def play(players, games, training=False):
         deck = list(range(1, 53))
         random.shuffle(deck)
         drawn_card = deck.pop()
-        for i, player in enumerate(players):
+        for player in players:
             player.mcts = Node(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], deck, drawn_card, Tree())
     
             turn = 1
@@ -78,11 +78,6 @@ def play(players, games, training=False):
             else:
                 for data in training_data[-1]: data.append(outcome)
 
-                training_length = len(np.vstack(training_data))
-
-                if len(loaded) + training_length < config.POSITION_AMOUNT:
-                    if len(loaded) + training_length < config.POSITION_AMOUNT and games == game_count: games += 1
-
                 # away_from_full = config.POSITION_AMOUNT - len(loaded)
                 # if training_length > config.POSITION_AMOUNT / 25 or away_from_full and training_length >= away_from_full:
                 product = []
@@ -90,7 +85,6 @@ def play(players, games, training=False):
                     for data in game_data:
                         state = np.array(game.generate_tutorial_game_state(data[0], True)).tolist()
                         for flip in state: product.append([flip, data[1].tolist(), data[2]])
-                        # product.append()
                         # data[0] = np.array(game.generate_tutorial_game_state(data[0])).tolist()
                         # data[1] = data[1].tolist()
                 # training_data = np.vstack(training_data).tolist()
@@ -100,7 +94,10 @@ def play(players, games, training=False):
                 files.write("positions.json", json.dumps(loaded))
 
                 is_full = len(loaded) == config.POSITION_AMOUNT
-                if is_full and not os.path.exists(f"{config.SAVE_PATH}/backup/positions_{config.POSITION_AMOUNT}.json"): files.make_backup("positions.json", f"positions_{config.POSITION_AMOUNT}.json")
+                if is_full:
+                    if not os.path.exists(f"{config.SAVE_PATH}/backup/positions_{config.POSITION_AMOUNT}.json"): files.make_backup("positions.json", f"positions_{config.POSITION_AMOUNT}.json")
+                else:
+                    if games == game_count: games += 1
 
                 training_data = []
             
