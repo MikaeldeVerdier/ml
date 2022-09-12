@@ -132,7 +132,7 @@ def evaluate_network(agents):
         results.append(agent.outcomes["average"])
         agent.save_outcomes("current_agent")
     log(agents, results)
-    agents[-1].nn.plot_outcomes(derivative_line=True)
+    agents[-1].nn.plot_outcomes(derivative_line=False)
 
     print(f"The results were: {results}")
     if results[1] > results[0] * config.WINNING_THRESHOLD:
