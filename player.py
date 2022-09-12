@@ -28,9 +28,9 @@ class User():
 
     @staticmethod
     def print_move(root, action):
-        print(f"Drawn card is: {game.format_card(root.drawn_card)}")
         print(f"Move to make is: {action}")
         print(f"Position is now:\n{game.print_board(root.s)}\n")
+        print(f"Drawn card is: {game.format_card(root.drawn_card)}")
         print(f"Deck length is now: {len(root.deck)}")
 
 
@@ -90,12 +90,12 @@ class Agent():
     
     @staticmethod
     def print_move(root, pi, action, nn_value):
-        print(f"Drawn card is: {game.format_card(root.drawn_card)}")
         game.print_values(pi)
         print(f"Move to make is: {action}")
         print(f"Position is now:\n{game.print_board(root.s)}")
-        print(f"Deck length is now: {len(root.deck)}")
         print(f"NN percieved value is: {nn_value:.3f}")
+        print(f"Drawn card is: {game.format_card(root.drawn_card)}")
+        print(f"Deck length is now: {len(root.deck)}")
 
 
 class CurrentAgent(Agent):  # Redundant currently

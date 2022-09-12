@@ -121,7 +121,7 @@ def retrain_network(agent):
     agent.nn.model.save(f"{config.SAVE_PATH}/training/v.{agent.nn.version}")
     agent.nn.save_metrics("current_agent")
     agent.outcomes = {"average": 0, "length": 0}
-    agent.nn.plot_metrics()
+    agent.nn.plot_metrics(derivative_lines=True)
 
 
 def evaluate_network(agents):
@@ -132,7 +132,7 @@ def evaluate_network(agents):
         results.append(agent.outcomes["average"])
         agent.save_outcomes("current_agent")
     log(agents, results)
-    agents[-1].nn.plot_outcomes(derivative_line=False)
+    agents[-1].nn.plot_outcomes(derivative_line=True)
 
     print(f"The results were: {results}")
     if results[1] > results[0] * config.WINNING_THRESHOLD:
@@ -177,6 +177,8 @@ def play_versions(versions, games):
 
 def main():
     agents = initiate()
+
+    agents = evaluate_network(agents)
 
     for _ in range(config.LOOP_ITERATIONS):
         self_play(agents[1])

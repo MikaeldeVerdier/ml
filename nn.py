@@ -62,7 +62,7 @@ class NeuralNetwork:
         # self.model.summary()
 
     def load_version(self, version):
-        self.model = load_model(f"{config.SAVE_PATH}/training/v.{version}", custom_objects={"softmax_cross_entropy_with_logits": self.softmax_cross_entropy_with_logits})
+        self.model = load_model(f"{config.SAVE_PATH}training/v.{version}", custom_objects={"softmax_cross_entropy_with_logits": self.softmax_cross_entropy_with_logits})
 
     @staticmethod
     def softmax_cross_entropy_with_logits(y_true, y_pred):
@@ -150,7 +150,7 @@ class CurrentNeuralNetwork(NeuralNetwork):
                 ax.axhline(data[-1], color="black", linestyle=":")
 
                 if derivative_lines:
-                    deriv = (data[-1] - data[0]) / len(data)
+                    deriv = (data[-1] - data[0]) / (len(data) - 1)
                     y = [deriv * x + data[0] for x in range(len(data))]
                     ax.plot(y, color="black", linestyle="-.")
 
@@ -185,9 +185,9 @@ class CurrentNeuralNetwork(NeuralNetwork):
             """deriv = (data[-1] - data[0]) / len(data)
             y = [deriv * x + data[0] for x in range(len(data))]
             plt.plot(y, color="black", linestyle="-.")"""
-            x = [0, len(data) - 1]
-            y = [data[0], data[-1]]
-            plt.plot(x, y, color="black", linestyle="-.")
+            deriv = (data[-1] - data[0]) / (len(data) - 1)
+            y = [deriv * x + data[0] for x in range(len(data))]
+            plt.plot(y, color="black", linestyle="-.")
         
         plt.savefig(f"{config.SAVE_PATH}outcomes.png", dpi=300)
         plt.pause(0.1)
