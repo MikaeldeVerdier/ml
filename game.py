@@ -133,14 +133,20 @@ def take_action(node, action):
     return node_info
 
 
+def format_card(card):
+    suit_dict = {0: "sp", 1: "hj", 2: "ru", 3: "kl"}
+    suit, value = get_card(card)
+
+    return f"{suit_dict[suit]}{int(value)}"
+
+
 def print_board(board):
     board = board.astype("<U4")
     board[board == "0.0"] = "---"
     suit_dict = {0: "sp", 1: "hj", 2: "ru", 3: "kl"}
     for i, pos in enumerate(board):
         if pos != "---":
-            suit, value = get_card(float(pos))
-            board[i] = f"{suit_dict[suit]}{int(value)}"
+            board[i] = format_card(float(pos))
     return board.reshape(GAME_DIMENSIONS)
 
 
