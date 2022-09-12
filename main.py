@@ -55,12 +55,7 @@ def play(players, games, training=False):
 
                 pi = player.play_turn(tau)
 
-                if training:
-                    training_data[-1][-1].append(pi)
-                    """length = len(np.where(pi != 0)[0])
-                    if length > 1:
-                        training_data[-1][-1].append(pi)
-                    else: del training_data[-1][-1] """
+                if training: training_data[-1][-1].append(pi)
                 outcome = game.check_game_over(player.mcts)
 
                 turn += 1
