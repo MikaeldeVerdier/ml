@@ -17,21 +17,22 @@ def generate_tutorial_game_state(node, mirror=False):
         for i in range(1, 53):
             position = np.zeros(len(s))
             position[s == i] = 1
-            position = np.append(position, [0] * 27).tolist()
+            position = np.append(position, [0] * 27)
             state.append(position)
         # state = np.array(state).reshape((25, 52)).tolist()
 
         deck = np.zeros(52)
         for card in node.deck: deck[card - 1] = 1
-        state.append(deck.tolist())
+        state.append(deck)
 
         drawn_card = np.zeros(52)
         drawn_card[node.drawn_card - 1] = 1
-        state.append(drawn_card.tolist())
+        state.append(drawn_card)
 
-        state = state.reshape(52, 54)
+        # state = np.moveaxis(state, 0, -1)
+        state = np.array(state).reshape(NN_INPUT_DIMENSIONS)
 
-        game_state.append([state])
+        game_state.append(state)
 
     # board_history.append(np.array([[[node.player + 1]] * GAME_DIMENSIONS[1]] * GAME_DIMENSIONS[0]))
     # game_state = np.reshape(board_history, NN_INPUT_DIMENSIONS)
