@@ -2,7 +2,7 @@ import numpy as np
 
 
 GAME_DIMENSIONS = (5, 5)
-NN_INPUT_DIMENSIONS = (1, 27, 52)
+NN_INPUT_DIMENSIONS = (1, 52, 54)
 MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
 REPLACE_CARDS = 3
 
@@ -17,8 +17,9 @@ def generate_tutorial_game_state(node, mirror=False):
         for i in range(1, 53):
             position = np.zeros(len(s))
             position[s == i] = 1
+            position = np.append(position, [0] * 27).tolist()
             state.append(position)
-        state = np.array(state).reshape((25, 52)).tolist()
+        # state = np.array(state).reshape((25, 52)).tolist()
 
         deck = np.zeros(52)
         for card in node.deck: deck[card - 1] = 1
@@ -27,6 +28,8 @@ def generate_tutorial_game_state(node, mirror=False):
         drawn_card = np.zeros(52)
         drawn_card[node.drawn_card - 1] = 1
         state.append(drawn_card.tolist())
+
+        state = state.reshape(52, 54)
 
         game_state.append([state])
 
