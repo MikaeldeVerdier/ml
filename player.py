@@ -4,7 +4,6 @@ import game
 import config
 import files
 
-
 class User():
     def __init__(self):
         pass

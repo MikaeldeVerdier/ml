@@ -10,7 +10,6 @@ from nn import NeuralNetwork, CurrentNeuralNetwork, BestNeuralNetwork
 from mcts import Node, Tree
 from player import User, Agent, CurrentAgent, BestAgent
 
-
 def initiate():
     load = [False, False]
 
@@ -111,8 +110,27 @@ def retrain_network(agent):
         positions = files.load_file("positions.json")
         minibatch = random.sample(positions, config.BATCH_SIZE)
 
-        x = np.array([batch[0] for batch in minibatch])
-        y = {"value_head": np.array([batch[2] for batch in minibatch]), "policy_head": np.array([batch[1] for batch in minibatch])}
+        x = [[], [], []]
+        y = {"value_head": [], "policy_head": []}
+        for batch in minibatch:
+            for i, dim in enumerate(batch[0]):
+                x[i].append(np.array(dim))
+
+            y["value_head"].append(np.array([batch[2]], dtype=np.float32))
+            y["policy_head"].append(np.array(batch[1]))
+
+        for i, dim in enumerate(x):
+            x[i] = np.array(dim)
+        
+        y["value_head"] = np.array(y["value_head"])
+        y["policy_head"] = np.array(y["policy_head"])
+
+        # x["position_input"] = np.expand_dims(x["position_input"], 1)
+        # x["deck_input"] = np.expand_dims(x["deck_input"], 1)
+        # x["drawn_card_input"] = np.expand_dims(x["drawn_card_input"], 1)
+
+        # y["policy_head"] = np.expand_dims(y["policy_head"], 1)
+        # y["value_head"] = np.expand_dims(y["value_head"], 1)
 
         agent.nn.train(x, y)
 
@@ -177,8 +195,6 @@ def play_versions(versions, games):
 
 def main():
     agents = initiate()
-
-    agents = evaluate_network(agents)
 
     for _ in range(config.LOOP_ITERATIONS):
         self_play(agents[1])

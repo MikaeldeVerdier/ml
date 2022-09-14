@@ -2,7 +2,6 @@ import numpy as np
 import game
 import config
 
-
 class Node:
     def __init__(self, state, deck, drawn_card, tree):
         self.s = state
