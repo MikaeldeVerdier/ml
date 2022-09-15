@@ -33,12 +33,15 @@ def play(players, games, training=False):
     loaded = files.load_file("positions.json")
 
     game_count = 0
+    if not training: outcomes = [[], []]
     starts = 1
     while game_count < games:
+        game_count += 1
+        
         deck = list(range(1, 53))
         random.shuffle(deck)
         drawn_card = deck.pop()
-        for player in players:
+        for i, player in enumerate(players):
             player.mcts = Node(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], deck, drawn_card, Tree())
     
             turn = 1
@@ -59,14 +62,14 @@ def play(players, games, training=False):
 
                 turn += 1
 
-            game_count += 1
             starts *= -1
 
             print(f"We are " + ("training" if training else "evaluating"))
             print(f"Game outcome was: {outcome} (Agent name: {player.get_name()[0]})")
-            print(f"Amount of games played is now: {game_count}\n")
+            print(f"Amount of games played for this agent is now: {game_count}\n")
 
             if not training:
+                outcomes[i].append(outcome)
                 player.outcomes["length"] += 1
                 player.outcomes["average"] = (player.outcomes["average"] * (player.outcomes["length"] - 1) + outcome) / player.outcomes["length"]
             else:
@@ -96,6 +99,8 @@ def play(players, games, training=False):
                 training_data = []
             
                 print(f"Position length is now: {len(loaded)}")
+            
+    if not training: return outcomes
 
 
 def self_play(agent):
@@ -143,17 +148,21 @@ def retrain_network(agent):
 
 
 def evaluate_network(agents):
-    play(agents, config.GAME_AMOUNT_EVALUATION)
-    
+    outcomes = play(agents, config.GAME_AMOUNT_EVALUATION)
+
     results = []
     for agent in agents.values():
         results.append(agent.outcomes["average"])
         agent.save_outcomes("current_agent")
-    log(agents, results)
+
+    for i, player in enumerate(outcomes):
+        outcomes[i] = np.sum(player) / len(player)
+
+    log(agents, outcomes)
     agents[-1].nn.plot_outcomes(derivative_line=True)
 
-    print(f"The results were: {results}")
-    if results[1] > results[0] * config.WINNING_THRESHOLD:
+    print(f"The results were: {outcomes}")
+    if outcomes[1] > outcomes[0] * config.WINNING_THRESHOLD:
         agents[1].copy_profile(agents[-1])
         print(f"The best_agent has copied the current_agent's profile")
 
