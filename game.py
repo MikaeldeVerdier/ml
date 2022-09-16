@@ -146,7 +146,6 @@ def format_card(card):
 def print_board(board):
     board = board.astype("<U4")
     board[board == "0.0"] = "---"
-    suit_dict = {0: "sp", 1: "hj", 2: "ru", 3: "kl"}
     for i, pos in enumerate(board):
         if pos != "---":
             board[i] = format_card(float(pos))

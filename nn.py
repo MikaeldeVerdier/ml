@@ -120,9 +120,21 @@ class NeuralNetwork:
 
     @cache
     def get_preds(self, node):
+        # data = game.generate_tutorial_game_state(node, True)
+        # result = [[], []]
+        # for flip in data:
+        #     input_data = [np.expand_dims(dat, 0) for dat in flip]
+        #     (v, p) = self.model.predict(input_data)
+        #     result[0].append(v[0][0])
+        #     result[1].append(p[0])
+
+        # value = np.mean(result[0])
+        # logits = np.mean(result[1], axis=0)
+
         data = [np.expand_dims(dat, 0) for dat in game.generate_tutorial_game_state(node)[0]]
         (v, p) = self.model.predict(data)
 
+        value = v[0][0]
         logits = p[0]
 
         mask = np.full(logits.shape, True)
@@ -135,7 +147,7 @@ class NeuralNetwork:
         odds = np.exp(logits)
         probs = odds / np.sum(odds)
 
-        return (v[0][0], probs)
+        return (value, probs)
 
 
 class CurrentNeuralNetwork(NeuralNetwork):

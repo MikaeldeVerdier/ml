@@ -29,11 +29,13 @@ def initiate():
 def play(players, games, training=False):
     players = set(players.values())
 
-    if training: training_data = []
-    loaded = files.load_file("positions.json")
+    if training:
+        training_data = []
+        loaded = files.load_file("positions.json")
+    else:
+        outcomes = [[], []]
 
     game_count = 0
-    if not training: outcomes = [[], []]
     starts = 1
     while game_count < games:
         game_count += 1
@@ -80,8 +82,8 @@ def play(players, games, training=False):
                 product = []
                 for game_data in training_data:
                     for data in game_data:
-                        state = np.array(game.generate_tutorial_game_state(data[0], True)).tolist()
-                        for flip in state: product.append([flip, data[1].tolist(), data[2]])
+                        states = np.array(game.generate_tutorial_game_state(data[0], True)).tolist()
+                        for flip in states: product.append([flip, data[1].tolist(), data[2]])
                         # data[0] = np.array(game.generate_tutorial_game_state(data[0])).tolist()
                         # data[1] = data[1].tolist()
                 # training_data = np.vstack(training_data).tolist()
