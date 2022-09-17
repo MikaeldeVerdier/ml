@@ -94,7 +94,7 @@ def play(players, games, training=False):
 
                 is_full = len(loaded) == config.POSITION_AMOUNT
                 if is_full:
-                    if not os.path.exists(f"{config.SAVE_PATH}/backup/positions_{config.POSITION_AMOUNT}.json"): files.make_backup("positions.json", f"positions_{config.POSITION_AMOUNT}.json")
+                    if not os.path.exists(f"{config.SAVE_PATH}backup/positions_{config.POSITION_AMOUNT}.json"): files.make_backup("positions.json", f"positions_{config.POSITION_AMOUNT}.json")
                 else:
                     if games == game_count: games += 1
 
@@ -143,7 +143,7 @@ def retrain_network(agent):
 
     agent.nn.iterations.append(config.TRAINING_ITERATIONS * config.EPOCHS)
     agent.nn.version += 1
-    agent.nn.model.save(f"{config.SAVE_PATH}/training/v.{agent.nn.version}")
+    agent.nn.model.save(f"{config.SAVE_PATH}training/v.{agent.nn.version}")
     agent.nn.save_metrics("current_agent")
     agent.outcomes = {"average": 0, "length": 0}
     agent.nn.plot_metrics(derivative_lines=True)

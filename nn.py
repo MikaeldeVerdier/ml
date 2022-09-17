@@ -51,11 +51,13 @@ class NeuralNetwork:
 
         x = Concatenate()([position, deck, drawn_card])
 
+        x = self.shared_mlp(x)
+
         vh = self.value_head(x)
         ph = self.policy_head(x)
 
         self.model = Model(inputs=[position_input, deck_input, drawn_card_input], outputs=[vh, ph])
-        self.model.compile(loss={"value_head": "mean_absolute_error", "policy_head": self.softmax_cross_entropy_with_logits}, optimizer=SGD(learning_rate=config.LEARNING_RATE, momentum=config.MOMENTUM), loss_weights={"value_head": 0.5, "policy_head": 0.5}, metrics="accuracy")
+        self.model.compile(loss={"value_head": "mse", "policy_head": self.softmax_cross_entropy_with_logits}, optimizer=SGD(learning_rate=config.LEARNING_RATE, momentum=config.MOMENTUM), loss_weights={"value_head": 0.5, "policy_head": 0.5}, metrics="accuracy")
         
         try:
             # pass
@@ -104,6 +106,11 @@ class NeuralNetwork:
         x = Conv2D(filters=filters, kernel_size=kernel_size, data_format="channels_last", padding="same", use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         x = BatchNormalization(axis=3)(x)
         x = ReLU()(x)
+        return x
+
+    @staticmethod
+    def shared_mlp(x):
+        for neuron_amount in config.DENSE_SHARED: x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         return x
 
     @staticmethod
@@ -158,7 +165,7 @@ class CurrentNeuralNetwork(NeuralNetwork):
         if version is None: version = loaded["version"]
 
         super().__init__(load, version)
-        self.model.save(f"{config.SAVE_PATH}/training/v.{version}")
+        self.model.save(f"{config.SAVE_PATH}training/v.{version}")
 
     def train(self, x, y):
         self.get_preds.cache_clear()
