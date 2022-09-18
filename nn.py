@@ -224,7 +224,7 @@ class CurrentNeuralNetwork(NeuralNetwork):
             """deriv = (data[-1] - data[0]) / len(data)
             y = [deriv * x + data[0] for x in range(len(data))]
             plt.plot(y, color="black", linestyle="-.")"""
-            deriv = (data[-1] - data[0]) / len(data)
+            deriv = (data[-1] - data[0]) / (len(data) - 1)
             y = [deriv * x + data[0] for x in range(len(data))]
             plt.plot(y, color="black", linestyle="-.")
         
