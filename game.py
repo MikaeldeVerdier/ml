@@ -74,12 +74,12 @@ def get_legal_moves(node):  # , all_moves):
 
 def get_card(value):
     suit = np.floor((value - 1) / 13)
-    value = ((value  - 1) % 13) + 2
+    value = ((value - 1) % 13) + 2
     return suit, value
 
 
 def get_score(cards):
-    values = [get_card(card)[1] for card in cards]
+    values = sorted([get_card(card)[1] for card in cards])
     
     histo_dict = {(1, 4): 20, (2, 3): 15, (1, 1, 3): 8, (1, 2, 2): 4, (1, 1, 1, 2): 2}
 
@@ -92,8 +92,7 @@ def get_score(cards):
         return histo_dict[histo]
 
     färgrad = len(set(get_card(card)[0] for card in cards)) == 1
-    stege = max(values) - min(values) == 4
-    op = max(values) == 14
+    stege = values[-1] - values[0] == 4 or values[-2] - values[0] == 3 and values[-1] == 14
     
     score = 0
 
@@ -101,6 +100,8 @@ def get_score(cards):
         score += 10
     if stege:
         score += 10
+
+        op = values[-1] == 14
         if op:
             return 3 * score - 10
     
