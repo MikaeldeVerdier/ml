@@ -43,8 +43,7 @@ def generate_tutorial_game_state(node, mirror=False):
 def check_index(board, index, checking_index, checking_func, multiplier_func, multiplier):
     if 0 <= checking_index < np.prod(GAME_DIMENSIONS):
         if np.floor(checking_index / GAME_DIMENSIONS[1]) == np.floor(index / GAME_DIMENSIONS[1]) + multiplier_func(multiplier):
-            if checking_func(board[checking_index]):
-                return True
+            return checking_func(board[checking_index])
 
 
 def get_legal_moves(node):  # , all_moves):
@@ -92,7 +91,7 @@ def get_score(cards):
         return histo_dict[histo]
 
     färgrad = len(set(get_card(card)[0] for card in cards)) == 1
-    stege = values[-1] - values[0] == 4 or values[-2] - values[0] == 3 and values[-1] == 14
+    stege = values[-1] - values[0] == 4 or values[-1] == 14 and values[-2] - values[0] == 3
     
     score = 0
 
@@ -109,7 +108,7 @@ def get_score(cards):
     
 
 def check_game_over(node):
-    if len(node.deck) == 52 - np.prod(GAME_DIMENSIONS) - REPLACE_CARDS - 1:
+    if len(node.deck) == 51 - np.prod(GAME_DIMENSIONS) - REPLACE_CARDS:
         score = 0
         # node.s = np.full((5, 5), 1)
         # node.s[0] = [13, 12, 11, 10, 8]
@@ -119,7 +118,7 @@ def check_game_over(node):
             for row in rowcol:
                 score += get_score(row)
         
-        return score
+        return score * 0.02
 
 
 def take_action(node, action):

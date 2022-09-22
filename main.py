@@ -67,13 +67,13 @@ def play(players, games, training=False):
             starts *= -1
 
             print(f"We are " + ("training" if training else "evaluating"))
-            print(f"Game outcome was: {outcome} (Agent name: {player.get_name()[0]})")
+            print(f"Game outcome was: {int(outcome * 50)} (Agent name: {player.get_name()[0]})")
             print(f"Amount of games played for this agent is now: {game_count}\n")
 
             if not training:
-                outcomes[i].append(outcome)
+                outcomes[i].append(int(outcome * 50))
                 player.outcomes["length"] += 1
-                player.outcomes["average"] = (player.outcomes["average"] * (player.outcomes["length"] - 1) + outcome) / player.outcomes["length"]
+                player.outcomes["average"] = (player.outcomes["average"] * (player.outcomes["length"] - 1) + int(outcome * 50)) / player.outcomes["length"]
             else:
                 for data in training_data[-1]: data.append(outcome)
 
@@ -113,8 +113,9 @@ def self_play(agent):
 
 
 def retrain_network(agent):
+    positions = files.load_file("positions.json")
+
     for _ in range(config.TRAINING_ITERATIONS):
-        positions = files.load_file("positions.json")
         minibatch = random.sample(positions, config.BATCH_SIZE)
 
         x = [[], [], []]
