@@ -67,7 +67,7 @@ def play(players, games, training=False):
             starts *= -1
 
             print(f"We are " + ("training" if training else "evaluating"))
-            print(f"Game outcome was: {int(outcome * 50)} (Agent name: {player.get_name()[0]})")
+            print(f"Game outcome was: {outcome} ({int(outcome * 50)}), (Agent name: {player.get_name()[0]})")
             print(f"Amount of games played for this agent is now: {game_count}\n")
 
             if not training:
@@ -82,7 +82,7 @@ def play(players, games, training=False):
                 product = []
                 for game_data in training_data:
                     for data in game_data:
-                        states = np.array(game.generate_tutorial_game_state(data[0], True)).tolist()
+                        states = np.array(game.generate_tutorial_game_state(data[0], True), dtype=object).tolist()
                         for flip in states: product.append([flip, data[1].tolist(), data[2]])
                         # data[0] = np.array(game.generate_tutorial_game_state(data[0])).tolist()
                         # data[1] = data[1].tolist()

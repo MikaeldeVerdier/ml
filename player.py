@@ -92,7 +92,7 @@ class Agent():
         game.print_values(pi)
         print(f"Move to make is: {action}")
         print(f"Position is now:\n{game.print_board(root.s)}")
-        print(f"NN percieved value is: {nn_value:.3f}")
+        print(f"NN percieved value is: {nn_value:.3f} ({(nn_value * 50):.3f})")
         print(f"Drawn card is: {game.format_card(root.drawn_card)}")
         print(f"Deck length is now: {len(root.deck)}")
 
