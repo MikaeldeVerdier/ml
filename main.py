@@ -167,7 +167,7 @@ def log(agents, results):
 ------------ {names[0][0]} vs {names[1][0]} ------------
 Results are: {results}
 {best} the best!
-
+5
 """
     files.write("log.txt", message, "a")
 

@@ -1,7 +1,7 @@
 import numpy as np
 
 GAME_DIMENSIONS = (5, 5)
-NN_INPUT_DIMENSIONS = (1, 52, 54)
+NN_INPUT_DIMENSIONS = [(5, 5, 52), (52,), (52,)]
 MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
 REPLACE_CARDS = 3
 
@@ -11,27 +11,27 @@ def generate_tutorial_game_state(node, mirror=False):
 
     game_state = []
     for flip in flips:
+        game_state.append([])
+
         s = node.s if flip is None else np.flip(node.s.reshape(GAME_DIMENSIONS), flip).flatten()
         state = []
         for i in range(1, 53):
             position = np.zeros(len(s))
             position[s == i] = 1
-            position = np.append(position, [0] * 27)
-            state.append(position)
-        # state = np.array(state).reshape((25, 52)).tolist()
+            state.append(np.reshape(position, NN_INPUT_DIMENSIONS[0][:-1]))
+
+        state = np.moveaxis(state, 0, -1)
+        # state = np.reshape(state, NN_INPUT_DIMENSIONS[0]).tolist()
+
+        game_state[-1].append(state)
 
         deck = np.zeros(52)
         for card in node.deck: deck[card - 1] = 1
-        state.append(deck)
+        game_state[-1].append(deck.tolist())
 
         drawn_card = np.zeros(52)
         drawn_card[node.drawn_card - 1] = 1
-        state.append(drawn_card)
-
-        # state = np.moveaxis(state, 0, -1)
-        state = np.array(state).reshape(NN_INPUT_DIMENSIONS)
-
-        game_state.append(state)
+        game_state[-1].append(drawn_card.tolist())
 
     # board_history.append(np.array([[[node.player + 1]] * GAME_DIMENSIONS[1]] * GAME_DIMENSIONS[0]))
     # game_state = np.reshape(board_history, NN_INPUT_DIMENSIONS)
