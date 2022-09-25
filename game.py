@@ -20,7 +20,7 @@ def generate_tutorial_game_state(node, mirror=False):
             position[s == i] = 1
             state.append(np.reshape(position, NN_INPUT_DIMENSIONS[0][:-1]))
 
-        state = np.moveaxis(state, 0, -1)
+        state = np.moveaxis(state, 0, -1).tolist()
         # state = np.reshape(state, NN_INPUT_DIMENSIONS[0]).tolist()
 
         game_state[-1].append(state)
