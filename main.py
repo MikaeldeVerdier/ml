@@ -118,8 +118,20 @@ def retrain_network(agent):
     for _ in range(config.TRAINING_ITERATIONS):
         minibatch = random.sample(positions, config.BATCH_SIZE)
 
-        x = np.array([batch[0] for batch in minibatch])
-        y = {"value_head": np.array([batch[2] for batch in minibatch]), "policy_head": np.array([batch[1] for batch in minibatch])}
+        x = [[], [], []]
+        y = {"value_head": [], "policy_head": []}
+        for batch in minibatch:
+            for i, dim in enumerate(batch[0]):
+                x[i].append(np.array(dim))
+
+            y["value_head"].append(np.array([batch[2]], dtype=np.float32))
+            y["policy_head"].append(np.array(batch[1]))
+
+        for i, dim in enumerate(x):
+            x[i] = np.array(dim)
+
+        y["value_head"] = np.array(y["value_head"])
+        y["policy_head"] = np.array(y["policy_head"])
 
         # x["position_input"] = np.expand_dims(x["position_input"], 1)
         # x["deck_input"] = np.expand_dims(x["deck_input"], 1)
