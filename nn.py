@@ -7,9 +7,9 @@ import files
 import tensorflow as tf
 from tensorflow.keras import regularizers
 from tensorflow.keras.models import Model, load_model
-from tensorflow.keras.layers import Input, Dense, Conv2D, Flatten, BatchNormalization, ReLU, Concatenate
+from tensorflow.keras.layers import Input, Dense, Conv2D, Flatten, BatchNormalization, ReLU, add
 from tensorflow.keras.optimizers import SGD
-from keras.utils.vis_utils import plot_model
+#  from keras.utils.vis_utils import plot_model
 
 try:
     from functools import cache
@@ -40,28 +40,22 @@ class NeuralNetwork:
             print(f"NN loaded with version: {version}")
             return
 
-        position_input = Input(shape=(1, 25, 52), name="position_input")
-        position = self.position_cnn(position_input)
+        main_input = Input(shape=game.NN_INPUT_DIMENSIONS, name="main_input")
 
-        deck_input = Input(shape=(52,), name="deck_input")
-        deck = self.deck_mlp(deck_input)
-
-        drawn_card_input = Input(shape=(52,), name="drawn_card_input")
-        drawn_card = self.drawn_card_mlp(drawn_card_input)
-
-        x = Concatenate()([position, deck, drawn_card])
-
-        x = self.shared_mlp(x)
+        x = main_input
+        for filter_amount, kernel_size in config.CONVOLUTIONAL_LAYER: x = self.convolutional_layer(x, filter_amount, kernel_size)
+        x = Flatten()(x)
+        for neuron_amount in config.DENSE_SHARED: x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
 
         vh = self.value_head(x)
         ph = self.policy_head(x)
 
-        self.model = Model(inputs=[position_input, deck_input, drawn_card_input], outputs=[vh, ph])
-        self.model.compile(loss={"value_head": "mae", "policy_head": self.softmax_cross_entropy_with_logits}, optimizer=SGD(learning_rate=config.LEARNING_RATE, momentum=config.MOMENTUM), loss_weights={"value_head": 0.5, "policy_head": 0.5}, metrics="accuracy")
+        self.model = Model(inputs=[main_input], outputs=[vh, ph])
+        self.model.compile(loss={"value_head": "mean_absolute_error", "policy_head": self.softmax_cross_entropy_with_logits}, optimizer=SGD(learning_rate=config.LEARNING_RATE, momentum=config.MOMENTUM), loss_weights={"value_head": 0.5, "policy_head": 0.5}, metrics="accuracy")
         
         try:
-            # pass
-            plot_model(self.model, to_file=f"{config.SAVE_PATH}model.png", show_shapes=True, show_layer_names=True)
+            pass
+            # plot_model(self.model, to_file=f"{config.SAVE_PATH}model.png", show_shapes=True, show_layer_names=True)
         except ImportError:
             print("You need to download pydot and graphviz to plot model.")
 
@@ -78,39 +72,18 @@ class NeuralNetwork:
         zero = tf.zeros(shape=tf.shape(pi), dtype=np.float32)
         where = tf.equal(pi, zero)
 
-        negatives = tf.fill(tf.shape(pi), -100.0)
+        negatives = tf.fill(tf.shape(pi), -100.0) 
         p = tf.where(where, negatives, p)
 
         loss = tf.nn.softmax_cross_entropy_with_logits(labels=pi, logits=p)
 
         return loss
 
-    def position_cnn(self, x):
-        for filter_amount, kernel_size in config.CONVOLUTIONAL_LAYER: x = self.convolutional_layer(x, filter_amount, kernel_size)
-        x = Flatten()(x)
-        for neuron_amount in config.DENSE_POSITION: x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
-        return x
-
-    @staticmethod
-    def deck_mlp(x):
-        for neuron_amount in config.DENSE_DECK: x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
-        return x
-
-    @staticmethod
-    def drawn_card_mlp(x):
-        for neuron_amount in config.DENSE_DRAWN_CARD: x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
-        return x
-
     @staticmethod
     def convolutional_layer(x, filters, kernel_size):
         x = Conv2D(filters=filters, kernel_size=kernel_size, data_format="channels_last", padding="same", use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         x = BatchNormalization(axis=3)(x)
         x = ReLU()(x)
-        return x
-
-    @staticmethod
-    def shared_mlp(x):
-        for neuron_amount in config.DENSE_SHARED: x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         return x
 
     @staticmethod
@@ -127,21 +100,9 @@ class NeuralNetwork:
 
     @cache
     def get_preds(self, node):
-        # data = game.generate_tutorial_game_state(node, True)
-        # result = [[], []]
-        # for flip in data:
-        #     input_data = [np.expand_dims(dat, 0) for dat in flip]
-        #     (v, p) = self.model.predict(input_data)
-        #     result[0].append(v[0][0])
-        #     result[1].append(p[0])
-
-        # value = np.mean(result[0])
-        # logits = np.mean(result[1], axis=0)
-
-        data = [np.expand_dims(dat, 0) for dat in game.generate_tutorial_game_state(node)[0]]
+        data = np.expand_dims(game.generate_tutorial_game_state(node), axis=0)[0]
         (v, p) = self.model.predict(data)
 
-        value = v[0][0]
         logits = p[0]
 
         mask = np.full(logits.shape, True)
@@ -154,7 +115,7 @@ class NeuralNetwork:
         odds = np.exp(logits)
         probs = odds / np.sum(odds)
 
-        return (value, probs)
+        return (v[0][0], probs)
 
 
 class CurrentNeuralNetwork(NeuralNetwork):
@@ -165,7 +126,7 @@ class CurrentNeuralNetwork(NeuralNetwork):
         if version is None: version = loaded["version"]
 
         super().__init__(load, version)
-        self.model.save(f"{config.SAVE_PATH}training/v.{version}")
+        self.model.save(f"{config.SAVE_PATH}/training/v.{version}")
 
     def train(self, x, y):
         self.get_preds.cache_clear()
