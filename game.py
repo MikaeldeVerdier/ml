@@ -1,37 +1,51 @@
 import numpy as np
 
 GAME_DIMENSIONS = (5, 5)
-NN_INPUT_DIMENSIONS = [(5, 5, 52), (52,), (52,)]
+NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (52,), (52,), (52,)]
 MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
 REPLACE_CARDS = 3
 
 
 def generate_tutorial_game_state(node, mirror=False):
-    flips = [None, 0, 1, (0, 1)] if mirror else [None]
+    if mirror:
+        flips = [None, 0, 1, (0, 1)]
+        suit_changes = [0, 13, 26, 39]
+    else:
+        flips = [None]
+        suit_changes = [0]
 
     game_state = []
     for flip in flips:
-        game_state.append([])
-
         s = node.s if flip is None else np.flip(node.s.reshape(GAME_DIMENSIONS), flip).flatten()
-        state = []
-        for i in range(1, 53):
-            position = np.zeros(len(s))
-            position[s == i] = 1
-            state.append(np.reshape(position, NN_INPUT_DIMENSIONS[0][:-1]))
+        
+        for suit_change in suit_changes:
+            game_state.append([])
 
-        state = np.moveaxis(state, 0, -1).tolist()
-        # state = np.reshape(state, NN_INPUT_DIMENSIONS[0]).tolist()
+            de = node.deck
+            dr = [node.drawn_card]
+            for var in [s, de, dr]:
+                for i, card in enumerate(var):
+                    if card != 0: var[i] += suit_change
+                    if var[i] > 52: var[i] -= 52
 
-        game_state[-1].append(state)
+            state = []
+            for i in range(1, 53):
+                position = np.zeros(len(s))
+                position[s == i] = 1
+                state.append(np.reshape(position, NN_INPUT_DIMENSIONS[0][:-1]))
 
-        deck = np.zeros(52)
-        for card in node.deck: deck[card - 1] = 1
-        game_state[-1].append(deck.tolist())
+            state = np.moveaxis(state, 0, -1).tolist()
+            # state = np.reshape(state, NN_INPUT_DIMENSIONS[0]).tolist()
 
-        drawn_card = np.zeros(52)
-        drawn_card[node.drawn_card - 1] = 1
-        game_state[-1].append(drawn_card.tolist())
+            game_state[-1].append(state)
+
+            deck = np.zeros(52)
+            for card in de: deck[card - 1] = 1
+            game_state[-1].append(deck.tolist())
+
+            drawn_card = np.zeros(52)
+            drawn_card[dr[0] - 1] = 1
+            game_state[-1].append(drawn_card.tolist())
 
     # board_history.append(np.array([[[node.player + 1]] * GAME_DIMENSIONS[1]] * GAME_DIMENSIONS[0]))
     # game_state = np.reshape(board_history, NN_INPUT_DIMENSIONS)

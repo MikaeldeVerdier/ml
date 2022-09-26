@@ -133,14 +133,13 @@ def retrain_network(agent):
         y["value_head"] = np.array(y["value_head"])
         y["policy_head"] = np.array(y["policy_head"])
 
-        # x["position_input"] = np.expand_dims(x["position_input"], 1)
-        # x["deck_input"] = np.expand_dims(x["deck_input"], 1)
-        # x["drawn_card_input"] = np.expand_dims(x["drawn_card_input"], 1)
-
-        # y["policy_head"] = np.expand_dims(y["policy_head"], 1)
-        # y["value_head"] = np.expand_dims(y["value_head"], 1)
-
         agent.nn.train(x, y)
+
+    # data = [np.expand_dims(dat, 0) for dat in positions[-1][0]]
+    # real = positions[-1]
+    # (v, p) = agent.nn.model.predict(data)
+    # a = np.exp(p)
+    # probs = a / np.sum(a)
 
     agent.nn.iterations.append(config.TRAINING_ITERATIONS * config.EPOCHS)
     agent.nn.version += 1
@@ -179,7 +178,7 @@ def log(agents, results):
 ------------ {names[0][0]} vs {names[1][0]} ------------
 Results are: {results}
 {best} the best!
-5
+
 """
     files.write("log.txt", message, "a")
 
@@ -208,7 +207,7 @@ def main():
 
     for _ in range(config.LOOP_ITERATIONS):
         self_play(agents[1])
-        retrain_network(agents[-1]) 
+        retrain_network(agents[-1])
         if (agents[-1].nn.version - 1) % config.EVALUATION_FREQUENCY == 0: agents = evaluate_network(agents)
 
     # play_versions([1, agents[1].nn.version], config.GAME_AMOUNT_PLAY_VERSIONS)
