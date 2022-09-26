@@ -170,13 +170,13 @@ def evaluate_network(agents):
 
 
 def log(agents, results):
-    names = [agents[-1].get_name(), agents[1].get_name()]
+    names = [agents[1].get_name(), agents[-1].get_name()]
 
     best_name = names[np.argmax(results)]
     best = f"{best_name[0]} {best_name[1]}" if results[0] != results[1] else "They both are" 
     message = f"""{datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')}:
 ------------ {names[0][0]} vs {names[1][0]} ------------
-Results are: {results}
+Results are: {results[::-1]}
 {best} the best!
 
 """
