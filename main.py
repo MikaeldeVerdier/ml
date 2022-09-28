@@ -44,7 +44,7 @@ def play(players, games, training=False):
         random.shuffle(deck)
         drawn_card = deck.pop()
         for i, player in enumerate(players):
-            player.mcts = Node(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], deck, drawn_card, Tree())
+            player.mcts = Node(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], deck, drawn_card)
     
             turn = 1
             if training:
@@ -176,7 +176,7 @@ def log(agents, results):
     best = f"{best_name[0]} {best_name[1]}" if results[0] != results[1] else "They both are" 
     message = f"""{datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')}:
 ------------ {names[0][0]} vs {names[1][0]} ------------
-Results are: {results[::-1]}
+Results are: {results}
 {best} the best!
 
 """

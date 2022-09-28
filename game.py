@@ -1,9 +1,12 @@
 import numpy as np
+from mcts import Tree
 
 GAME_DIMENSIONS = (5, 5)
 NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (52,), (52,), (52,)]
 MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
 REPLACE_CARDS = 3
+
+tree = Tree()
 
 
 def generate_tutorial_game_state(node, mirror=False):

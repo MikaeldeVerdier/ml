@@ -3,16 +3,15 @@ import game
 import config
 
 class Node:
-    def __init__(self, state, deck, drawn_card, tree):
+    def __init__(self, state, deck, drawn_card):
         self.s = state
         self.deck = deck
         self.drawn_card = drawn_card
-        self.tree = tree
 
         self.replace_card = not len(np.where(state == 0)[0])
         self.edges = []
 
-        self.tree.add_node(self)
+        game.tree.add_node(self)
     
     def __hash__(self):
         return hash(tuple(self.s) + tuple(self.deck) + (self.drawn_card,))
@@ -21,12 +20,12 @@ class Node:
         new_node_info = game.take_action(self, action)
         new_nodes = []
         for new_state, new_deck, new_drawn_card in new_node_info:
-            if self.tree.check_state(new_state, new_deck, new_drawn_card):
+            if game.tree.check_state(new_state, new_deck, new_drawn_card):
                 # print("NODE EXISTED")
-                new_nodes.append(self.tree.get_node(new_state, new_deck, new_drawn_card))
+                new_nodes.append(game.tree.get_node(new_state, new_deck, new_drawn_card))
             else:
-                new_nodes.append(Node(new_state, new_deck, new_drawn_card, self.tree))
-                self.tree.add_node(new_nodes[-1])
+                new_nodes.append(Node(new_state, new_deck, new_drawn_card))
+                game.tree.add_node(new_nodes[-1])
                 # self.add_node(new_node)
 
         return new_nodes
