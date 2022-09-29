@@ -94,7 +94,7 @@ def get_card(value):
     return suit, value
 
 
-def get_score(cards):
+def score_row(cards):
     values = sorted([get_card(card)[1] for card in cards])
     
     histo_dict = {(1, 4): 20, (2, 3): 15, (1, 1, 3): 8, (1, 2, 2): 4, (1, 1, 1, 2): 2}
@@ -108,7 +108,7 @@ def get_score(cards):
         return histo_dict[histo]
 
     färgrad = len(set(get_card(card)[0] for card in cards)) == 1
-    stege = values[-1] - values[0] == 4 or values[-1] == 14 and values[-2] - values[0] == 3
+    stege = values[-1] - values[0] == 4 or values == [2, 3, 4, 5, 14]
     
     score = 0
 
@@ -117,7 +117,7 @@ def get_score(cards):
     if stege:
         score += 10
 
-        op = values[-1] == 14
+        op = values[-2] == 13
         if op:
             return 3 * score - 10
     
@@ -133,7 +133,7 @@ def check_game_over(node):
         # print(print_board(board.flatten()))
         for rowcol in [board, board.T]:
             for row in rowcol:
-                score += get_score(row)
+                score += score_row(row)
         
         return score * 0.02
 
@@ -158,6 +158,15 @@ def format_card(card):
     suit, value = get_card(card)
 
     return f"{suit_dict[suit]}{int(value)}"
+
+
+def inverse_format_card(card):
+    suit_dict = {"sp": 0, "hj": 1, "ru": 2, "kl": 3}
+
+    c = int(card[2:]) - 1
+    c += 13 * suit_dict[card[:2]]
+
+    return c
 
 
 def print_board(board):
