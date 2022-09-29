@@ -44,7 +44,7 @@ def play(players, games, training=False):
         random.shuffle(deck)
         drawn_card = deck.pop()
         for i, player in enumerate(players):
-            player.mcts = Node(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], deck, drawn_card)
+            player.mcts = Node(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], deck, drawn_card, Tree())
     
             turn = 1
             if training:
