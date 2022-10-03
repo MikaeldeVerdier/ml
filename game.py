@@ -8,7 +8,7 @@ REPLACE_CARDS = 3
 def generate_tutorial_game_state(node, mirror=False):
     if mirror:
         flips = [None, 0, 1, (0, 1)]
-        suit_changes = [0, 13, 26, 39]
+        suit_changes = [0]  # [0, 13, 26, 39]
     else:
         flips = [None]
         suit_changes = [0]

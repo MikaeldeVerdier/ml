@@ -2,7 +2,7 @@
 LOOP_ITERATIONS = 50
 
 # Network architecture
-CONVOLUTIONAL_LAYER = [(128, (3, 3)), (256, (3, 3)), (256, (3, 3))]
+CONVOLUTIONAL_LAYER = [(128, (3, 3)), (256, (3, 3)), (256, (3, 3)), (256, (3, 3)), (256, (3, 3)), (256, (3, 3))]
 DENSE_POSITION = [512, 512]
 DENSE_DECK = [128, 128]
 DENSE_DRAWN_CARD = [128, 128]
