@@ -57,7 +57,7 @@ class NeuralNetwork:
         ph = self.policy_head(x)
 
         self.model = Model(inputs=[position_input, deck_input, drawn_card_input], outputs=[vh, ph])
-        self.model.compile(loss={"value_head": self.absolute_root_error, "policy_head": self.softmax_cross_entropy_with_logits}, optimizer=SGD(learning_rate=config.LEARNING_RATE, momentum=config.MOMENTUM), loss_weights={"value_head": 0.5, "policy_head": 0.5}, metrics="accuracy")
+        self.model.compile(loss={"value_head": "mae", "policy_head": self.softmax_cross_entropy_with_logits}, optimizer=SGD(learning_rate=config.LEARNING_RATE, momentum=config.MOMENTUM), loss_weights={"value_head": 5, "policy_head": 0.5}, metrics="accuracy")
         
         try:
             # pass
@@ -68,13 +68,7 @@ class NeuralNetwork:
         # self.model.summary()
 
     def load_version(self, version):
-        self.model = load_model(f"{config.SAVE_PATH}training/v.{version}", custom_objects={"softmax_cross_entropy_with_logits": self.softmax_cross_entropy_with_logits, "absolute_root_error": self.absolute_root_error})
-
-    @staticmethod
-    def absolute_root_error(y_true, y_pred):
-        loss = abs(y_true - y_pred) ** (1 / 2)
-
-        return loss
+        self.model = load_model(f"{config.SAVE_PATH}training/v.{version}", custom_objects={"softmax_cross_entropy_with_logits": self.softmax_cross_entropy_with_logits})
 
     @staticmethod
     def softmax_cross_entropy_with_logits(y_true, y_pred):
