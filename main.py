@@ -27,7 +27,7 @@ def initiate():
 
 
 def play(players, games, training=False):
-    players = set(players.values())
+    players = sorted(set(players.values()))
 
     if training:
         training_data = []

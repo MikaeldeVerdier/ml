@@ -101,6 +101,9 @@ class CurrentAgent(Agent):  # Redundant currently
     def __init__(self, nn_class, load, version=None, name=None):
         super().__init__(nn_class, load, version, name)
 
+    def __lt__(self, other):
+        return True if type(other) == type(self) and other.nn.version > self.nn.version else False
+
 
 class BestAgent(Agent):
     def __init__(self, nn_class, load, version=None, name=None):

@@ -169,9 +169,6 @@ class CurrentNeuralNetwork(NeuralNetwork):
 
         super().__init__(load, version)
         self.model.save(f"{config.SAVE_PATH}training/v.{version}")
-    
-    def __lt__(self, other):
-        return True if type(other) == type(self) and other.version > self.version else False
 
     def train(self, x, y):
         self.get_preds.cache_clear()
