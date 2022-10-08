@@ -67,6 +67,9 @@ class NeuralNetwork:
 
         # self.model.summary()
 
+    def __hash__(self):
+        return hash(self.version)
+
     def load_version(self, version):
         self.model = load_model(f"{config.SAVE_PATH}training/v.{version}", custom_objects={"softmax_cross_entropy_with_logits": self.softmax_cross_entropy_with_logits})
 
@@ -252,6 +255,3 @@ class BestNeuralNetwork(NeuralNetwork):
             version = loaded["version"]
 
         super().__init__(True, version)
-
-    def __hash__(self):
-        return int(f"9{self.version}")
