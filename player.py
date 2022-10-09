@@ -40,6 +40,9 @@ class Agent():
         
         self.outcomes = {"average": 0, "length": 0}
 
+    def __gt__(self, other):
+        return type(other) == BestAgent or type(self) == CurrentAgent and other.nn.version > self.nn.version
+
     def get_name(self):
         return (f"Version {self.nn.version}" if not self.name else self.name, "is")
 
@@ -101,8 +104,8 @@ class CurrentAgent(Agent):  # Redundant currently
     def __init__(self, nn_class, load, version=None, name=None):
         super().__init__(nn_class, load, version, name)
 
-    def __lt__(self, other):
-        return True if type(other) == type(self) and other.nn.version > self.nn.version else False
+    # def __lt__(self, other):
+    #     return True if type(other) == type(self) and other.nn.version > self.nn.version else False
 
 
 class BestAgent(Agent):

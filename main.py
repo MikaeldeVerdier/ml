@@ -11,7 +11,7 @@ from mcts import Node, Tree
 from player import User, Agent, CurrentAgent, BestAgent
 
 def initiate():
-    load = [False, False]
+    load = [True, True]
 
     files.setup_files()
     if not any(load):
@@ -204,6 +204,8 @@ def play_versions(versions, games):
 
 def main():
     agents = initiate()
+
+    agents = evaluate_network(agents)
 
     for _ in range(config.LOOP_ITERATIONS):
         self_play(agents[1])

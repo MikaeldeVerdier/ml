@@ -192,7 +192,7 @@ class CurrentNeuralNetwork(NeuralNetwork):
                 ax.axhline(data[-1], color="black", linestyle=":")
 
                 if derivative_lines:
-                    deriv = (data[-1] - data[0]) / (len(data) - 1)
+                    deriv = (data[-1] - data[0]) / (len(data) - 1)  # np.mean(np.diff(data)) 
                     y = [deriv * x + data[0] for x in range(len(data))]
                     ax.plot(y, color="black", linestyle="-.")
 
@@ -216,7 +216,7 @@ class CurrentNeuralNetwork(NeuralNetwork):
         loaded = files.load_file("save.json")
         data = loaded["current_agent"]["version_outcomes"] 
 
-        x = list(data.keys())
+        x = list(map(int, data.keys()))
         data = list(data.values())
         plt.plot(x, data)
         plt.xlabel("Version")
@@ -224,12 +224,13 @@ class CurrentNeuralNetwork(NeuralNetwork):
         plt.title("Average outcome for versions")
 
         if derivative_line:
-            """deriv = (data[-1] - data[0]) / len(data)
-            y = [deriv * x + data[0] for x in range(len(data))]
-            plt.plot(y, color="black", linestyle="-.")"""
             deriv = (data[-1] - data[0]) / (len(data) - 1)
             y = [deriv * x + data[0] for x in range(len(data))]
             plt.plot(y, color="black", linestyle="-.")
+
+            # t = np.diff(x)
+            # y_p = np.diff(data) / np.diff(x)
+            # x_p = (np.array(x)[:-1] + np.array(x)[1:]) / 2
         
         plt.savefig(f"{config.SAVE_PATH}outcomes.png", dpi=300)
         plt.pause(0.1)
