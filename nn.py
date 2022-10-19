@@ -224,13 +224,9 @@ class CurrentNeuralNetwork(NeuralNetwork):
         plt.title("Average outcome for versions")
 
         if derivative_line:
-            deriv = (data[-1] - data[0]) / (len(data) - 1)
-            y = [deriv * x + data[0] for x in range(len(data))]
+            deriv = (data[-1] - data[0]) / x[-1]
+            y = [deriv * x + data[0] for x in range(len(x[-1]))]
             plt.plot(y, color="black", linestyle="-.")
-
-            # t = np.diff(x)
-            # y_p = np.diff(data) / np.diff(x)
-            # x_p = (np.array(x)[:-1] + np.array(x)[1:]) / 2
         
         plt.savefig(f"{config.SAVE_PATH}outcomes.png", dpi=300)
         plt.pause(0.1)
