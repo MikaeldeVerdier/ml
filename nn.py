@@ -7,7 +7,7 @@ import files
 import tensorflow as tf
 from tensorflow.keras import regularizers
 from tensorflow.keras.models import Model, load_model
-from tensorflow.keras.layers import Input, Dense, Conv2D, Flatten, BatchNormalization, ReLU, Concatenate
+from tensorflow.keras.layers import Input, Dense, Conv2D, Conv1D, Flatten, BatchNormalization, ReLU, Concatenate
 from tensorflow.keras.optimizers import SGD
 from keras.utils.vis_utils import plot_model
 
@@ -44,10 +44,10 @@ class NeuralNetwork:
         position = self.position_cnn(position_input)
 
         deck_input = Input(shape=game.NN_INPUT_DIMENSIONS[1], name="deck_input")
-        deck = self.deck_mlp(deck_input)
+        deck = self.deck_cnn(deck_input)
 
         drawn_card_input = Input(shape=game.NN_INPUT_DIMENSIONS[2], name="drawn_card_input")
-        drawn_card = self.drawn_card_mlp(drawn_card_input)
+        drawn_card = self.drawn_card_cnn(drawn_card_input)
 
         x = Concatenate()([position, deck, drawn_card])
 
@@ -89,25 +89,34 @@ class NeuralNetwork:
         return loss
 
     def position_cnn(self, x):
-        for filter_amount, kernel_size in config.CONVOLUTIONAL_LAYER: x = self.convolutional_layer(x, filter_amount, kernel_size)
+        for filter_amount, kernel_size in config.CONVOLUTIONAL_LAYERS_POSITION: x = self.convolutional_layer_2D(x, filter_amount, kernel_size)
         x = Flatten()(x)
         for neuron_amount in config.DENSE_POSITION: x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         return x
 
-    @staticmethod
-    def deck_mlp(x):
+    def deck_cnn(self, x):
+        for filter_amount, kernel_size in config.CONVOLUTIONAL_LAYERS_DECK: x = self.convolutional_layer_1D(x, filter_amount, kernel_size)
+        x = Flatten()(x)
         for neuron_amount in config.DENSE_DECK: x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         return x
 
-    @staticmethod
-    def drawn_card_mlp(x):
+    def drawn_card_cnn(self, x):
+        for filter_amount, kernel_size in config.CONVOLUTIONAL_LAYERS_DRAWN_CARD: x = self.convolutional_layer_1D(x, filter_amount, kernel_size)
+        x = Flatten()(x)
         for neuron_amount in config.DENSE_DRAWN_CARD: x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         return x
 
     @staticmethod
-    def convolutional_layer(x, filters, kernel_size):
+    def convolutional_layer_2D(x, filters, kernel_size):
         x = Conv2D(filters=filters, kernel_size=kernel_size, data_format="channels_last", padding="same", use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         x = BatchNormalization(axis=3)(x)
+        x = ReLU()(x)
+        return x
+
+    @staticmethod
+    def convolutional_layer_1D(x, filters, kernel_size):
+        x = Conv1D(filters=filters, kernel_size=kernel_size, data_format="channels_last", padding="same", use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
+        x = BatchNormalization(axis=2)(x)
         x = ReLU()(x)
         return x
 
@@ -129,7 +138,7 @@ class NeuralNetwork:
         return x
 
     @cache
-    def get_preds(self, node):
+    def get_preds(self, nodes):
         # data = game.generate_tutorial_game_state(node, True)
         # result = [[], []]
         # for flip in data:
@@ -141,13 +150,14 @@ class NeuralNetwork:
         # value = np.mean(result[0])
         # logits = np.mean(result[1], axis=0)
 
-        data = [np.expand_dims(dat, 0) for dat in game.generate_tutorial_game_state(node)[0]]
+        data = [np.expand_dims(dat, 0) for dat in game.generate_tutorial_game_state(nodes)[0]]
         (v, p) = self.model.predict(data)
 
         value = v[0][0]
         logits = p[0]
 
         mask = np.full(logits.shape, True)
+        node = nodes[-1]
         legal_moves = game.get_legal_moves(node)
         mask[legal_moves] = False
 

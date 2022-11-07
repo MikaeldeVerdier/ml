@@ -82,7 +82,7 @@ def play(players, games, training=False):
                 product = []
                 for game_data in training_data:
                     for data in game_data:
-                        states = np.array(game.generate_tutorial_game_state(data[0], True), dtype=object).tolist()
+                        states = np.array(game.generate_tutorial_game_state((data[0],), True), dtype=object).tolist()
                         for flip in states: product.append([flip, data[1].tolist(), data[2]])
                         # data[0] = np.array(game.generate_tutorial_game_state(data[0])).tolist()
                         # data[1] = data[1].tolist()

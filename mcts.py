@@ -35,7 +35,8 @@ class Node:
         return self.create_node(action)[-1]
 
     def simulate(self, nn):
-        breadcrumbs = []
+        breadcrumb_nodes = []
+        breadcrumb_edges = []
         root = self
         while root.edges:
             if len(root.edges) == 1: edge = root.edges[0]
@@ -43,15 +44,17 @@ class Node:
                 p = root.probabilities(root == self)
                 edge = root.edges[np.random.choice(np.flatnonzero(p == np.max(p)))]
             root = np.random.choice(edge.out_nodes)
-            breadcrumbs.append(edge)
+            breadcrumb_nodes.append(root)
+            breadcrumb_edges.append(edge)
 
         outcome = game.check_game_over(root)
         if outcome is None:
-            (v, p) = nn.get_preds(root)
+            nodes = (self,) + tuple(breadcrumb_nodes)
+            (v, p) = nn.get_preds(nodes)
             root.expand_fully(p)
         else: v = outcome
         
-        root.backfill(v, breadcrumbs)
+        root.backfill(v, breadcrumb_edges)
 
     def expand_fully(self, prior):
         for action in game.get_legal_moves(self):
@@ -78,6 +81,23 @@ class Node:
             edge.n += 1
             edge.w += v
             edge.q = edge.w / edge.n
+
+
+class ChoiceNode(Node):
+    def __init__(self, state, deck, drawn_card, tree):
+        super().__init__(state, deck, drawn_card, tree)
+
+class ChanceNode(Node):
+    def __init__(self, state, deck, drawn_card, tree):
+        super().__init__(state, deck, drawn_card, tree)
+
+class TerminalNode(Node):
+    def __init__(self, state, deck, drawn_card, tree):
+        super().__init__(state, deck, drawn_card, tree)
+
+class IdentityNode(Node):
+    def __init__(self, state, deck, drawn_card, tree):
+        super().__init__(state, deck, drawn_card, tree)
 
 
 class Edge:
