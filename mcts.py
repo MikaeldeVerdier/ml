@@ -83,23 +83,6 @@ class Node:
             edge.q = edge.w / edge.n
 
 
-class ChoiceNode(Node):
-    def __init__(self, state, deck, drawn_card, tree):
-        super().__init__(state, deck, drawn_card, tree)
-
-class ChanceNode(Node):
-    def __init__(self, state, deck, drawn_card, tree):
-        super().__init__(state, deck, drawn_card, tree)
-
-class TerminalNode(Node):
-    def __init__(self, state, deck, drawn_card, tree):
-        super().__init__(state, deck, drawn_card, tree)
-
-class IdentityNode(Node):
-    def __init__(self, state, deck, drawn_card, tree):
-        super().__init__(state, deck, drawn_card, tree)
-
-
 class Edge:
     def __init__(self, in_node, out_nodes, action, prior):
         self.in_node = in_node
