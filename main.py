@@ -78,9 +78,11 @@ def play(players, games, training=False):
                 player.outcomes["length"] += 1
                 player.outcomes["average"] = (player.outcomes["average"] * (player.outcomes["length"] - 1) + int(outcome * 50)) / player.outcomes["length"]
             else:
-                for data in storage[-1]:
+                for i, data in enumerate(storage[-1]):
                     data["r"] = outcome
-                for i in range(len(storage[-1]) - 1):
+                for i, data in sorted(enumerate(storage[-1][:-1]), reverse=True):
+                    data["delta"] = delta(storage[-1], i)
+                for i, data in enumerate(storage[-1][:-1]):
                     data["Â"] = A(storage[-1], i)
                 # storage[-1][-1]["Â"] = outcome
 
@@ -113,6 +115,8 @@ def play(players, games, training=False):
 
 
 def delta(data, t):
+    if "delta" in data[t].keys():
+        return data[t]["delta"]
     delt = data[t]["r"] + config.GAMMA * data[t + 1]["V_s"] - data[t]["V_s"]
     return delt
 
