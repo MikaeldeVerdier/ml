@@ -74,6 +74,10 @@ class NeuralNetwork:
         self.model = load_model(f"{config.SAVE_PATH}training/v.{version}", custom_objects={"softmax_cross_entropy_with_logits": self.softmax_cross_entropy_with_logits})
 
     @staticmethod
+    def L_clip(s, a, p_a, r, y_a, v):
+        pass
+
+    @staticmethod
     def softmax_cross_entropy_with_logits(y_true, y_pred):
         p = y_pred
         pi = y_true
@@ -156,18 +160,7 @@ class NeuralNetwork:
         value = v[0][0]
         logits = p[0]
 
-        mask = np.full(logits.shape, True)
-        node = nodes[-1]
-        legal_moves = game.get_legal_moves(node)
-        mask[legal_moves] = False
-
-        if max(logits) > 85: logits *= 85 / max(logits)
-        logits[mask] = -100
-
-        odds = np.exp(logits)
-        probs = odds / np.sum(odds)
-
-        return (value, probs)
+        return (value, logits)
 
 
 class CurrentNeuralNetwork(NeuralNetwork):

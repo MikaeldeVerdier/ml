@@ -30,9 +30,10 @@ def play(players, games, training=False):
     players = sorted(set(players.values()))
 
     if training:
-        training_data = []
+        storage = []
         loaded = files.load_file("positions.json")
     else:
+        storage = [[]]
         outcomes = [[], []]
 
     game_count = 0
@@ -48,18 +49,20 @@ def play(players, games, training=False):
     
             turn = 1
             if training:
-                training_data.append([])
+                storage.append([])
                 tau = 1
             else: tau = 1e-2
 
             outcome = None
             while outcome is None:
                 if turn == config.TURNS_UNTIL_TAU: tau = 1e-2
-                if training: training_data[-1].append([player.mcts])
+                if training: storage[-1].append({"s": player.mcts})
 
-                pi = player.play_turn(tau)
+                a, pi_a, y_a, v = player.play_turn(storage[-1], tau)
 
-                if training: training_data[-1][-1].append(pi)
+                if training:
+                    for i, var in enumerate(["a", "pi_a", "logit_a", "V_s"]):
+                        storage[-1][-1][var] = [a, pi_a, y_a, v][i]
                 outcome = game.check_game_over(player.mcts)
 
                 turn += 1
@@ -75,12 +78,16 @@ def play(players, games, training=False):
                 player.outcomes["length"] += 1
                 player.outcomes["average"] = (player.outcomes["average"] * (player.outcomes["length"] - 1) + int(outcome * 50)) / player.outcomes["length"]
             else:
-                for data in training_data[-1]: data.append(outcome)
+                for data in storage[-1]:
+                    data["r"] = outcome
+                for i in range(len(storage[-1]) - 1):
+                    data["Â"] = A(storage[-1], i)
+                # storage[-1][-1]["Â"] = outcome
 
                 # away_from_full = config.POSITION_AMOUNT - len(loaded)
                 # if training_length > config.POSITION_AMOUNT / 25 or away_from_full and training_length >= away_from_full:
                 product = []
-                for game_data in training_data:
+                for game_data in storage:
                     for data in game_data:
                         states = np.array(game.generate_tutorial_game_state((data[0],), True), dtype=object).tolist()
                         for flip in states: product.append([flip, data[1].tolist(), data[2]])
@@ -98,11 +105,23 @@ def play(players, games, training=False):
                 else:
                     if games == game_count: games += 1
 
-                training_data = []
+                storage = []
             
                 print(f"Position length is now: {len(loaded)}")
             
     if not training: return outcomes
+
+
+def delta(data, t):
+    delt = data[t]["r"] + config.GAMMA * data[t + 1]["V_s"] - data[t]["V_s"]
+    return delt
+
+
+def A(data, t):
+    T = len(data)
+    delt = delta(data, t)
+    li = [(config.GAMMA * config.LAMBDA) ** i * delta(data, t + i) for i in range(T - t - 1)]
+    return delt + sum(li)
 
 
 def self_play(agent):

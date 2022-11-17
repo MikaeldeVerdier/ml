@@ -46,8 +46,8 @@ class Agent():
     def get_name(self):
         return (f"Version {self.nn.version}" if not self.name else self.name, "is")
 
-    def play_turn(self, tau):
-        legal_moves = game.get_legal_moves(self.mcts)
+    def play_turn(self, history, tau):
+        """legal_moves = game.get_legal_moves(self.mcts)
         if len(legal_moves) == 1:
             action = legal_moves[0]
             pi = np.zeros(game.MOVE_AMOUNT)
@@ -57,13 +57,28 @@ class Agent():
 
             pi = self.getAV(tau)
 
-            action = self.choose_action(pi, tau)
+            action = self.choose_action(pi, tau)"""
+
+        a = tuple(his["s"] for his in history)
+        (nn_value, logits) = self.nn.get_preds(a)
+
+        mask = np.full(logits.shape, True)
+        legal_moves = game.get_legal_moves(self.mcts)
+        mask[legal_moves] = False
+
+        if max(logits) > 85: logits *= 85 / max(logits)
+        logits[mask] = -100
+
+        odds = np.exp(logits).astype(np.float64)
+        probs = odds / np.sum(odds)
+
+        action = self.choose_action(probs, tau)
+
         self.mcts = self.mcts.update_root(action)
 
-        nn_value = self.nn.get_preds((self.mcts,))[0]
-        self.print_move(self.mcts, pi, action, nn_value)
+        self.print_move(self.mcts, probs, action, nn_value)
 
-        return pi
+        return action, probs[action], logits[action], nn_value
 
     def getAV(self, tau):
         pi = np.zeros(game.MOVE_AMOUNT)
@@ -77,6 +92,8 @@ class Agent():
 
     @staticmethod
     def choose_action(pi, tau):
+        b = np.sum(pi)
+        print(b)
         if tau == 1e-2:
             actions = np.flatnonzero(pi == np.max(pi))
             action = np.random.choice(actions)
