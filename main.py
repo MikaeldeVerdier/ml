@@ -7,7 +7,7 @@ import game
 import config
 import files
 from nn import NeuralNetwork, CurrentNeuralNetwork, BestNeuralNetwork
-from mcts import Node, Tree
+from game_state import GameState
 from player import User, Agent, CurrentAgent, BestAgent
 
 def initiate():
@@ -30,10 +30,8 @@ def play(players, games, training=False):
     players = sorted(set(players.values()))
 
     if training:
-        storage = []
         loaded = files.load_file("positions.json")
     else:
-        storage = [[]]
         outcomes = [[], []]
 
     game_count = 0
@@ -45,24 +43,22 @@ def play(players, games, training=False):
         random.shuffle(deck)
         drawn_card = deck.pop()
         for i, player in enumerate(players):
-            player.mcts = Node(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], deck, drawn_card, Tree())
+            player.mcts = GameState(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], deck, drawn_card)
     
+            storage = []
             turn = 1
-            if training:
-                storage.append([])
-                tau = 1
-            else: tau = 1e-2
+            tau = 1 if training else 1e-2
 
             outcome = None
             while outcome is None:
                 if turn == config.TURNS_UNTIL_TAU: tau = 1e-2
-                if training: storage[-1].append({"s": player.mcts})
+                storage.append({"s": player.mcts})
 
-                a, pi_a, y_a, v = player.play_turn(storage[-1], tau)
+                a, pi_a, y_a, v = player.play_turn(storage, tau)
 
                 if training:
                     for i, var in enumerate(["a", "pi_a", "logit_a", "V_s"]):
-                        storage[-1][-1][var] = [a, pi_a, y_a, v][i]
+                        storage[-1][var] = [a, pi_a, y_a, v][i]
                 outcome = game.check_game_over(player.mcts)
 
                 turn += 1
@@ -78,23 +74,27 @@ def play(players, games, training=False):
                 player.outcomes["length"] += 1
                 player.outcomes["average"] = (player.outcomes["average"] * (player.outcomes["length"] - 1) + int(outcome * 50)) / player.outcomes["length"]
             else:
-                for i, data in enumerate(storage[-1]):
+                for i, data in sorted(enumerate(storage), reverse=True):
                     data["r"] = outcome
-                for i, data in sorted(enumerate(storage[-1][:-1]), reverse=True):
-                    data["delta"] = delta(storage[-1], i)
-                for i, data in enumerate(storage[-1][:-1]):
-                    data["Â"] = A(storage[-1], i)
-                # storage[-1][-1]["Â"] = outcome
+                    if i != len(storage) - 1:
+                        data["V_s_1"] = storage[i + 1]["V_s"]
+                        data["delta"] = delta(storage, i)
+
+                for i, data in enumerate(storage[:-1]):
+                    data["Â"] = A(storage, i)
+                # storage[-1]["Â"] = outcome
 
                 # away_from_full = config.POSITION_AMOUNT - len(loaded)
                 # if training_length > config.POSITION_AMOUNT / 25 or away_from_full and training_length >= away_from_full:
                 product = []
-                for game_data in storage:
-                    for data in game_data:
-                        states = np.array(game.generate_tutorial_game_state((data[0],), True), dtype=object).tolist()
-                        for flip in states: product.append([flip, data[1].tolist(), data[2]])
-                        # data[0] = np.array(game.generate_tutorial_game_state(data[0])).tolist()
-                        # data[1] = data[1].tolist()
+                for t, data in enumerate(storage):
+                    game_states = game.generate_game_states(storage, t)
+
+                    if t != len(storage) - 1:
+                        states = np.array(game.generate_nn_pass(game_states, True), dtype=object).tolist()
+                        for flip in states: product.append([flip, data["a"].item(), data["pi_a"], data["Â"], data["r"], data["V_s"].item(), data["V_s_1"].item()])  # [s, a, pi_a, Â, nn_value, nn_value_s+1, logits]
+                    # data[0] = np.array(game.generate_nn_pass(data[0])).tolist()
+                    # data[1] = data[1].tolist()
                 # training_data = np.vstack(training_data).tolist()
 
                 loaded += product
@@ -106,8 +106,6 @@ def play(players, games, training=False):
                     if not os.path.exists(f"{config.SAVE_PATH}backup/positions_{config.POSITION_AMOUNT}.json"): files.make_backup("positions.json", f"positions_{config.POSITION_AMOUNT}.json")
                 else:
                     if games == game_count: games += 1
-
-                storage = []
             
                 print(f"Position length is now: {len(loaded)}")
             
@@ -123,9 +121,8 @@ def delta(data, t):
 
 def A(data, t):
     T = len(data)
-    delt = delta(data, t)
     li = [(config.GAMMA * config.LAMBDA) ** i * delta(data, t + i) for i in range(T - t - 1)]
-    return delt + sum(li)
+    return sum(li)
 
 
 def self_play(agent):
@@ -142,19 +139,24 @@ def retrain_network(agent):
         minibatch = random.sample(positions, config.BATCH_SIZE)
 
         x = [[], [], []]
-        y = {"value_head": [], "policy_head": []}
-        for batch in minibatch:
-            for i, dim in enumerate(batch[0]):
+        y = [[], [], [], [], [], []]
+
+        for position in minibatch:
+            for i, var in enumerate(y):
+                var.append(position[i + 1])
+            for i, dim in enumerate(position[0]):
                 x[i].append(np.array(dim))
 
-            y["value_head"].append(np.array([batch[2]], dtype=np.float32))
-            y["policy_head"].append(np.array(batch[1]))
+        for i, var in enumerate(y):
+            y[i] = np.array(var)
+        for i, var in enumerate(x):
+            x[i] = np.array(var)
 
-        for i, dim in enumerate(x):
-            x[i] = np.array(dim)
+        y = np.array([batch[1:] for batch in minibatch])
 
-        y["value_head"] = np.array(y["value_head"])
-        y["policy_head"] = np.array(y["policy_head"])
+        y = {}
+        y["value_head"] = np.array([batch[4:] for batch in minibatch])
+        y["policy_head"] = np.array([batch[1:4] for batch in minibatch])
 
         agent.nn.train(x, y)
 

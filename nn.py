@@ -1,10 +1,10 @@
 import numpy as np
-import json
+import tensorflow as tf
 import matplotlib.pyplot as plt
+import json
 import config
 import game
 import files
-import tensorflow as tf
 from tensorflow.keras import regularizers
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.layers import Input, Dense, Conv2D, Conv1D, Flatten, BatchNormalization, ReLU, Concatenate
@@ -57,7 +57,7 @@ class NeuralNetwork:
         ph = self.policy_head(x)
 
         self.model = Model(inputs=[position_input, deck_input, drawn_card_input], outputs=[vh, ph])
-        self.model.compile(loss={"value_head": "mae", "policy_head": self.softmax_cross_entropy_with_logits}, optimizer=SGD(learning_rate=config.LEARNING_RATE, momentum=config.MOMENTUM), loss_weights={"value_head": 10, "policy_head": 0.5}, metrics="accuracy")
+        self.model.compile(loss={"value_head": self.J_vf, "policy_head": self.J_clip}, optimizer=SGD(learning_rate=config.LEARNING_RATE, momentum=config.MOMENTUM), loss_weights = {"value_head": 0.5, "policy_head": 0.5}, metrics="accuracy")
         
         try:
             # pass
@@ -71,11 +71,36 @@ class NeuralNetwork:
         return hash(self.version)
 
     def load_version(self, version):
-        self.model = load_model(f"{config.SAVE_PATH}training/v.{version}", custom_objects={"softmax_cross_entropy_with_logits": self.softmax_cross_entropy_with_logits})
+        self.model = load_model(f"{config.SAVE_PATH}training/v.{version}", custom_objects={"J_vf": self.J_vf, "J_clip": self.J_clip})
 
     @staticmethod
-    def L_clip(s, a, p_a, r, y_a, v):
-        pass
+    def J_vf(y_true, y_pred):
+        r = y_true[0][0]
+        V_s = y_pred[0][0]
+        V_s_1 = y_true[0][2]
+
+        V_targ = r + config.GAMMA * V_s_1
+        J_vf = (V_s - V_targ) ** 2
+
+        return J_vf
+
+    @staticmethod
+    def J_clip(y_true, y_pred):
+        y_true = y_true[0]
+        a = tf.cast(y_true[0], tf.int32)
+        pi_a = y_true[1]
+        Â = y_true[2]
+
+        pi_theta = y_pred[0][a]
+        pi_theta_old = pi_a
+        r_theta = pi_theta / pi_theta_old
+
+        L_cpi = r_theta * Â
+        # L_clip = min(r_theta, 1 + config.EPSILON if Â > 0 else 1 - config.EPSILON)
+        # J_clip = min(L_cpi, L_clip)
+        J_clip = L_cpi
+
+        return -J_clip
 
     @staticmethod
     def softmax_cross_entropy_with_logits(y_true, y_pred):
@@ -142,25 +167,24 @@ class NeuralNetwork:
         return x
 
     @cache
-    def get_preds(self, nodes):
-        # data = game.generate_tutorial_game_state(node, True)
-        # result = [[], []]
-        # for flip in data:
-        #     input_data = [np.expand_dims(dat, 0) for dat in flip]
-        #     (v, p) = self.model.predict(input_data)
-        #     result[0].append(v[0][0])
-        #     result[1].append(p[0])
-
-        # value = np.mean(result[0])
-        # logits = np.mean(result[1], axis=0)
-
-        data = [np.expand_dims(dat, 0) for dat in game.generate_tutorial_game_state(nodes)[0]]
+    def get_preds(self, history):
+        data = [np.expand_dims(dat, 0) for dat in game.generate_nn_pass(history)[0]]
         (v, p) = self.model.predict(data)
 
         value = v[0][0]
         logits = p[0]
 
-        return (value, logits)
+        mask = np.full(logits.shape, True)
+        legal_moves = game.get_legal_moves(history[-1])
+        mask[legal_moves] = False
+
+        if max(logits) > 85: logits *= 85 / max(logits)
+        logits[mask] = -100
+
+        odds = np.exp(logits).astype(np.float64)
+        probs = odds / np.sum(odds)
+
+        return (value, probs, logits)
 
 
 class CurrentNeuralNetwork(NeuralNetwork):
@@ -228,7 +252,7 @@ class CurrentNeuralNetwork(NeuralNetwork):
 
         if derivative_line:
             deriv = (data[-1] - data[0]) / x[-1]
-            y = [deriv * x + data[0] for x in range(len(x[-1]))]
+            y = [deriv * x + data[0] for x in range(x[-1])]
             plt.plot(y, color="black", linestyle="-.")
         
         plt.savefig(f"{config.SAVE_PATH}outcomes.png", dpi=300)

@@ -47,34 +47,12 @@ class Agent():
         return (f"Version {self.nn.version}" if not self.name else self.name, "is")
 
     def play_turn(self, history, tau):
-        """legal_moves = game.get_legal_moves(self.mcts)
-        if len(legal_moves) == 1:
-            action = legal_moves[0]
-            pi = np.zeros(game.MOVE_AMOUNT)
-            pi[action] = 1
-        else: 
-            for _ in range(config.MCTS_SIMS): self.mcts.simulate(self.nn)
-
-            pi = self.getAV(tau)
-
-            action = self.choose_action(pi, tau)"""
-
-        a = tuple(his["s"] for his in history)
-        (nn_value, logits) = self.nn.get_preds(a)
-
-        mask = np.full(logits.shape, True)
-        legal_moves = game.get_legal_moves(self.mcts)
-        mask[legal_moves] = False
-
-        if max(logits) > 85: logits *= 85 / max(logits)
-        logits[mask] = -100
-
-        odds = np.exp(logits).astype(np.float64)
-        probs = odds / np.sum(odds)
+        game_states = game.generate_game_states(history, len(history) - 1)
+        (nn_value, probs, logits) = self.nn.get_preds(game_states)
 
         action = self.choose_action(probs, tau)
 
-        self.mcts = self.mcts.update_root(action)
+        self.mcts.update_root(action)
 
         self.print_move(self.mcts, probs, action, nn_value)
 
@@ -92,8 +70,6 @@ class Agent():
 
     @staticmethod
     def choose_action(pi, tau):
-        b = np.sum(pi)
-        print(b)
         if tau == 1e-2:
             actions = np.flatnonzero(pi == np.max(pi))
             action = np.random.choice(actions)

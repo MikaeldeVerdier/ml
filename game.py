@@ -6,9 +6,16 @@ NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (52, config.DEPTH), (52, config.DEPTH),
 MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
 REPLACE_CARDS = 3
 
-def generate_tutorial_game_state(nodes, mirror=False):
-    nodes = (None,) * (config.DEPTH - len(nodes)) + nodes
-    node = nodes[-1]
+def generate_game_states(history, t):
+    data = history[:t + 1]
+    game_states = ({"s": None},) * (config.DEPTH - len(data)) + tuple(data)[-config.DEPTH:]
+    game_states = tuple([game_state["s"] for game_state in game_states])
+
+    return game_states
+
+
+def generate_nn_pass(game_states, mirror=False):
+    game_state = game_states[-1]
 
     if mirror:
         flips = [None, 0, 1, (0, 1)]
@@ -17,15 +24,15 @@ def generate_tutorial_game_state(nodes, mirror=False):
         flips = [None]
         suit_changes = [0]
 
-    game_state = []
+    nn_pass = []
     for flip in flips:
-        s = node.s if flip is None else np.flip(node.s.reshape(GAME_DIMENSIONS), flip).flatten()
+        s = game_state.s if flip is None else np.flip(game_state.s.reshape(GAME_DIMENSIONS), flip).flatten()
         
         for suit_change in suit_changes:
-            game_state.append([[], [], []])
+            nn_pass.append([[], [], []])
             for depth in range(config.DEPTH):
-                de = node.deck
-                dr = [node.drawn_card]
+                de = game_state.deck
+                dr = [game_state.drawn_card]
                 for var in [s, de, dr]:
                     for i, card in enumerate(var):
                         if card != 0: var[i] += suit_change
@@ -38,27 +45,21 @@ def generate_tutorial_game_state(nodes, mirror=False):
                     state.append(np.reshape(position, NN_INPUT_DIMENSIONS[0][:-2]))
 
                 state = np.moveaxis(state, 0, -1).tolist()
-                # state = np.reshape(state, NN_INPUT_DIMENSIONS[0]).tolist()
-
-                game_state[-1][0].append(state)
+                nn_pass[-1][0].append(state)
 
                 deck = np.zeros(52)
                 for card in de: deck[card - 1] = 1
-                game_state[-1][1].append(deck.tolist())
+                nn_pass[-1][1].append(deck.tolist())
 
                 drawn_card = np.zeros(52)
                 drawn_card[dr[0] - 1] = 1
-                game_state[-1][2].append(drawn_card.tolist())
+                nn_pass[-1][2].append(drawn_card.tolist())
 
-                if nodes[-depth - 1]: node = nodes[-depth - 1]
+                if game_states[-depth - 1]: game_state = game_states[-depth - 1]
             
-            game_state[-1] = [np.moveaxis(dim, 0, -1).tolist() for dim in game_state[-1]]
+            nn_pass[-1] = [np.moveaxis(dim, 0, -1).tolist() for dim in nn_pass[-1]]
 
-    # board_history.append(np.array([[[node.player + 1]] * GAME_DIMENSIONS[1]] * GAME_DIMENSIONS[0]))
-    # game_state = np.reshape(board_history, NN_INPUT_DIMENSIONS)
-    # game_state = np.moveaxis(game_state, 0, 1)
-
-    return game_state
+    return nn_pass
 
 
 def check_index(board, index, checking_index, checking_func, multiplier_func, multiplier):
@@ -67,19 +68,19 @@ def check_index(board, index, checking_index, checking_func, multiplier_func, mu
             return checking_func(board[checking_index])
 
 
-def get_legal_moves(node):  # , all_moves):
-    if not len(np.where(node.s != 0)[0]): return list(range(np.prod(GAME_DIMENSIONS)))
+def get_legal_moves(game_state):  # , all_moves):
+    if not len(np.where(game_state.s != 0)[0]): return list(range(np.prod(GAME_DIMENSIONS)))
 
-    if node.replace_card: return list(range(np.prod(GAME_DIMENSIONS))) + [25]
+    if game_state.replace_card: return list(range(np.prod(GAME_DIMENSIONS))) + [25]
 
     legal_moves = []
 
-    for index in np.where(node.s != 0)[0]:
+    for index in np.where(game_state.s != 0)[0]:
         for checks, func in [[(GAME_DIMENSIONS[1] + 1, GAME_DIMENSIONS[1] - 1, GAME_DIMENSIONS[1]), lambda m: m], [(1,), lambda m: 0]]:
             for check in checks:
                 for multiplier in [1, -1]:
                     checking_index = index + check * multiplier
-                    if check_index(node.s, index, checking_index, lambda x: x == 0, func, multiplier):
+                    if check_index(game_state.s, index, checking_index, lambda x: x == 0, func, multiplier):
                         legal_moves.append(checking_index)
 
     return legal_moves
@@ -121,10 +122,10 @@ def score_row(cards):
     return score
     
 
-def check_game_over(node):
-    if len(node.deck) == 51 - np.prod(GAME_DIMENSIONS) - REPLACE_CARDS:
+def check_game_over(game_state):
+    if len(game_state.deck) == 51 - np.prod(GAME_DIMENSIONS) - REPLACE_CARDS:
         score = 0
-        board = node.s.reshape(GAME_DIMENSIONS)
+        board = game_state.s.reshape(GAME_DIMENSIONS)
         # print(print_board(board.flatten()))
         for rowcol in [board, board.T]:
             for row in rowcol:
@@ -133,19 +134,15 @@ def check_game_over(node):
         return score * 0.02
 
 
-def take_action(node, action):
-    board = node.s.copy()
+def take_action(game_state, action):
+    board = game_state.s.copy()
+    deck = game_state.deck.copy()
+    card = game_state.drawn_card
 
-    node_info = []
-    for card in node.deck:
-        deck = node.deck.copy()
+    if action != 25: board[action] = card
+    card = deck.pop()
 
-        if action != 25: board[action] = node.drawn_card
-
-        deck.remove(card)
-
-        node_info.append((board, deck, card))
-    return node_info
+    return (board, deck, card)
 
 
 def format_card(card):
