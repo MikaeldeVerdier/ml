@@ -73,14 +73,25 @@ class NeuralNetwork:
     def load_version(self, version):
         self.model = load_model(f"{config.SAVE_PATH}training/v.{version}", custom_objects={"J_vf": self.J_vf, "J_clip": self.J_clip})
 
-    @staticmethod
-    def J_vf(y_true, y_pred):
+    def J_vf(self, y_true, y_pred):
         r = y_true[0][0]
-        V_s = y_pred[0][0]
-        V_s_1 = y_true[0][2]
+        index = tf.cast(y_true[0][1], tf.int32)
 
-        V_targ = r + config.GAMMA * V_s_1
-        J_vf = (V_s - V_targ) ** 2
+        posses = files.load_file("positions.json")
+
+        bs = [[], [], []]
+        for pos in posses:
+            for i, b in enumerate(bs):
+                bs[i].append(pos[0][i])
+
+        for i, b in enumerate(bs):
+            bs[i] = tf.convert_to_tensor(np.array(b))
+
+        data = [tf.expand_dims(b[index], 0) for b in bs]
+        v = self.model(data)[0][0][0]
+
+        V_targ = r + config.GAMMA * v
+        J_vf = (y_pred - V_targ) ** 2
 
         return J_vf
 

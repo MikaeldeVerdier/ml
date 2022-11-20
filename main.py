@@ -77,7 +77,6 @@ def play(players, games, training=False):
                 for i, data in sorted(enumerate(storage), reverse=True):
                     data["r"] = outcome
                     if i != len(storage) - 1:
-                        data["V_s_1"] = storage[i + 1]["V_s"]
                         data["delta"] = delta(storage, i)
 
                 for i, data in enumerate(storage[:-1]):
@@ -87,17 +86,19 @@ def play(players, games, training=False):
                 # away_from_full = config.POSITION_AMOUNT - len(loaded)
                 # if training_length > config.POSITION_AMOUNT / 25 or away_from_full and training_length >= away_from_full:
                 product = []
-                for t, data in enumerate(storage):
+                for t, data in sorted(enumerate(storage), reverse=True):
                     game_states = game.generate_game_states(storage, t)
 
                     if t != len(storage) - 1:
                         states = np.array(game.generate_nn_pass(game_states, True), dtype=object).tolist()
-                        for flip in states: product.append([flip, data["a"].item(), data["pi_a"], data["Â"], data["r"], data["V_s"].item(), data["V_s_1"].item()])  # [s, a, pi_a, Â, nn_value, nn_value_s+1, logits]
+                        for flip in states: product.append([flip, data["a"].item(), data["pi_a"], data["Â"], data["r"], product[-1][0]])  # [s, a, pi_a, Â, nn_value, nn_value_s+1, logits]
+                    else:
+                        product.append([np.array(game.generate_nn_pass(game_states, False), dtype=object).tolist()])
                     # data[0] = np.array(game.generate_nn_pass(data[0])).tolist()
                     # data[1] = data[1].tolist()
                 # training_data = np.vstack(training_data).tolist()
 
-                loaded += product
+                loaded += product[1:]
                 loaded = loaded[-config.POSITION_AMOUNT:]
                 files.write("positions.json", json.dumps(loaded))
 
@@ -139,24 +140,27 @@ def retrain_network(agent):
         minibatch = random.sample(positions, config.BATCH_SIZE)
 
         x = [[], [], []]
-        y = [[], [], [], [], [], []]
+        y = {"value_head": [], "policy_head": []}
 
         for position in minibatch:
-            for i, var in enumerate(y):
-                var.append(position[i + 1])
+            for head in y:
+                y[head].append([])
+            # y["value_head"].append([])
+            # y["policy_head"].append([])
+            for i, var in enumerate(position[1:5]):
+                y["policy_head" if i != 3 else "value_head"][-1].append(var)
+
+            posses = [pos[5] for pos in positions]
+            y["value_head"][-1].append(posses.index(position[5]))
+
             for i, dim in enumerate(position[0]):
                 x[i].append(np.array(dim))
 
-        for i, var in enumerate(y):
-            y[i] = np.array(var)
         for i, var in enumerate(x):
             x[i] = np.array(var)
-
-        y = np.array([batch[1:] for batch in minibatch])
-
-        y = {}
-        y["value_head"] = np.array([batch[4:] for batch in minibatch])
-        y["policy_head"] = np.array([batch[1:4] for batch in minibatch])
+        
+        for head in y:
+            y[head] = np.array(y[head])
 
         agent.nn.train(x, y)
 

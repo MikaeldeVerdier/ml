@@ -57,7 +57,8 @@ def generate_nn_pass(game_states, mirror=False):
 
                 if game_states[-depth - 1]: game_state = game_states[-depth - 1]
             
-            nn_pass[-1] = [np.moveaxis(dim, 0, -1).tolist() for dim in nn_pass[-1]]
+            nn_pass[-1] = [np.array(np.moveaxis(dim, 0, -1)).tolist() for dim in nn_pass[-1]]
+            # nn_pass[-1] = [np.array(np.moveaxis(dim, 0, -1), dtype=np.int32).tolist() for dim in nn_pass[-1]]
 
     return nn_pass
 
