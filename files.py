@@ -1,3 +1,4 @@
+import numpy as np
 import os
 import json
 import config
@@ -87,17 +88,17 @@ EMPTY_SAVE = json.dumps({
         }
     }
 })
-EMPTY_POSITIONS = json.dumps([])
+EMPTY_POSITIONS = np.array([])
 EMPTY_LOG = ""
 
-EMPTY_FILES = {"save.json": EMPTY_SAVE, "positions.json": EMPTY_POSITIONS, "log.txt": EMPTY_LOG}
+EMPTY_FILES = {"save.json": EMPTY_SAVE, "positions.npy": EMPTY_POSITIONS, "log.txt": EMPTY_LOG}
 
 
 def setup_files():
     save_folder = (config.SAVE_PATH, os.mkdir)
     backup_folder = (f"{config.SAVE_PATH}backup/", os.mkdir)
     save_file = (f"{config.SAVE_PATH}save.json", open, *"x")
-    positions_file = (f"{config.SAVE_PATH}positions.json", open, *"x")
+    positions_file = (f"{config.SAVE_PATH}positions.npy", open, *"x")
     log_file = (f"{config.SAVE_PATH}log.txt", open, *"x")
 
     for file, func, *kwargs in [save_folder, backup_folder, save_file, positions_file, log_file]:
@@ -124,7 +125,10 @@ def load_file(file):
 
 def reset_file(file):
     make_backup(file)
-    write(file, EMPTY_FILES[file])
+    if not file.endswith(".npy"): write(file, EMPTY_FILES[file])
+    else:
+        file_path = get_path(file)
+        np.save(file_path, EMPTY_FILES[file])
 
 
 def reset_key(file, key):
@@ -134,12 +138,19 @@ def reset_key(file, key):
 
 
 def add_to_file(file, content, max_len):
-    loaded = load_file(file)
-    recent = len(loaded) != max_len
-    loaded += content
-    loaded = loaded[-max_len:]
-    write(file, json.dumps(loaded))
-    return len(loaded), recent
+    if not file.endswith(".npy"):
+        loaded = load_file(file)
+        recent = len(loaded) != max_len
+        loaded += content
+        loaded = loaded[-max_len:]
+        write(file, json.dumps(loaded))
+        return len(loaded), recent
+    else:
+        loaded = np.load(file, allow_pickle=True)
+        if len(loaded): loaded = np.append(loaded, content, axis=0)[-max_len:]
+        else: loaded = content[-max_len:]
+        np.save(file, loaded)
+        return len(loaded)
 
 
 def make_backup(file, new_name=None):

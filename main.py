@@ -1,4 +1,3 @@
-import json
 import os
 import numpy as np
 import datetime
@@ -16,7 +15,7 @@ def initiate():
     files.setup_files()
     if not any(load):
         files.reset_file("save.json")
-        files.reset_file("positions.json")
+        files.reset_file("positions.npy")
         files.reset_file("log.txt")
 
     current_agent = CurrentAgent(CurrentNeuralNetwork, load[0])
@@ -30,7 +29,7 @@ def play(players, games, training=False):
     players = sorted(set(players.values()))
 
     if training:
-        loaded = files.load_file("positions.json")
+        is_full = False
     else:
         outcomes = [[], []]
 
@@ -98,18 +97,21 @@ def play(players, games, training=False):
                     # data[1] = data[1].tolist()
                 # training_data = np.vstack(training_data).tolist()
 
-                loaded += product[1:]
-                loaded = loaded[-config.POSITION_AMOUNT:]
-                files.write("positions.json", json.dumps(loaded))
+                # np.save(f"{config.SAVE_PATH}positions.npy", np.array(product[1:], dtype="object"))
+                if game_count % round(config.GAME_AMOUNT_SELF_PLAY / 5) == 1: length = files.add_to_file(files.get_path("positions.npy"), np.array(product[1:], dtype=object), config.POSITION_AMOUNT)
+                # loaded += product[1:]
+                # loaded = loaded[-config.POSITION_AMOUNT:]
+                # files.write("positions.json", json.dumps(loaded))
+                
+                is_full = length == config.POSITION_AMOUNT
 
-                is_full = len(loaded) == config.POSITION_AMOUNT
                 if is_full:
-                    if not os.path.exists(f"{config.SAVE_PATH}backup/positions_{config.POSITION_AMOUNT}.json"): files.make_backup("positions.json", f"positions_{config.POSITION_AMOUNT}.json")
+                    if not os.path.exists(f"{config.SAVE_PATH}backup/positions_{config.POSITION_AMOUNT}.json"): files.make_backup("positions.npy", f"positions_{config.POSITION_AMOUNT}.npy")
                 else:
                     if games == game_count: games += 1
-            
-                print(f"Position length is now: {len(loaded)}")
-            
+ 
+                print(f"Position length is now: {length}")
+
     if not training: return outcomes
 
 
@@ -134,7 +136,7 @@ def self_play(agent):
 
 
 def retrain_network(agent):
-    positions = files.load_file("positions.json")
+    positions = np.load(files.get_path("positions.npy"), allow_pickle=True).tolist()
 
     for _ in range(config.TRAINING_ITERATIONS):
         minibatch = random.sample(positions, config.BATCH_SIZE)

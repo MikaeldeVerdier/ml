@@ -77,7 +77,7 @@ class NeuralNetwork:
         r = y_true[0][0]
         index = tf.cast(y_true[0][1], tf.int32)
 
-        posses = files.load_file("positions.json")
+        posses = np.load(files.get_path("positions.npy"), allow_pickle=True)
 
         bs = [[], [], []]
         for pos in posses:
