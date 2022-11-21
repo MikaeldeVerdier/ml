@@ -98,11 +98,13 @@ class NeuralNetwork:
     @staticmethod
     def J_clip(y_true, y_pred):
         y_true = y_true[0]
+        y_pred = y_pred[0]
+
         a = tf.cast(y_true[0], tf.int32)
         pi_a = y_true[1]
         Â = y_true[2]
 
-        pi_theta = y_pred[0][a]
+        pi_theta = y_pred[a]
         pi_theta_old = pi_a
         r_theta = pi_theta / pi_theta_old
 
@@ -111,7 +113,11 @@ class NeuralNetwork:
         # J_clip = min(L_cpi, L_clip)
         J_clip = L_cpi
 
-        return -J_clip
+        mask = tf.greater(y_pred, 0)
+        masked = tf.boolean_mask(y_pred, mask)
+        S_pi = -tf.math.reduce_sum(masked * tf.math.log(masked))
+
+        return -J_clip - S_pi
 
     @staticmethod
     def softmax_cross_entropy_with_logits(y_true, y_pred):
