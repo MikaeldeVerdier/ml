@@ -91,7 +91,7 @@ class NeuralNetwork:
         v = self.model(data)[0][0][0]
 
         V_targ = r + config.GAMMA * v
-        J_vf = (y_pred - V_targ) ** 2
+        J_vf = (y_pred[0][0] - V_targ) ** 2
 
         return J_vf
 

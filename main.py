@@ -103,7 +103,7 @@ def play(players, games, training=False):
                 # training_data = np.vstack(training_data).tolist()
 
                 # np.save(f"{config.SAVE_PATH}positions.npy", np.array(product[1:], dtype="object"))
-                if game_count % round(config.GAME_AMOUNT_SELF_PLAY / 5) == 1:
+                if game_count % np.ceil(config.GAME_AMOUNT_SELF_PLAY / 5) == 1:
                     length = files.add_to_file(files.get_path("positions.npy"), np.array(product, dtype=object), config.POSITION_AMOUNT)
                     product = []
                 # loaded += product[1:]
