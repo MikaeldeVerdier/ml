@@ -29,6 +29,7 @@ def play(players, games, training=False):
     players = sorted(set(players.values()))
 
     if training:
+        product = []
         is_full = False
     else:
         outcomes = [[], []]
@@ -84,21 +85,27 @@ def play(players, games, training=False):
 
                 # away_from_full = config.POSITION_AMOUNT - len(loaded)
                 # if training_length > config.POSITION_AMOUNT / 25 or away_from_full and training_length >= away_from_full:
-                product = []
+                
+                index = len(product)
+
                 for t, data in sorted(enumerate(storage), reverse=True):
                     game_states = game.generate_game_states(storage, t)
 
                     if t != len(storage) - 1:
                         states = np.array(game.generate_nn_pass(game_states, True), dtype=object).tolist()
-                        for flip in states: product.append([flip, data["a"].item(), data["pi_a"], data["Â"], data["r"], product[-1][0]])  # [s, a, pi_a, Â, nn_value, nn_value_s+1, logits]
+                        for flip in states: product.append(np.array([flip, data["a"].item(), data["pi_a"], data["Â"], data["r"], product[-1][0]], dtype=object))  # [s, a, pi_a, Â, nn_value, nn_value_s+1, logits]
                     else:
                         product.append([np.array(game.generate_nn_pass(game_states, False), dtype=object).tolist()])
+                
+                del product[index]
                     # data[0] = np.array(game.generate_nn_pass(data[0])).tolist()
                     # data[1] = data[1].tolist()
                 # training_data = np.vstack(training_data).tolist()
 
                 # np.save(f"{config.SAVE_PATH}positions.npy", np.array(product[1:], dtype="object"))
-                if game_count % round(config.GAME_AMOUNT_SELF_PLAY / 5) == 1: length = files.add_to_file(files.get_path("positions.npy"), np.array(product[1:], dtype=object), config.POSITION_AMOUNT)
+                if game_count % round(config.GAME_AMOUNT_SELF_PLAY / 5) == 1:
+                    length = files.add_to_file(files.get_path("positions.npy"), np.array(product, dtype=object), config.POSITION_AMOUNT)
+                    product = []
                 # loaded += product[1:]
                 # loaded = loaded[-config.POSITION_AMOUNT:]
                 # files.write("positions.json", json.dumps(loaded))
