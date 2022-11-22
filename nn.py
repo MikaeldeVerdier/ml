@@ -124,8 +124,8 @@ class NeuralNetwork:
         J_clip = tf.math.minimum(L_cpi, L_clip)  # Can be effectivised asf
         J_clip = L_cpi
 
-        mask = tf.greater(y_pred, 0)
-        masked = tf.boolean_mask(y_pred, mask)
+        mask = tf.greater(logits, 0)
+        masked = tf.boolean_mask(logits, mask)
         S_pi = -tf.math.reduce_sum(masked * tf.math.log(masked))
 
         return -J_clip - S_pi
