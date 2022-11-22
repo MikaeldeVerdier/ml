@@ -8,8 +8,8 @@ REPLACE_CARDS = 3
 
 def generate_game_states(history, t):
     data = history[:t + 1]
-    game_states = ({"s": None},) * (config.DEPTH - len(data)) + tuple(data)[-config.DEPTH:]
-    game_states = tuple([game_state["s"] for game_state in game_states])
+    game_states = ({"state": None},) * (config.DEPTH - len(data)) + tuple(data)[-config.DEPTH:]
+    game_states = tuple([game_state["state"] for game_state in game_states])
 
     return game_states
 
@@ -72,7 +72,7 @@ def check_index(board, index, checking_index, checking_func, multiplier_func, mu
 def get_legal_moves(game_state):  # , all_moves):
     if not len(np.where(game_state.s != 0)[0]): return list(range(np.prod(GAME_DIMENSIONS)))
 
-    if game_state.replace_card: return list(range(np.prod(GAME_DIMENSIONS))) + [25]
+    if game_state.replace_card: return list(range(MOVE_AMOUNT))
 
     legal_moves = []
 
@@ -84,7 +84,7 @@ def get_legal_moves(game_state):  # , all_moves):
                     if check_index(game_state.s, index, checking_index, lambda x: x == 0, func, multiplier):
                         legal_moves.append(checking_index)
 
-    return legal_moves
+    return list(set(legal_moves))  # Prob can be more efficient
 
 
 def get_card(value):

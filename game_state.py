@@ -13,4 +13,5 @@ class GameState:
         return hash(tuple(self.s) + tuple(self.deck) + (self.drawn_card,))
 
     def update_root(self, action):
-        (self.s, self.deck, self.drawn_card) = game.take_action(self, action)
+        self.s, self.deck, self.drawn_card = game.take_action(self, action)
+        return GameState(self.s, self.deck, self.drawn_card)

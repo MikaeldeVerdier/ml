@@ -98,19 +98,30 @@ class NeuralNetwork:
     @staticmethod
     def J_clip(y_true, y_pred):
         y_true = y_true[0]
-        y_pred = y_pred[0]
+        logits = y_pred[0]
 
         a = tf.cast(y_true[0], tf.int32)
-        pi_a = y_true[1]
-        Â = y_true[2]
+        pi_action = y_true[1]
+        advantage = y_true[2]
+        legal_moves = y_true[2:]
 
-        pi_theta = y_pred[a]
-        pi_theta_old = pi_a
-        r_theta = pi_theta / pi_theta_old
+        mask = tf.equal(legal_moves, [1])
 
-        L_cpi = r_theta * Â
-        # L_clip = min(r_theta, 1 + config.EPSILON if Â > 0 else 1 - config.EPSILON)
-        # J_clip = min(L_cpi, L_clip)
+        new = np.full(game.MOVE_AMOUNT, -100)
+        for i in range(len((new))):
+            if tf.get_static_value(mask[i]):
+                new[i] = logits[i]
+
+        odds = np.exp(new).astype(np.float64)
+        pi = odds / np.sum(odds)
+
+        pi_theta = tf.convert_to_tensor(pi)[a]
+        pi_theta_old = pi_action
+        r_theta = tf.cast(pi_theta, tf.float32) / pi_theta_old
+
+        L_cpi = r_theta * advantage
+        L_clip = tf.math.minimum(r_theta, 1 + config.EPSILON if advantage > 0 else 1 - config.EPSILON) * advantage
+        J_clip = tf.math.minimum(L_cpi, L_clip)  # Can be effectivised asf
         J_clip = L_cpi
 
         mask = tf.greater(y_pred, 0)
