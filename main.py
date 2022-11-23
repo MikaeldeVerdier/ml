@@ -58,8 +58,8 @@ def play(players, games, training=False):
                 action, pi_action, y_a, value = player.play_turn(storage, tau)
 
                 if training:
-                    for i, var in enumerate(["action", "pi_action", "logit_a", "value"]):
-                        storage[-1][var] = [action, pi_action, y_a, value][i]
+                    for i, var in enumerate(["action", "pi_action", "logit_a", "value", "reward"]):
+                        storage[-1][var] = [action, pi_action, y_a, value, 0 if outcome is None else outcome][i]
                 outcome = game.check_game_over(player.mcts)
 
                 turn += 1
@@ -76,7 +76,7 @@ def play(players, games, training=False):
                 player.outcomes["average"] = (player.outcomes["average"] * (player.outcomes["length"] - 1) + int(outcome * 50)) / player.outcomes["length"]
             else:
                 for i, data in sorted(enumerate(storage), reverse=True):
-                    data["reward"] = outcome
+                    # data["reward"] = outcome
                     if i != len(storage) - 1:
                         data["delta"] = delta(storage, i)
 
