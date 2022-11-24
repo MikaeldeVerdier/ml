@@ -57,13 +57,13 @@ def play(players, games, training=False):
 
                 action, pi_action, y_a, value = player.play_turn(storage, tau)
 
+                outcome = game.check_game_over(player.mcts)
+
                 if training:
                     for i, var in enumerate(["action", "pi_action", "logit_a", "value", "reward"]):
                         storage[-1][var] = [action, pi_action, y_a, value, 0.0 if outcome is None else outcome][i]
-                outcome = game.check_game_over(player.mcts)
 
                 turn += 1
-
             starts *= -1
 
             print(f"We are " + ("training" if training else "evaluating"))
