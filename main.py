@@ -76,6 +76,8 @@ def play(players, games, training=False):
                 player.outcomes["length"] += 1
                 player.outcomes["average"] = (player.outcomes["average"] * (player.outcomes["length"] - 1) + int(outcome * 50)) / player.outcomes["length"]
             else:
+                storage[-1]["value"] = outcome
+                storage[-1]["advantage"] = outcome
                 for i, data in sorted(enumerate(storage), reverse=True):
                     # data["reward"] = outcome
                     if i != len(storage) - 1:
@@ -88,7 +90,7 @@ def play(players, games, training=False):
                 # away_from_full = config.POSITION_AMOUNT - len(loaded)
                 # if training_length > config.POSITION_AMOUNT / 25 or away_from_full and training_length >= away_from_full:
                 
-                index = len(product)
+                # index = len(product)
 
                 for t, data in sorted(enumerate(storage), reverse=True):
                     legal_moves = np.zeros(game.MOVE_AMOUNT)
@@ -96,20 +98,18 @@ def play(players, games, training=False):
 
                     game_states = game.generate_game_states(storage, t)
 
-                    if t != len(storage) - 1:
-                        states = np.array(game.generate_nn_pass(game_states, True), dtype=object).tolist()
-                        for flip in states: product.append(np.array([flip, data["action"].item(), data["pi_action"], data["advantage"]] + list(legal_moves) + [data["reward"], product[-1][0]], dtype=object))  # [s, a, pi_action, advantage, nn_value, nn_value_s+1, logits]
-                    else:
-                        product.append([np.array(game.generate_nn_pass(game_states, False), dtype=object).tolist()])
-                
-                del product[index]
+                    states = np.array(game.generate_nn_pass(game_states, True), dtype=object).tolist()
+                    for flip in states: product.append(np.array([flip, data["action"].item(), data["pi_action"], data["advantage"]] + list(legal_moves) + [data["reward"], product[-1][0] if t != len(storage) - 1 else -1], dtype=object))  # [s, a, pi_action, advantage, nn_value, nn_value_s+1, logits]
+
+                # del product[index]
+
                     # data[0] = np.array(game.generate_nn_pass(data[0])).tolist()
                     # data[1] = data[1].tolist()
                 # training_data = np.vstack(training_data).tolist()
 
                 # np.save(f"{config.SAVE_PATH}positions.npy", np.array(product[1:], dtype="object"))
                 if not game_count % np.ceil(config.GAME_AMOUNT_SELF_PLAY / 2):
-                    length = files.add_to_file(files.get_path("positions.npy"), np.array(product, dtype=object), config.POSITION_AMOUNT)
+                    length = files.add_to_file(files.get_path("positions.npy"), np.array(product[::-1], dtype=object), config.POSITION_AMOUNT)
                     product = []
                 # loaded += product[1:]
                 # loaded = loaded[-config.POSITION_AMOUNT:]
@@ -164,8 +164,11 @@ def retrain_network(agent):
             for i, var in enumerate(position[1:(5 + game.MOVE_AMOUNT)]):
                 y["policy_head" if i != 3 + game.MOVE_AMOUNT else "value_head"][-1].append(var)
 
-            posses = [pos[-1] for pos in positions]
-            y["value_head"][-1].append(posses.index(position[-1]))
+            if position[-1] != -1:
+                posses = [pos[-1] for pos in positions]
+                y["value_head"][-1].append(posses.index(position[-1]))
+            else:
+                y["value_head"][-1].append(-1)
 
             for i, dim in enumerate(position[0]):
                 x[i].append(np.array(dim))

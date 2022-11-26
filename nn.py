@@ -77,18 +77,21 @@ class NeuralNetwork:
         r = y_true[0][0]
         index = tf.cast(y_true[0][1], tf.int32)
 
-        posses = np.load(files.get_path("positions.npy"), allow_pickle=True)
+        if index != -1:
+            posses = np.load(files.get_path("positions.npy"), allow_pickle=True)
 
-        bs = [[], [], []]
-        for pos in posses:
+            bs = [[], [], []]
+            for pos in posses:
+                for i, b in enumerate(bs):
+                    bs[i].append(pos[0][i])
+
             for i, b in enumerate(bs):
-                bs[i].append(pos[0][i])
+                bs[i] = tf.convert_to_tensor(np.array(b))
 
-        for i, b in enumerate(bs):
-            bs[i] = tf.convert_to_tensor(np.array(b))
-
-        data = [tf.expand_dims(b[index], 0) for b in bs]
-        v = self.model(data)[0][0][0]
+            data = [tf.expand_dims(b[index], 0) for b in bs]
+            v = self.model(data)[0][0][0]
+        else:
+            v = 0.0
 
         V_targ = r + config.GAMMA * v
         J_vf = tf.math.abs(y_pred[0][0] - V_targ)  # ** 2
