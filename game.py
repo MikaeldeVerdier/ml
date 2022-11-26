@@ -2,7 +2,7 @@ import numpy as np
 import config
 
 GAME_DIMENSIONS = (5, 5)
-NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (52, config.DEPTH), (52, config.DEPTH), (52, config.DEPTH)]
+NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (52, config.DEPTH), (52, config.DEPTH), (53, config.DEPTH)]
 MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
 REPLACE_CARDS = 3
 
@@ -51,8 +51,8 @@ def generate_nn_pass(game_states, mirror=False):
                 for card in de: deck[card - 1] = 1
                 nn_pass[-1][1].append(deck.tolist())
 
-                drawn_card = np.zeros(52)
-                drawn_card[dr[0] - 1] = 1
+                drawn_card = np.zeros(53)
+                drawn_card[dr[0]] = 1
                 nn_pass[-1][2].append(drawn_card.tolist())
 
                 if game_states[-depth - 1]: game_state = game_states[-depth - 1]
@@ -121,7 +121,7 @@ def score_row(cards):
     
 
 def check_game_over(game_state):
-    if len(game_state.deck) == 51 - np.prod(GAME_DIMENSIONS) - REPLACE_CARDS:
+    if not len(game_state.deck):
         score = 0
         board = game_state.s.reshape(GAME_DIMENSIONS)
         # print(print_board(board.flatten()))
@@ -144,10 +144,13 @@ def take_action(game_state, action):
 
 
 def format_card(card):
-    suit_dict = {0: "sp", 1: "hj", 2: "ru", 3: "kl"}
-    suit, value = get_card(card)
+    if card:
+        suit_dict = {0: "sp", 1: "hj", 2: "ru", 3: "kl"}
+        suit, value = get_card(card)
 
-    return f"{suit_dict[suit]}{int(value)}"
+        return f"{suit_dict[suit]}{int(value)}"
+    else:
+        return "None"
 
 
 def inverse_format_card(card):

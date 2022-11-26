@@ -30,7 +30,7 @@ class User():
         print(f"Move to make is: {action}")
         print(f"Position is now:\n{game.print_board(root.s)}\n")
         print(f"Drawn card is: {game.format_card(root.drawn_card)}")
-        print(f"Deck length is now: {len(root.deck)}")
+        print(f"Amount of cards left is now: {len(root.deck)}")
 
 
 class Agent():
@@ -90,7 +90,7 @@ class Agent():
         print(f"Position is now:\n{game.print_board(root.s)}")
         print(f"NN percieved value is: {nn_value:.3f} ({(nn_value * 50):.3f})")
         print(f"Drawn card is: {game.format_card(root.drawn_card)}")
-        print(f"Deck length is now: {len(root.deck)}")
+        print(f"Amount of cards left is now: {len(root.deck)}")
 
 
 class CurrentAgent(Agent):  # Redundant currently

@@ -42,6 +42,7 @@ def play(players, games, training=False):
         
         deck = list(range(1, 53))
         random.shuffle(deck)
+        deck = [0] + deck[:(np.prod(game.GAME_DIMENSIONS) + game.REPLACE_CARDS)]
         drawn_card = deck.pop()
         for i, player in enumerate(players):
             player.mcts = GameState(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], deck, drawn_card)
@@ -107,7 +108,7 @@ def play(players, games, training=False):
                 # training_data = np.vstack(training_data).tolist()
 
                 # np.save(f"{config.SAVE_PATH}positions.npy", np.array(product[1:], dtype="object"))
-                if not game_count % np.ceil(config.GAME_AMOUNT_SELF_PLAY / 5):
+                if not game_count % np.ceil(config.GAME_AMOUNT_SELF_PLAY / 2):
                     length = files.add_to_file(files.get_path("positions.npy"), np.array(product, dtype=object), config.POSITION_AMOUNT)
                     product = []
                 # loaded += product[1:]
