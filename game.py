@@ -81,10 +81,10 @@ def get_legal_moves(game_state):  # , all_moves):
             for check in checks:
                 for multiplier in [1, -1]:
                     checking_index = index + check * multiplier
-                    if check_index(game_state.s, index, checking_index, lambda x: x == 0, func, multiplier):
+                    if checking_index not in legal_moves and check_index(game_state.s, index, checking_index, lambda x: x == 0, func, multiplier):
                         legal_moves.append(checking_index)
 
-    return list(set(legal_moves))  # Prob can be more efficient
+    return legal_moves  # Prob can be more efficient
 
 
 def get_card(value):
@@ -98,11 +98,8 @@ def score_row(cards):
     
     histo_dict = {(1, 4): 20, (2, 3): 15, (1, 1, 3): 8, (1, 2, 2): 4, (1, 1, 1, 2): 2}
 
-    histo = []
-    for value in set(values):
-        histo.append(values.count(value))
+    histo = tuple(sorted([values.count(value) for value in set(values)]))
 
-    histo = tuple(sorted(histo))
     if histo in histo_dict:
         return histo_dict[histo]
 

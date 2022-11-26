@@ -121,7 +121,7 @@ class NeuralNetwork:
 
         L_cpi = r_theta * advantage
         L_clip = tf.math.minimum(r_theta, 1 + config.EPSILON if advantage > 0 else 1 - config.EPSILON) * advantage
-        J_clip = tf.math.minimum(L_cpi, L_clip)  # Can be effectivised asf
+        J_clip = tf.math.minimum(L_cpi, L_clip)
         # J_clip = L_cpi
 
         mask = tf.greater(logits, 0)
@@ -206,7 +206,7 @@ class NeuralNetwork:
         legal_moves = game.get_legal_moves(history[-1])
         mask[legal_moves] = False
 
-        if max(logits) > 85: logits *= 85 / max(logits)
+        # if max(logits) > 85: logits *= 85 / max(logits)
         logits[mask] = -100
 
         odds = np.exp(logits).astype(np.float64)
