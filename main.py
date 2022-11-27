@@ -153,6 +153,8 @@ def retrain_network(agent):
     for _ in range(config.TRAINING_ITERATIONS):
         minibatch = random.sample(positions, config.BATCH_SIZE)
 
+        posses = [pos[-1] for pos in positions]
+
         x = [[], [], []]
         y = {"value_head": [], "policy_head": []}
 
@@ -164,11 +166,7 @@ def retrain_network(agent):
             for i, var in enumerate(position[1:(5 + game.MOVE_AMOUNT)]):
                 y["policy_head" if i != 3 + game.MOVE_AMOUNT else "value_head"][-1].append(var)
 
-            if position[-1] != -1:
-                posses = [pos[-1] for pos in positions]
-                y["value_head"][-1].append(posses.index(position[-1]))
-            else:
-                y["value_head"][-1].append(-1)
+            y["value_head"][-1].append(posses.index(position[-1]) if position[-1] != -1 else -1)
 
             for i, dim in enumerate(position[0]):
                 x[i].append(np.array(dim))
