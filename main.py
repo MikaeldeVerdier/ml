@@ -42,7 +42,7 @@ def play(players, games, training=False):
         
         deck = list(range(1, 53))
         random.shuffle(deck)
-        deck = [0] + deck[:(np.prod(game.GAME_DIMENSIONS) + game.REPLACE_CARDS)]
+        # deck = [0] + deck[:(np.prod(game.GAME_DIMENSIONS) + game.REPLACE_CARDS)]
         drawn_card = deck.pop()
         for i, player in enumerate(players):
             player.mcts = GameState(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], deck, drawn_card)
@@ -76,6 +76,8 @@ def play(players, games, training=False):
                 player.outcomes["length"] += 1
                 player.outcomes["average"] = (player.outcomes["average"] * (player.outcomes["length"] - 1) + int(outcome * 50)) / player.outcomes["length"]
             else:
+                storage[-1]["state"].deck += [storage[-1]["state"].drawn_card]
+                storage[-1]["state"].drawn_card = 0
                 storage[-1]["value"] = outcome
                 storage[-1]["advantage"] = outcome
                 for i, data in sorted(enumerate(storage), reverse=True):

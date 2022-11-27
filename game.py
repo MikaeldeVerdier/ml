@@ -121,7 +121,7 @@ def score_row(cards):
     
 
 def check_game_over(game_state):
-    if not len(game_state.deck):
+    if len(game_state.deck) == 51 - np.prod(GAME_DIMENSIONS) - REPLACE_CARDS:
         score = 0
         board = game_state.s.reshape(GAME_DIMENSIONS)
         # print(print_board(board.flatten()))
@@ -144,13 +144,10 @@ def take_action(game_state, action):
 
 
 def format_card(card):
-    if card:
-        suit_dict = {0: "sp", 1: "hj", 2: "ru", 3: "kl"}
-        suit, value = get_card(card)
+    suit_dict = {0: "sp", 1: "hj", 2: "ru", 3: "kl"}
+    suit, value = get_card(card)
 
-        return f"{suit_dict[suit]}{int(value)}"
-    else:
-        return "None"
+    return f"{suit_dict[suit]}{int(value)}"
 
 
 def inverse_format_card(card):
