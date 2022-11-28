@@ -46,7 +46,7 @@ def play(players, games, training=False):
         drawn_card = deck.pop()
         for i, player in enumerate(players):
             player.mcts = GameState(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], deck, drawn_card)
-    
+
             storage = []
             turn = 1
             tau = 1 if training else 1e-2
