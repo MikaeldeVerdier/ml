@@ -34,8 +34,8 @@ class User():
 
 
 class Agent():
-    def __init__(self, nn_class, load, version=None, name=None):
-        self.nn = nn_class(load, version)
+    def __init__(self, nn_class, load, version=None, name=None, to_weights=False):
+        self.nn = nn_class(load, version, to_weights=to_weights)
         self.name = name
         
         self.outcomes = {"average": 0, "length": 0}
@@ -94,8 +94,8 @@ class Agent():
 
 
 class CurrentAgent(Agent):  # Redundant currently
-    def __init__(self, nn_class, load, version=None, name=None):
-        super().__init__(nn_class, load, version, name)
+    def __init__(self, nn_class, load, version=None, name=None, to_weights=False):
+        super().__init__(nn_class, load, version, name, to_weights)
 
     # def __lt__(self, other):
     #     return True if type(other) == type(self) and other.nn.version > self.nn.version else False

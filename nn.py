@@ -35,7 +35,7 @@ class NeuralNetwork:
     def __init__(self, load, version):
         self.version = version
 
-        if load:
+        if load and type(version) is int:
             self.load_version(version)
             print(f"NN loaded with version: {version}")
             return
@@ -59,19 +59,26 @@ class NeuralNetwork:
         self.model = Model(inputs=[position_input, deck_input, drawn_card_input], outputs=[vh, ph])
         self.model.compile(loss={"value_head": self.J_vf, "policy_head": self.J_clip}, optimizer=SGD(learning_rate=config.LEARNING_RATE, momentum=config.MOMENTUM), loss_weights = {"value_head": 0.5, "policy_head": 0.5}, metrics="accuracy")
         
-        try:
-            # pass
-            plot_model(self.model, to_file=f"{config.SAVE_PATH}model.png", show_shapes=True, show_layer_names=True)
-        except ImportError:
-            print("You need to download pydot and graphviz to plot model.")
+        if load:
+            self.load_version(version, from_weights=True)
+            print(f"Weights loaded from version: {version}")
+        else:
+            try:
+                plot_model(self.model, to_file=files.get_path("model.png"), show_shapes=True, show_layer_names=True)
+            except ImportError:
+                print("You need to download pydot and graphviz to plot model.")
 
         self.model.summary()
 
     def __hash__(self):
         return hash(self.version)
 
-    def load_version(self, version):
-        self.model = load_model(f"{config.SAVE_PATH}training/v.{version}", custom_objects={"J_vf": self.J_vf, "J_clip": self.J_clip})
+    def load_version(self, version, from_weights=False):
+        if not from_weights:
+            self.model = load_model(f"{config.SAVE_PATH}training/v.{version}", custom_objects={"J_vf": self.J_vf, "J_clip": self.J_clip})
+        else:
+            checkpoint_path = f"{config.SAVE_PATH}training/v.{version}/cp.cpkt"
+            self.model.load_weights(checkpoint_path).expect_partial()
 
     def J_vf(self, y_true, y_pred):
         r = y_true[0][0]
@@ -219,7 +226,9 @@ class NeuralNetwork:
 
 
 class CurrentNeuralNetwork(NeuralNetwork):
-    def __init__(self, load, version):
+    def __init__(self, load, version, to_weights=False):
+        self.to_weights = to_weights
+
         loaded = files.load_file("save.json")["current_agent"]
         self.metrics = loaded["metrics"]
         self.iterations = loaded["iterations"]
@@ -234,6 +243,12 @@ class CurrentNeuralNetwork(NeuralNetwork):
         fit = self.model.fit(x, y, batch_size=32, epochs=config.EPOCHS, verbose=1, validation_split=config.VALIDATION_SPLIT)
         for metric in fit.history:
             [self.metrics[metric].append(fit.history[metric][i]) for i in range(config.EPOCHS)]
+
+    def save_model(self):
+        if not self.to_weights:
+            self.model.save(f"{config.SAVE_PATH}training/v.{self.version}")
+        else:
+            self.model.save_weights(f"{config.SAVE_PATH}training/v.{self.version}")
 
     def plot_metrics(self, iteration_lines=False, derivative_lines=False):
         _, axs = plt.subplots(4, sharey="row", figsize=(20, 15))
@@ -299,7 +314,7 @@ class CurrentNeuralNetwork(NeuralNetwork):
         files.write("save.json", json.dumps(loaded))
 
 class BestNeuralNetwork(NeuralNetwork):
-    def __init__(self, load, version):
+    def __init__(self, load, version, **kwargs):
         print(f"Num GPUs Available: {len(tf.config.list_physical_devices('GPU'))}")
 
         if version is None:

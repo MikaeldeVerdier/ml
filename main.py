@@ -18,7 +18,7 @@ def initiate():
         files.reset_file("positions.npy")
         files.reset_file("log.txt")
 
-    current_agent = CurrentAgent(CurrentNeuralNetwork, load[0])
+    current_agent = CurrentAgent(CurrentNeuralNetwork, load[0], to_weights=True)
     best_agent = BestAgent(BestNeuralNetwork, load[1])
     agents = {1: best_agent, -1: current_agent}
 
@@ -69,7 +69,7 @@ def play(players, games, training=False):
 
             # print(f"We are " + ("training" if training else "evaluating"))
             # print(f"Game outcome was: {outcome} ({int(outcome * 50)}), (Agent name: {player.get_name()[0]})")
-            if not game_count % np.ceil(games % 2):
+            if not game_count % np.ceil(games / 2):
                 print(f"Amount of games played is now: {game_count} ({player.get_name()})\n")
 
             if not training:
@@ -125,7 +125,7 @@ def play(players, games, training=False):
                 if is_full:
                     if not os.path.exists(f"{config.SAVE_PATH}backup/positions_{config.POSITION_AMOUNT}.json"): files.make_backup("positions.npy", f"positions_{config.POSITION_AMOUNT}.npy")
                 else:
-                    if games == game_count: games += 1
+                    if games == game_count: games += config.GAME_AMOUNT_SELF_PLAY / 2
  
                 # print(f"Position length is now: {length}")
 
@@ -193,6 +193,7 @@ def retrain_network(agent):
 
     agent.nn.iterations.append(config.TRAINING_ITERATIONS * config.EPOCHS)
     agent.nn.version += 1
+    agent.nn.save_model()
     agent.nn.model.save(f"{config.SAVE_PATH}training/v.{agent.nn.version}")
     agent.nn.save_metrics("current_agent")
     agent.outcomes = {"average": 0, "length": 0}
