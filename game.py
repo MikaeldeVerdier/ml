@@ -2,7 +2,7 @@ import numpy as np
 import config
 
 GAME_DIMENSIONS = (5, 5)
-NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (52, config.DEPTH), (52, config.DEPTH), (53, config.DEPTH)]
+NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (52, config.DEPTH), (52, config.DEPTH), (52, config.DEPTH)]
 MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
 REPLACE_CARDS = 3
 
@@ -51,8 +51,8 @@ def generate_nn_pass(game_states, mirror=False):
                 for card in de: deck[card - 1] = 1
                 nn_pass[-1][1].append(deck.tolist())
 
-                drawn_card = np.zeros(53)
-                drawn_card[dr[0]] = 1
+                drawn_card = np.zeros(52)
+                if dr[0] != 0: drawn_card[dr[0] - 1] = 1
                 nn_pass[-1][2].append(drawn_card.tolist())
 
                 if game_states[-depth - 1]: game_state = game_states[-depth - 1]
