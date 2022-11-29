@@ -146,6 +146,7 @@ def advantage(data, t):
 
 
 def self_play(agent):
+    print("\nSelf-play started!\n")
     play({1: agent, -1: agent}, config.GAME_AMOUNT_SELF_PLAY, True)
 
     # outcome = agent.outcomes["average"]
@@ -153,12 +154,14 @@ def self_play(agent):
 
 
 def retrain_network(agent):
+    print("\nRetraining started!\n")
+
     positions = np.load(files.get_path("positions.npy"), allow_pickle=True).tolist()
 
     for _ in range(config.TRAINING_ITERATIONS):
         minibatch = random.sample(positions, config.BATCH_SIZE)
 
-        # posses = [pos[-1] for pos in positions]
+        posses = [pos[-1] for pos in positions]
 
         x = [[], [], []]
         y = {"value_head": [], "policy_head": []}
@@ -171,8 +174,8 @@ def retrain_network(agent):
             for i, var in enumerate(position[1:(5 + game.MOVE_AMOUNT)]):
                 y["policy_head" if i != 3 + game.MOVE_AMOUNT else "value_head"][-1].append(var)
 
-            # y["value_head"][-1].append(posses.index(position[-1]) if position[-1] != -1 else -1)
-            y["value_head"][-1].append(config.POSITION_AMOUNT - position[-2] if position[-1] != -1 else -1)
+            y["value_head"][-1].append(posses.index(position[-1]) if position[-1] != -1 else -1)
+            # y["value_head"][-1].append(config.POSITION_AMOUNT - position[-2] if position[-1] != -1 else -1)
 
             for i, dim in enumerate(position[0]):
                 x[i].append(np.array(dim))
@@ -201,6 +204,8 @@ def retrain_network(agent):
 
 
 def evaluate_network(agents):
+    print("\nEvaluation of agents started!\n")
+
     outcomes = play(agents, config.GAME_AMOUNT_EVALUATION)
 
     for agent in agents.values():
