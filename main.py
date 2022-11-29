@@ -101,7 +101,7 @@ def play(players, games, training=False):
                     game_states = game.generate_game_states(storage, t)
 
                     states = np.array(game.generate_nn_pass(game_states, True), dtype=object).tolist()
-                    for flip in states: product.append(np.array([flip, data["action"].item(), data["pi_action"], data["advantage"]] + list(legal_moves) + [data["reward"], product[-1][0] if t != len(storage) - 1 else -1], dtype=object))  # [s, a, pi_action, advantage, nn_value, nn_value_s+1, logits]
+                    for flip in states: product.append(np.array([flip, data["action"].item(), data["pi_action"], data["advantage"]] + list(legal_moves) + [data["reward"], length + len(product) + 1, product[-1][0] if t != len(storage) - 1 else -1], dtype=object))  # [s, a, pi_action, advantage, nn_value, nn_value_s+1, logits]
 
                 # del product[index]
 
@@ -155,7 +155,7 @@ def retrain_network(agent):
     for _ in range(config.TRAINING_ITERATIONS):
         minibatch = random.sample(positions, config.BATCH_SIZE)
 
-        posses = [pos[-1] for pos in positions]
+        # posses = [pos[-1] for pos in positions]
 
         x = [[], [], []]
         y = {"value_head": [], "policy_head": []}
@@ -168,7 +168,8 @@ def retrain_network(agent):
             for i, var in enumerate(position[1:(5 + game.MOVE_AMOUNT)]):
                 y["policy_head" if i != 3 + game.MOVE_AMOUNT else "value_head"][-1].append(var)
 
-            y["value_head"][-1].append(posses.index(position[-1]) if position[-1] != -1 else -1)
+            # y["value_head"][-1].append(posses.index(position[-1]) if position[-1] != -1 else -1)
+            y["value_head"][-1].append(config.POSITION_AMOUNT - position[-2] if position[-1] != -1 else -1)
 
             for i, dim in enumerate(position[0]):
                 x[i].append(np.array(dim))
