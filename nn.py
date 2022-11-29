@@ -1,6 +1,7 @@
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
+import os
 import json
 import config
 import game
@@ -35,10 +36,10 @@ class NeuralNetwork:
     def __init__(self, load, version):
         self.version = version
 
-        if load and type(version) is int:
-            self.load_version(version)
-            print(f"NN loaded with version: {version}")
-            return
+        if load:
+            if self.load_version(version):
+                print(f"NN loaded with version: {version}")
+                return
 
         position_input = Input(shape=game.NN_INPUT_DIMENSIONS[0], name="position_input")
         position = self.position_cnn(position_input)
@@ -74,11 +75,13 @@ class NeuralNetwork:
         return hash(self.version)
 
     def load_version(self, version, from_weights=False):
+        path = f"{config.SAVE_PATH}training/v.{version}/checkpoint"
         if not from_weights:
-            self.model = load_model(f"{config.SAVE_PATH}training/v.{version}", custom_objects={"J_vf": self.J_vf, "J_clip": self.J_clip})
+            if not os.path.exists(path):
+                self.model = load_model(f"{config.SAVE_PATH}training/v.{version}", custom_objects={"J_vf": self.J_vf, "J_clip": self.J_clip})
+                return True
         else:
-            checkpoint_path = f"{config.SAVE_PATH}training/v.{version}/cp.cpkt"
-            self.model.load_weights(checkpoint_path).expect_partial()
+            self.model.load_weights(path).expect_partial()
 
     def J_vf(self, y_true, y_pred):
         r = y_true[0][0]
@@ -235,7 +238,8 @@ class CurrentNeuralNetwork(NeuralNetwork):
         if version is None: version = loaded["version"]
 
         super().__init__(load, version)
-        self.model.save(f"{config.SAVE_PATH}training/v.{version}")
+        if not load: self.save_model()
+        # self.model.save(f"{config.SAVE_PATH}training/v.{version}")
 
     def train(self, x, y):
         self.get_preds.cache_clear()
@@ -248,7 +252,7 @@ class CurrentNeuralNetwork(NeuralNetwork):
         if not self.to_weights:
             self.model.save(f"{config.SAVE_PATH}training/v.{self.version}")
         else:
-            self.model.save_weights(f"{config.SAVE_PATH}training/v.{self.version}")
+            self.model.save_weights(f"{config.SAVE_PATH}training/v.{self.version}/checkpoint")
 
     def plot_metrics(self, iteration_lines=False, derivative_lines=False):
         _, axs = plt.subplots(4, sharey="row", figsize=(20, 15))
