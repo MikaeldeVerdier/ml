@@ -67,9 +67,10 @@ def play(players, games, training=False):
                 turn += 1
             starts *= -1
 
-            print(f"We are " + ("training" if training else "evaluating"))
-            print(f"Game outcome was: {outcome} ({int(outcome * 50)}), (Agent name: {player.get_name()[0]})")
-            print(f"Amount of games played for this agent is now: {game_count}\n")
+            # print(f"We are " + ("training" if training else "evaluating"))
+            # print(f"Game outcome was: {outcome} ({int(outcome * 50)}), (Agent name: {player.get_name()[0]})")
+            if not game_count % np.ceil(games % 2):
+                print(f"Amount of games played is now: {game_count} ({player.get_name()})\n")
 
             if not training:
                 outcomes[i].append(int(outcome * 50))
@@ -113,6 +114,8 @@ def play(players, games, training=False):
                 if not game_count % np.ceil(config.GAME_AMOUNT_SELF_PLAY / 2):
                     length = files.add_to_file(files.get_path("positions.npy"), np.array(product[::-1], dtype=object), config.POSITION_AMOUNT)
                     product = []
+
+                    print(f"Position length is now: {length}")
                 # loaded += product[1:]
                 # loaded = loaded[-config.POSITION_AMOUNT:]
                 # files.write("positions.json", json.dumps(loaded))
@@ -124,7 +127,7 @@ def play(players, games, training=False):
                 else:
                     if games == game_count: games += 1
  
-                print(f"Position length is now: {length}")
+                # print(f"Position length is now: {length}")
 
     if not training: return outcomes
 
@@ -220,11 +223,12 @@ def log(agents, results):
     names = [agents[1].get_name(), agents[-1].get_name()]
 
     best_name = names[np.argmax(results)]
-    best = f"{best_name[0]} {best_name[1]}" if results[0] != results[1] else "They both are" 
+    best = f"{best_name} is the best" if results[0] != results[1] else "They are equally good"
+
     message = f"""{datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')}:
------------- {names[0][0]} vs {names[1][0]} ------------
+------------ {names[0]} vs {names[1]} ------------
 Results are: {results}
-{best} the best!
+{best}!
 
 """
     files.write("log.txt", message, "a")

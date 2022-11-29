@@ -44,7 +44,7 @@ class Agent():
         return type(other) == BestAgent or type(self) == CurrentAgent and other.nn.version > self.nn.version
 
     def get_name(self):
-        return (f"Version {self.nn.version}" if not self.name else self.name, "is")
+        return f"Version {self.nn.version}" if not self.name else self.name
 
     def play_turn(self, history, tau):
         game_states = game.generate_game_states(history, len(history) - 1)
@@ -54,7 +54,7 @@ class Agent():
 
         self.mcts = self.mcts.update_root(action)
 
-        self.print_move(self.mcts, probs, action, nn_value)
+        # self.print_move(self.mcts, probs, action, nn_value)
 
         return action, probs[action], logits[action], nn_value
 
