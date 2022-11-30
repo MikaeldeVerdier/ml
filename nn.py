@@ -104,7 +104,7 @@ class NeuralNetwork:
             v = 0.0
 
         V_targ = r + config.GAMMA * v
-        J_vf = tf.math.abs(y_pred[0][0] - V_targ)  # ** 2
+        J_vf = tf.math.abs(y_pred[0][0] - V_targ) / r # ** 2
 
         return J_vf
 
