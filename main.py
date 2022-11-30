@@ -47,18 +47,18 @@ def play(players, games, training=False):
         for i, player in enumerate(players):
             player.mcts = GameState(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], deck, drawn_card)
 
-            storage = []
+            storage = [{"state": player.mcts}]
             turn = 1
             tau = 1 if training else 1e-2
 
             outcome = None
             while outcome is None:
                 if turn == config.TURNS_UNTIL_TAU: tau = 1e-2
-                storage.append({"state": player.mcts})
 
                 action, pi_action, y_a, value = player.play_turn(storage, tau)
+                storage.append({"state": player.mcts})
 
-                outcome = game.check_game_over(player.mcts)
+                outcome = game.check_game_over(player.mcts)                
 
                 if training:
                     for i, var in enumerate(["action", "pi_action", "logit_a", "value", "reward"]):
