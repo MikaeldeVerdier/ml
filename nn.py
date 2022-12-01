@@ -8,7 +8,7 @@ import game
 import files
 from tensorflow.keras import regularizers
 from tensorflow.keras.models import Model, load_model
-from tensorflow.keras.layers import Input, Dense, Conv2D, Flatten, BatchNormalization, ReLU, Concatenate
+from tensorflow.keras.layers import Input, Dense, Conv3D, Conv1D, Flatten, BatchNormalization, ReLU, Concatenate
 from tensorflow.keras.optimizers import SGD
 from keras.utils.vis_utils import plot_model
 
@@ -45,10 +45,10 @@ class NeuralNetwork:
         position = self.position_cnn(position_input)
 
         deck_input = Input(shape=game.NN_INPUT_DIMENSIONS[1], name="deck_input")
-        deck = self.deck_mlp(deck_input)
+        deck = self.deck_cnn(deck_input)
 
         drawn_card_input = Input(shape=game.NN_INPUT_DIMENSIONS[2], name="drawn_card_input")
-        drawn_card = self.drawn_card_mlp(drawn_card_input)
+        drawn_card = self.drawn_card_cnn(drawn_card_input)
 
         x = Concatenate()([position, deck, drawn_card])
 
@@ -58,7 +58,7 @@ class NeuralNetwork:
         ph = self.policy_head(x)
 
         self.model = Model(inputs=[position_input, deck_input, drawn_card_input], outputs=[vh, ph])
-        self.model.compile(loss={"value_head": self.J_vf, "policy_head": self.J_clip}, optimizer=SGD(learning_rate=config.LEARNING_RATE, momentum=config.MOMENTUM), loss_weights = {"value_head": 2, "policy_head": 0.5}, metrics="accuracy")
+        self.model.compile(loss={"value_head": self.J_vf, "policy_head": self.J_clip}, optimizer=SGD(learning_rate=config.LEARNING_RATE, momentum=config.MOMENTUM), loss_weights = {"value_head": 2.5, "policy_head": 0.5}, metrics="accuracy")
         
         if load:
             self.load_version(version, from_weights=True)
@@ -104,7 +104,7 @@ class NeuralNetwork:
             v = 0.0
 
         V_targ = r + config.GAMMA * v
-        J_vf = 10 * tf.math.abs(y_pred[0][0] - V_targ) # ** 2
+        J_vf = tf.math.abs(y_pred[0][0] - V_targ) # ** 2
 
         return J_vf
 
@@ -164,18 +164,28 @@ class NeuralNetwork:
         for neuron_amount in config.DENSE_POSITION: x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         return x
 
-    def deck_mlp(self, x):
+    def deck_cnn(self, x):
+        for filter_amount, kernel_size in config.CONVOLUTIONAL_LAYERS_DECK: x = self.convolutional_layer_1D(x, filter_amount, kernel_size)
+        x = Flatten()(x)
         for neuron_amount in config.DENSE_DECK: x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         return x
 
-    def drawn_card_mlp(self, x):
+    def drawn_card_cnn(self, x):
+        for filter_amount, kernel_size in config.CONVOLUTIONAL_LAYERS_DRAWN_CARD: x = self.convolutional_layer_1D(x, filter_amount, kernel_size)
+        x = Flatten()(x)
         for neuron_amount in config.DENSE_DRAWN_CARD: x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         return x
 
     @staticmethod
-    def convolutional_layer_3D(x, filters, kernel_size):  # , pool_size):
-        x = Conv2D(filters=filters, kernel_size=kernel_size, data_format="channels_last", padding="same", use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
-        # x = MaxPool3D(pool_size=pool_size, padding="same")(x)
+    def convolutional_layer_3D(x, filters, kernel_size):
+        x = Conv3D(filters=filters, kernel_size=kernel_size, data_format="channels_last", padding="same", use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
+        x = BatchNormalization()(x)
+        x = ReLU()(x)
+        return x
+
+    @staticmethod
+    def convolutional_layer_1D(x, filters, kernel_size):
+        x = Conv1D(filters=filters, kernel_size=kernel_size, data_format="channels_last", padding="same", use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         x = BatchNormalization()(x)
         x = ReLU()(x)
         return x
