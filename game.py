@@ -59,9 +59,8 @@ def generate_nn_pass(game_states, mirror=False):
                     if game_states[-depth - 2]: game_state = game_states[-depth - 2]
                     else:
                         for _ in range(config.DEPTH - depth - 1):
-                            nn_pass[-1][0].append(np.zeros((5, 5, 52)))
-                            nn_pass[-1][1].append(np.ones((52,)))
-                            nn_pass[-1][2].append(np.zeros((52,)))
+                            for i, func in enumerate([np.zeros, np.ones, np.zeros]):
+                                nn_pass[-1][i].append(func(NN_INPUT_DIMENSIONS[i][:-1]))
                         break
             
             nn_pass[-1] = [np.array(np.moveaxis(dim, 0, -1)).tolist() for dim in nn_pass[-1]]
