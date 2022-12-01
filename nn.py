@@ -159,7 +159,7 @@ class NeuralNetwork:
         return loss
 
     def position_cnn(self, x):
-        for filter_amount, kernel_size in config.CONVOLUTIONAL_LAYERS_POSITION: x = self.convolutional_layer_3D(x, filter_amount, kernel_size)
+        for filter_amount, kernel_size in config.CONVOLUTIONAL_LAYERS_POSITION: x = self.convolutional_layer_3D(x, filter_amount, kernel_size, config.POOLING_SIZE_POSITION)
         x = Flatten()(x)
         for neuron_amount in config.DENSE_POSITION: x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         return x
@@ -177,9 +177,9 @@ class NeuralNetwork:
         return x
 
     @staticmethod
-    def convolutional_layer_3D(x, filters, kernel_size):
+    def convolutional_layer_3D(x, filters, kernel_size, pool_size):
         x = Conv3D(filters=filters, kernel_size=kernel_size, data_format="channels_last", padding="same", use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
-        x = MaxPool3D(padding="same")(x)
+        x = MaxPool3D(pool_size=pool_size, padding="same")(x)
         x = BatchNormalization()(x)
         x = ReLU()(x)
         return x
