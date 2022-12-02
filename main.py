@@ -79,17 +79,15 @@ def play(players, games, training=False):
             else:
                 storage[-1]["state"].deck += [storage[-1]["state"].drawn_card]
                 storage[-1]["state"].drawn_card = 0
-                # storage[-1]["value"] = outcome
-                # storage[-1]["advantage"] = outcome
-                # for i, data in sorted(enumerate(storage), reverse=True):
-                #     data["reward"] = outcome
-                #     if i != len(storage) - 1:
-                #         data["delta"] = delta(storage, i)
+                storage[-1]["value"] = outcome
+                storage[-1]["advantage"] = outcome
+                for i, data in sorted(enumerate(storage), reverse=True):
+                    # data["reward"] = outcome
+                    if i != len(storage) - 1:
+                        data["delta"] = delta(storage, i)
 
-                for i, data in enumerate(storage):
-                # for i, data in enumerate(storage[:-1]):
-                    # data["advantage"] = advantage(storage, i)
-                    data["advantage"] = advantage_2(storage, i)
+                for i, data in enumerate(storage[:-1]):
+                    data["advantage"] = advantage(storage, i)
                 # storage[-1]["advantage"] = outcome
 
                 # away_from_full = config.POSITION_AMOUNT - len(loaded)
@@ -144,11 +142,6 @@ def delta(data, t):
 def advantage(data, t):
     T = len(data)
     li = [(config.GAMMA * config.LAMBDA) ** i * delta(data, t + i) for i in range(T - t - 1)]
-    return sum(li)
-
-
-def advantage_2(data, t):
-    li = [config.GAMMA ** i * (dat_point["reward"] + dat_point["value"]) for i, dat_point in enumerate(data[t:])]
     return sum(li)
 
 
