@@ -23,16 +23,10 @@ EMPTY_SAVE = json.dumps({
             "policy_head_loss": [
 
             ],
-            "value_head_accuracy": [
+            "value_head_vf_mae": [
 
             ],
-            "value_head_vf_accuracy": [
-
-            ],
-            "policy_head_accuracy": [
-
-            ],
-            "policy_head_ph_accuracy": [
+            "policy_head_ph_mae": [
 
             ],
             "val_loss": [
@@ -44,16 +38,10 @@ EMPTY_SAVE = json.dumps({
             "val_policy_head_loss": [
 
             ],
-            "val_value_head_accuracy": [
+            "val_value_head_vf_mae": [
 
             ],
-            "val_value_head_vf_accuracy": [
-
-            ],
-            "val_policy_head_accuracy": [
-
-            ],
-            "val_policy_head_ph_accuracy": [
+            "val_policy_head_ph_mae": [
 
             ]
         }
@@ -76,16 +64,10 @@ EMPTY_SAVE = json.dumps({
             "policy_head_loss": [
 
             ],
-            "value_head_accuracy": [
+            "value_head_vf_mae": [
 
             ],
-            "value_head_vf_accuracy": [
-
-            ],
-            "policy_head_accuracy": [
-
-            ],
-            "policy_head_ph_accuracy": [
+            "policy_head_ph_mae": [
 
             ],
             "val_loss": [
@@ -97,16 +79,10 @@ EMPTY_SAVE = json.dumps({
             "val_policy_head_loss": [
 
             ],
-            "val_value_head_accuracy": [
+            "val_value_head_vf_mae": [
 
             ],
-            "val_value_head_vf_accuracy": [
-
-            ],
-            "val_policy_head_accuracy": [
-
-            ],
-            "val_policy_head_ph_accuracy": [
+            "val_policy_head_ph_mae": [
 
             ]
         }

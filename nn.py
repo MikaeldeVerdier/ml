@@ -6,6 +6,7 @@ import json
 import config
 import game
 import files
+from keras import backend as K
 from tensorflow.keras import regularizers
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.layers import Input, Dense, Conv3D, Conv1D, Flatten, BatchNormalization, ReLU, Concatenate
@@ -58,7 +59,7 @@ class NeuralNetwork:
         ph = self.policy_head(x)
 
         self.model = Model(inputs=[position_input, deck_input, drawn_card_input], outputs=[vh, ph])
-        self.model.compile(loss={"value_head": self.J_vf, "policy_head": self.J_clip}, optimizer=SGD(learning_rate=config.LEARNING_RATE, momentum=config.MOMENTUM), loss_weights = {"value_head": 1, "policy_head": 0.5}, metrics={"value_head": ["accuracy", self.vf_accuracy], "policy_head": ["accuracy", self.ph_accuracy]})
+        self.model.compile(loss={"value_head": self.J_vf, "policy_head": self.J_clip}, optimizer=SGD(learning_rate=config.LEARNING_RATE, momentum=config.MOMENTUM), loss_weights = {"value_head": 1, "policy_head": 0.5}, metrics={"value_head": self.vf_mae, "policy_head": self.ph_mae})
         
         if load:
             self.load_version(version, from_weights=True)
@@ -108,11 +109,11 @@ class NeuralNetwork:
 
         return J_vf
 
-    @staticmethod
-    def vf_accuracy(y_true, y_pred):
-        return tf.math.abs(y_pred[0][0] - y_true[0][0]) < 1e-2
+    def vf_mae(self, y_true, y_pred):
+       return abs(y_true[0][0] - y_pred[0][0])
 
-    def softmax(self, logits, action, legal_moves):
+    @staticmethod
+    def softmax(logits, action, legal_moves):
         mask = tf.equal(legal_moves, [1])
 
         new = np.full(game.MOVE_AMOUNT, -100)
@@ -134,8 +135,8 @@ class NeuralNetwork:
         advantage = y_true[2]
         legal_moves = y_true[2:]
 
-        pi_theta = self.softmax(logits, action, legal_moves)
         pi_theta_old = pi_action
+        pi_theta = self.softmax(logits, action, legal_moves)
         r_theta = tf.cast(pi_theta, tf.float32) / pi_theta_old
 
         L_cpi = r_theta * advantage
@@ -149,7 +150,7 @@ class NeuralNetwork:
 
         return -J_clip - S_pi
 
-    def ph_accuracy(self, y_true, y_pred):
+    def ph_mae(self, y_true, y_pred):
         y_true = y_true[0]
         logits = y_pred[0]
 
@@ -157,10 +158,10 @@ class NeuralNetwork:
         pi_action = y_true[1]
         legal_moves = y_true[2:]
 
-        pi_theta = tf.cast(self.softmax(logits, action, legal_moves), tf.float32)
         pi_theta_old = pi_action
+        pi_theta = tf.cast(self.softmax(logits, action, legal_moves), tf.float32)
 
-        return abs(pi_theta - pi_theta_old) < 1e-4
+        return abs(pi_theta_old - pi_theta)
 
     @staticmethod
     def softmax_cross_entropy_with_logits(y_true, y_pred):
@@ -292,7 +293,7 @@ class CurrentNeuralNetwork(NeuralNetwork):
                     y = [deriv * x + data[0] for x in range(len(data))]
                     ax.plot(y, color="black", linestyle="-.")
 
-        for ax_index, metric in enumerate(["Loss", "Accuracy", "Validation Loss", "Validation Accuracy"]):
+        for ax_index, metric in enumerate(["Loss", "Error", "Validation Loss", "Validation Error"]):
             ax = axs[ax_index]
             ax.set_title(metric)
             ax.set_ylabel(metric)
