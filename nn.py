@@ -58,7 +58,7 @@ class NeuralNetwork:
         ph = self.policy_head(x)
 
         self.model = Model(inputs=[position_input, deck_input, drawn_card_input], outputs=[vh, ph])
-        self.model.compile(loss={"value_head": self.J_vf, "policy_head": self.J_clip}, optimizer=SGD(learning_rate=config.LEARNING_RATE, momentum=config.MOMENTUM), loss_weights = {"value_head": 1, "policy_head": 0.5}, metrics={"value_head": self.vf_accuracy, "policy_head": self.ph_accuracy})
+        self.model.compile(loss={"value_head": self.J_vf, "policy_head": self.J_clip}, optimizer=SGD(learning_rate=config.LEARNING_RATE, momentum=config.MOMENTUM), loss_weights = {"value_head": 1, "policy_head": 0.5}, metrics={"value_head": ["accuracy", self.vf_accuracy], "policy_head": ["accuracy", self.ph_accuracy]})
         
         if load:
             self.load_version(version, from_weights=True)
