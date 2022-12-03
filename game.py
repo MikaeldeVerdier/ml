@@ -2,7 +2,7 @@ import numpy as np
 import config
 
 GAME_DIMENSIONS = (5, 5)
-NN_INPUT_DIMENSIONS = [(config.DEPTH,) + GAME_DIMENSIONS + (52,), (config.DEPTH, 52), (config.DEPTH, 52)]
+NN_INPUT_DIMENSIONS = [(config.DEPTH, np.prod(GAME_DIMENSIONS), 52), (config.DEPTH, 52), (config.DEPTH, 52)]
 MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
 REPLACE_CARDS = 3
 GAME_LENGTH = np.prod(GAME_DIMENSIONS) + REPLACE_CARDS
