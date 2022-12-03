@@ -79,15 +79,16 @@ def play(players, games, training=False):
             else:
                 storage[-1]["state"].deck += [storage[-1]["state"].drawn_card]
                 storage[-1]["state"].drawn_card = 0
-                storage[-1]["value"] = outcome
+                storage[-1]["V_targ"] = outcome
                 storage[-1]["advantage"] = outcome
-                for i, data in sorted(enumerate(storage), reverse=True):
-                    # data["reward"] = outcome
-                    if i != len(storage) - 1:
-                        data["delta"] = delta(storage, i)
+                # for i, data in sorted(enumerate(storage), reverse=True):
+                #     # data["reward"] = outcome
+                #     if i != len(storage) - 1:
+                #         data["delta"] = delta(storage, i)
 
                 for i, data in enumerate(storage[:-1]):
-                    data["advantage"] = advantage(storage, i)
+                    data["V_targ"] = V_targ(storage, i)
+                    data["advantage"] = advantage_2(storage, i)
                 # storage[-1]["advantage"] = outcome
 
                 # away_from_full = config.POSITION_AMOUNT - len(loaded)
@@ -102,7 +103,7 @@ def play(players, games, training=False):
                     game_states = game.generate_game_states(storage, t)
 
                     states = np.array(game.generate_nn_pass(game_states, True), dtype=object).tolist()
-                    for flip in states: product.append(np.array([flip, data["action"].item(), data["pi_action"], data["advantage"]] + list(legal_moves) + [data["reward"], length + len(product) + 1, product[-1][0] if t != len(storage) - 1 else -1], dtype=object))  # [s, a, pi_action, advantage, nn_value, nn_value_s+1, logits]
+                    for flip in states: product.append(np.array([flip, data["action"].item(), data["pi_action"], data["advantage"]] + list(legal_moves) + [data["V_targ"]], dtype=object))  # [s, a, pi_action, advantage, nn_value, nn_value_s+1, logits]
 
                 # del product[index]
 
@@ -131,17 +132,27 @@ def play(players, games, training=False):
     if not training: return outcomes
 
 
-def delta(data, t):
-    if "delta" in data[t].keys():
-        return data[t]["delta"]
-    delt = data[t]["reward"] + config.GAMMA * data[t + 1]["value"] - data[t]["value"]
-    return delt
-
-
-def advantage(data, t):
+def V_targ(data, t):
     T = len(data)
-    li = [(config.GAMMA * config.LAMBDA) ** i * delta(data, t + i) for i in range(T - t - 1)]
-    return sum(li)
+    value = sum([config.GAMMA ** i * data[t + i]["reward"] for i in range(T - t - 1)]) + config.GAMMA ** (T - t) * data[-1]["value"]
+    return value
+
+
+def advantage_2(data, t):
+    return data[t]["V_targ"] - data[t]["value"]
+
+
+# def delta(data, t):
+#     if "delta" in data[t].keys():
+#         return data[t]["delta"]
+#     delt = data[t]["reward"] + config.GAMMA * data[t + 1]["value"] - data[t]["value"]
+#     return delt
+
+
+# def advantage(data, t):
+#     T = len(data)
+#     li = [(config.GAMMA * config.LAMBDA) ** i * delta(data, t + i) for i in range(T - t - 1)]
+#     return sum(li)
 
 
 def self_play(agent):
@@ -160,7 +171,6 @@ def retrain_network(agent):
     for _ in range(config.TRAINING_ITERATIONS):
         minibatch = random.sample(positions, config.BATCH_SIZE)
 
-        posses = [pos[-1] for pos in positions]
 
         x = [[], [], []]
         y = {"value_head": [], "policy_head": []}
@@ -168,13 +178,9 @@ def retrain_network(agent):
         for position in minibatch:
             for head in y:
                 y[head].append([])
-            # y["value_head"].append([])
-            # y["policy_head"].append([])
+
             for i, var in enumerate(position[1:(5 + game.MOVE_AMOUNT)]):
                 y["policy_head" if i != 3 + game.MOVE_AMOUNT else "value_head"][-1].append(var)
-
-            y["value_head"][-1].append(posses.index(position[-1]) if position[-1] != -1 else -1)
-            # y["value_head"][-1].append(config.POSITION_AMOUNT - position[-2] if position[-1] != -1 else -1)
 
             for i, dim in enumerate(position[0]):
                 x[i].append(np.array(dim))

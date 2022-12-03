@@ -84,27 +84,8 @@ class NeuralNetwork:
             self.model.load_weights(path).expect_partial()
 
     def J_vf(self, y_true, y_pred):
-        r = y_true[0][0]
-        index = tf.cast(y_true[0][1], tf.int32)
-
-        if index != -1:
-            posses = np.load(files.get_path("positions.npy"), allow_pickle=True)
-
-            bs = [[], [], []]
-            for pos in posses:
-                for i, b in enumerate(bs):
-                    bs[i].append(pos[0][i])
-
-            for i, b in enumerate(bs):
-                bs[i] = tf.convert_to_tensor(np.array(b))
-
-            data = [tf.expand_dims(b[index], 0) for b in bs]
-            v = self.model(data)[0][0][0]
-        else:
-            v = 0.0
-
-        V_targ = r + config.GAMMA * v
-        J_vf = tf.math.abs(y_pred[0][0] - V_targ)  # ** 2
+        V_targ = y_true[0][0]
+        J_vf = tf.math.abs(y_pred[0][0] - V_targ) ** 2
 
         return J_vf
 
@@ -292,7 +273,7 @@ class CurrentNeuralNetwork(NeuralNetwork):
                     y = [deriv * x + data[0] for x in range(len(data))]
                     ax.plot(y, color="black", linestyle="-.")
 
-        for ax_index, metric in enumerate(["Loss", "Error", "Validation Loss", "Validation Error"]):
+        for ax_index, metric in enumerate(["Loss", "MAE", "Validation Loss", "Validation MAE"]):
             ax = axs[ax_index]
             ax.set_title(metric)
             ax.set_ylabel(metric)
