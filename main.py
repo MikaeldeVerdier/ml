@@ -31,10 +31,10 @@ def play(players, games, training=False):
     if training:
         product = []
         length = 0
-        is_full = False
     else:
         outcomes = [[], []]
 
+    og_games = games
     game_count = 0
     starts = 1
     while game_count < games:
@@ -69,7 +69,7 @@ def play(players, games, training=False):
 
             # print(f"We are " + ("training" if training else "evaluating"))
             # print(f"Game outcome was: {outcome} ({int(outcome * 50)}), (Agent name: {player.get_name()[0]})")
-            if not game_count % np.ceil(games / 2):
+            if not game_count % games:
                 print(f"Amount of games played is now: {game_count} ({player.get_name()})\n")
 
             if not training:
@@ -111,7 +111,7 @@ def play(players, games, training=False):
                 # training_data = np.vstack(training_data).tolist()
 
                 # np.save(f"{config.SAVE_PATH}positions.npy", np.array(product[1:], dtype="object"))
-                if not game_count % np.ceil(config.GAME_AMOUNT_SELF_PLAY / 2):
+                if not game_count % games:
                     length = files.add_to_file(files.get_path("positions.npy"), np.array(product[::-1], dtype=object), config.POSITION_AMOUNT)
                     product = []
 
@@ -120,12 +120,11 @@ def play(players, games, training=False):
                 # loaded = loaded[-config.POSITION_AMOUNT:]
                 # files.write("positions.json", json.dumps(loaded))
                 
-                is_full = length == config.POSITION_AMOUNT
-
-                if is_full:
+                left = config.POSITION_AMOUNT - length
+                if not left:
                     if not os.path.exists(f"{config.SAVE_PATH}backup/positions_{config.POSITION_AMOUNT}.json"): files.make_backup("positions.npy", f"positions_{config.POSITION_AMOUNT}.npy")
                 else:
-                    if games == game_count: games += config.GAME_AMOUNT_SELF_PLAY / 2
+                    if games == game_count: games += np.ceil(left / (game.GAME_LENGTH * 16 * np.floor(left / (game.GAME_LENGTH * 16 * og_games))))
  
                 # print(f"Position length is now: {length}")
 

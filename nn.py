@@ -6,7 +6,6 @@ import json
 import config
 import game
 import files
-from keras import backend as K
 from tensorflow.keras import regularizers
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.layers import Input, Dense, Conv3D, Conv1D, Flatten, BatchNormalization, ReLU, Concatenate

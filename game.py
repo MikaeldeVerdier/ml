@@ -5,6 +5,7 @@ GAME_DIMENSIONS = (5, 5)
 NN_INPUT_DIMENSIONS = [(config.DEPTH,) + GAME_DIMENSIONS + (52,), (config.DEPTH, 52), (config.DEPTH, 52)]
 MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
 REPLACE_CARDS = 3
+GAME_LENGTH = np.prod(GAME_DIMENSIONS) + REPLACE_CARDS
 
 def generate_game_states(history, t):
     data = history[:t + 1]
@@ -126,7 +127,7 @@ def score_row(cards):
     
 
 def check_game_over(game_state):
-    if len(game_state.deck) == 51 - np.prod(GAME_DIMENSIONS) - REPLACE_CARDS:
+    if len(game_state.deck) == 51 - GAME_LENGTH:
         score = 0
         board = game_state.s.reshape(GAME_DIMENSIONS)
         # print(print_board(board.flatten()))
