@@ -58,7 +58,7 @@ class NeuralNetwork:
         ph = self.policy_head(x)
 
         self.model = Model(inputs=[position_input, deck_input, drawn_card_input], outputs=[vh, ph])
-        self.model.compile(loss={"value_head": self.J_vf, "policy_head": self.J_clip}, optimizer=SGD(learning_rate=config.LEARNING_RATE, momentum=config.MOMENTUM), loss_weights = {"value_head": 1, "policy_head": 0.5}, metrics={"value_head": self.vf_mae, "policy_head": self.ph_mae})
+        self.model.compile(loss={"value_head": "mse", "policy_head": self.J_clip}, optimizer=SGD(learning_rate=config.LEARNING_RATE, momentum=config.MOMENTUM), loss_weights = {"value_head": 1, "policy_head": 0.5}, metrics={"value_head": self.vf_mae, "policy_head": self.ph_mae})
         
         if load:
             self.load_version(version, from_weights=True)
@@ -90,7 +90,10 @@ class NeuralNetwork:
         return J_vf
 
     def vf_mae(self, y_true, y_pred):
-       return tf.math.abs(y_true[0][0] - y_pred[0][0])
+        loss = (y_true[0][0] - y_pred[0][0]) ** 2
+        loss = tf.math.reduce_mean(loss, axis=-1)
+        
+        return loss
 
     @staticmethod
     def softmax(logits, action, legal_moves):
@@ -128,7 +131,10 @@ class NeuralNetwork:
         masked = tf.boolean_mask(logits, mask)
         S_pi = -tf.math.reduce_sum(masked * tf.math.log(masked))
 
-        return -J_clip - S_pi
+        loss = -J_clip - S_pi
+        loss = tf.math.reduce_mean(loss, axis=-1)
+
+        return loss
 
     def ph_mae(self, y_true, y_pred):
         y_true = y_true[0]
