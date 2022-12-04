@@ -126,7 +126,7 @@ class NeuralNetwork:
         J_clip = tf.math.minimum(L_cpi, L_clip)
         # J_clip = L_cpi
 
-        mask = tf.equal(legal_moves, [1])
+        mask = tf.greater(logits, 0)
         masked = tf.boolean_mask(logits, mask)
         S_pi = -tf.math.reduce_sum(masked * tf.math.log(masked))
 
@@ -140,7 +140,7 @@ class NeuralNetwork:
 
         action = tf.cast(y_true[0], tf.int32)
         pi_action = y_true[1]
-        legal_moves = y_true[2:]
+        legal_moves = y_true[-game.MOVE_AMOUNT:]
 
         pi_theta_old = pi_action
         pi_theta = tf.cast(self.softmax(logits, action, legal_moves), tf.float32)
