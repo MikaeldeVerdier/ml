@@ -91,7 +91,6 @@ class NeuralNetwork:
 
     def vf_mae(self, y_true, y_pred):
         loss = (y_true[0][0] - y_pred[0][0]) ** 2
-        loss = tf.math.reduce_mean(loss, axis=-1)
         
         return loss
 
@@ -132,7 +131,6 @@ class NeuralNetwork:
         S_pi = -tf.math.reduce_sum(masked * tf.math.log(masked))
 
         loss = -J_clip - S_pi
-        loss = tf.math.reduce_mean(loss, axis=-1)
 
         return loss
 
