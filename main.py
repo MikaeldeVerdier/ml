@@ -87,7 +87,7 @@ def play(players, games, training=False):
                 #         data["delta"] = delta(storage, i)
 
                 for i, data in enumerate(storage[:-1]):
-                    data["V_targ"] = V_targ(storage, i)
+                    data["V_targ"] = V_targ_2(storage, i)
                     data["advantage"] = advantage_2(storage, i)
                 # storage[-1]["advantage"] = outcome
 
@@ -134,7 +134,7 @@ def play(players, games, training=False):
 
 def V_targ(data, t):
     T = len(data)
-    value = sum([config.GAMMA ** i * data[t + i]["reward"] for i in range(T - t - 1)]) + config.GAMMA ** (T - t) * data[-1]["value"]
+    value = sum([config.GAMMA ** i * (data[t + i]["value"] + data[t + i]["reward"]) / 2 for i in range(T - t)])
     return value
 
 
@@ -142,17 +142,23 @@ def advantage_2(data, t):
     return data[t]["V_targ"] - data[t]["value"]
 
 
-# def delta(data, t):
-#     if "delta" in data[t].keys():
-#         return data[t]["delta"]
-#     delt = data[t]["reward"] + config.GAMMA * data[t + 1]["value"] - data[t]["value"]
-#     return delt
+def delta(data, t):
+    if "delta" in data[t].keys():
+        return data[t]["delta"]
+    delt = data[t]["reward"] + config.GAMMA * data[t + 1]["value"] - data[t]["value"]
+    return delt
 
 
-# def advantage(data, t):
-#     T = len(data)
-#     li = [(config.GAMMA * config.LAMBDA) ** i * delta(data, t + i) for i in range(T - t - 1)]
-#     return sum(li)
+def advantage(data, t):
+    T = len(data)
+    li = [(config.GAMMA * config.LAMBDA) ** i * delta(data, t + i) for i in range(T - t - 1)]
+    return sum(li)
+
+
+def V_targ_2(data, t):
+    T = len(data)
+    li = sum([(config.GAMMA * config.LAMBDA) ** i * delta(data, t + i) for i in range(T - t - 1)]) + (config.GAMMA * config.LAMBDA) ** (T - t) * data[-1]["reward"]
+    return li
 
 
 def self_play(agent):
