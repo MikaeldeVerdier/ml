@@ -79,22 +79,16 @@ def play(players, games, training=False):
             else:
                 storage[-1]["state"].deck += [storage[-1]["state"].drawn_card]
                 storage[-1]["state"].drawn_card = 0
-                storage[-1]["V_targ"] = outcome
-                storage[-1]["advantage"] = outcome
-                # for i, data in sorted(enumerate(storage), reverse=True):
-                #     # data["reward"] = outcome
-                #     if i != len(storage) - 1:
-                #         data["delta"] = delta(storage, i)
+
+                for i, data in sorted(enumerate(storage), reverse=True):
+                    if i != len(storage) - 1:
+                        data["delta"] = delta(storage, i)
 
                 for i, data in enumerate(storage[:-1]):
-                    data["V_targ"] = V_targ_2(storage, i)
-                    data["advantage"] = advantage_2(storage, i)
-                # storage[-1]["advantage"] = outcome
-
-                # away_from_full = config.POSITION_AMOUNT - len(loaded)
-                # if training_length > config.POSITION_AMOUNT / 25 or away_from_full and training_length >= away_from_full:
-                
-                # index = len(product)
+                    data["advantage"] = advantage(storage, i)
+                    data["V_targ"] = V_targ(storage, i)
+                storage[-1]["advantage"] = 0
+                storage[-1]["V_targ"] = outcome
 
                 for t, data in sorted(enumerate(storage), reverse=True):
                     legal_moves = np.zeros(game.MOVE_AMOUNT)
@@ -132,16 +126,12 @@ def play(players, games, training=False):
     if not training: return outcomes
 
 
+# V_targ is how good a position is
 def V_targ(data, t):
-    T = len(data)
-    value = sum([config.GAMMA ** i * (data[t + i]["value"] + data[t + i]["reward"]) / 2 for i in range(T - t)])
-    return value
+    return data[t]["reward"] + config.GAMMA * data[t + 1]["value"]
 
 
-def advantage_2(data, t):
-    return data[t]["V_targ"] - data[t]["value"]
-
-
+# delta is how much good a position is compared to the last one = V_targ - V(s_t)
 def delta(data, t):
     if "delta" in data[t].keys():
         return data[t]["delta"]
@@ -149,16 +139,11 @@ def delta(data, t):
     return delt
 
 
+# advantage is how much better a the future is (I think)
 def advantage(data, t):
     T = len(data)
     li = [(config.GAMMA * config.LAMBDA) ** i * delta(data, t + i) for i in range(T - t - 1)]
     return sum(li)
-
-
-def V_targ_2(data, t):
-    T = len(data)
-    li = sum([(config.GAMMA * config.LAMBDA) ** i * delta(data, t + i) for i in range(T - t - 1)]) + (config.GAMMA * config.LAMBDA) ** (T - t) * data[-1]["reward"]
-    return li
 
 
 def self_play(agent):

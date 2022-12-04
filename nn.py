@@ -90,7 +90,7 @@ class NeuralNetwork:
         return J_vf
 
     def vf_mae(self, y_true, y_pred):
-        loss = (y_true[0][0] - y_pred[0][0]) ** 2
+        loss = y_true[0][0] - y_pred[0][0]
         
         return loss
 
@@ -115,7 +115,7 @@ class NeuralNetwork:
         action = tf.cast(y_true[0], tf.int32)
         pi_action = y_true[1]
         advantage = y_true[2]
-        legal_moves = y_true[2:]
+        legal_moves = y_true[-game.MOVE_AMOUNT:]
 
         pi_theta_old = pi_action
         pi_theta = self.softmax(logits, action, legal_moves)
@@ -126,7 +126,7 @@ class NeuralNetwork:
         J_clip = tf.math.minimum(L_cpi, L_clip)
         # J_clip = L_cpi
 
-        mask = tf.greater(logits, 0)
+        mask = tf.equal(legal_moves, [1])
         masked = tf.boolean_mask(logits, mask)
         S_pi = -tf.math.reduce_sum(masked * tf.math.log(masked))
 
