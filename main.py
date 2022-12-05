@@ -77,6 +77,7 @@ def play(players, games, training=False):
             else:
                 storage[-1]["state"].deck += [storage[-1]["state"].drawn_card]
                 storage[-1]["state"].drawn_card = 0
+                storage[-1]["value"] = outcome
 
                 for i, data in sorted(enumerate(storage[:-1]), reverse=True):
                     data["delta"] = delta(storage, i)
