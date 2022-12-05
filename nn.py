@@ -122,7 +122,7 @@ class NeuralNetwork:
         r_theta = tf.cast(pi_theta, tf.float32) / pi_theta_old
 
         L_cpi = r_theta * advantage
-        L_clip = tf.math.minimum(r_theta, 1 + config.EPSILON) * advantage
+        L_clip = tf.math.minimum(r_theta, 1 + config.EPSILON if advantage > 0 else 1 - config.EPSILON) * advantage
         J_clip = tf.math.minimum(L_cpi, L_clip)
         # J_clip = L_cpi
 

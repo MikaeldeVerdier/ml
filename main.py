@@ -95,7 +95,7 @@ def play(players, games, training=False):
                     game_states = game.generate_game_states(storage, t)
 
                     states = np.array(game.generate_nn_pass(game_states, True), dtype=object).tolist()
-                    for flip in states: product.append(np.array([flip, data["action"].item(), data["pi_action"], data["advantage"]] + list(legal_moves) + [data["V_targ"]], dtype=object))  # [s, a, pi_action, advantage, nn_value, nn_value_s+1, logits]
+                    for flip in states: product.append(np.array([flip, data["action"].item(), data["pi_action"], data["advantage"]] + list(legal_moves) + [data["V_targ"]], dtype=object))
 
                 if game_count == games:
                     np.save(files.get_path("positions.npy"), np.array(product[::-1], dtype=object))
