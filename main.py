@@ -80,11 +80,11 @@ def play(players, games, training=False):
                 storage[-1]["value"] = outcome
 
                 for i, data in sorted(enumerate(storage[:-1]), reverse=True):
+                    data["V_targ"] = V_targ(storage, i)
                     data["delta"] = delta(storage, i)
 
                 for i, data in enumerate(storage[:-1]):
                     data["advantage"] = advantage(storage, i)
-                    data["V_targ"] = V_targ(storage, i)
                 storage[-1]["advantage"] = 0
                 storage[-1]["V_targ"] = outcome
 
@@ -110,16 +110,12 @@ def V_targ(data, t):
 
 # delta is how much good a position is compared to the last one = V_targ - V(s_t)
 def delta(data, t):
-    if "delta" in data[t].keys():
-        return data[t]["delta"]
-    delt = data[t]["reward"] + config.GAMMA * data[t + 1]["value"] - data[t]["value"]
-    return delt
+    return data[t]["V_targ"] - data[t]["value"]
 
 
 # advantage is how much better a the future is (I think)
 def advantage(data, t):
-    T = len(data)
-    li = [(config.GAMMA * config.LAMBDA) ** i * delta(data, t + i) for i in range(T - t - 1)]
+    li = [(config.GAMMA * config.LAMBDA) ** i * data[t + i]["delta"] for i in range(len(data) - t - 1)]
     return sum(li)
 
 
