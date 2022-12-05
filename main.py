@@ -1,4 +1,3 @@
-import os
 import numpy as np
 import datetime
 import random
@@ -30,11 +29,9 @@ def play(players, games, training=False):
 
     if training:
         product = []
-        length = 0
     else:
         outcomes = [[], []]
 
-    og_games = games
     game_count = 0
     starts = 1
     while game_count < games:
@@ -69,7 +66,7 @@ def play(players, games, training=False):
 
             # print(f"We are " + ("training" if training else "evaluating"))
             # print(f"Game outcome was: {outcome} ({int(outcome * 50)}), (Agent name: {player.get_name()[0]})")
-            if not game_count % games:
+            if not game_count % (games / 2):
                 print(f"Amount of games played is now: {game_count} ({player.get_name()})\n")
 
             if not training:
@@ -100,29 +97,8 @@ def play(players, games, training=False):
                     states = np.array(game.generate_nn_pass(game_states, True), dtype=object).tolist()
                     for flip in states: product.append(np.array([flip, data["action"].item(), data["pi_action"], data["advantage"]] + list(legal_moves) + [data["V_targ"]], dtype=object))  # [s, a, pi_action, advantage, nn_value, nn_value_s+1, logits]
 
-                # del product[index]
-
-                    # data[0] = np.array(game.generate_nn_pass(data[0])).tolist()
-                    # data[1] = data[1].tolist()
-                # training_data = np.vstack(training_data).tolist()
-
-                # np.save(f"{config.SAVE_PATH}positions.npy", np.array(product[1:], dtype="object"))
-                if not game_count % games:
-                    length = files.add_to_file(files.get_path("positions.npy"), np.array(product[::-1], dtype=object), config.POSITION_AMOUNT)
-                    product = []
-
-                    print(f"Position length is now: {length}")
-                # loaded += product[1:]
-                # loaded = loaded[-config.POSITION_AMOUNT:]
-                # files.write("positions.json", json.dumps(loaded))
-                
-                left = config.POSITION_AMOUNT - length
-                if not left:
-                    if not os.path.exists(f"{config.SAVE_PATH}backup/positions_{config.POSITION_AMOUNT}.json"): files.make_backup("positions.npy", f"positions_{config.POSITION_AMOUNT}.npy")
-                else:
-                    if games == game_count: games += np.ceil(left / (game.GAME_LENGTH * 16 * np.floor(left / (game.GAME_LENGTH * 16 * og_games))))
- 
-                # print(f"Position length is now: {length}")
+                if game_count == games:
+                    np.save(files.get_path("positions.npy"), np.array(product[::-1], dtype=object))
 
     if not training: return outcomes
 

@@ -58,7 +58,7 @@ class NeuralNetwork:
         ph = self.policy_head(x)
 
         self.model = Model(inputs=[position_input, deck_input, drawn_card_input], outputs=[vh, ph])
-        self.model.compile(loss={"value_head": "mse", "policy_head": self.J_clip}, optimizer=SGD(learning_rate=config.LEARNING_RATE, momentum=config.MOMENTUM), loss_weights = {"value_head": 1, "policy_head": 0.5}, metrics={"value_head": self.vf_mae, "policy_head": self.ph_mae})
+        self.model.compile(loss={"value_head": "mse", "policy_head": self.J_clip}, optimizer=SGD(learning_rate=config.LEARNING_RATE, momentum=config.MOMENTUM), loss_weights = {"value_head": 0.5, "policy_head": 0.5}, metrics={"value_head": self.vf_mae, "policy_head": self.ph_mae})
         
         if load:
             self.load_version(version, from_weights=True)
@@ -90,7 +90,7 @@ class NeuralNetwork:
         return J_vf
 
     def vf_mae(self, y_true, y_pred):
-        loss = y_true[0][0] - y_pred[0][0]
+        loss = tf.math.abs(y_true[0][0] - y_pred[0][0])
         
         return loss
 
