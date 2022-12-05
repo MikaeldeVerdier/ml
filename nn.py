@@ -140,12 +140,13 @@ class NeuralNetwork:
 
         action = tf.cast(y_true[0], tf.int32)
         pi_action = y_true[1]
+        advantage = y_true[2]
         legal_moves = y_true[-game.MOVE_AMOUNT:]
 
         pi_theta_old = pi_action
         pi_theta = tf.cast(self.softmax(logits, action, legal_moves), tf.float32)
 
-        return tf.math.abs(pi_theta_old - pi_theta)
+        return tf.math.abs((pi_theta_old - pi_theta) * advantage)
 
     @staticmethod
     def softmax_cross_entropy_with_logits(y_true, y_pred):

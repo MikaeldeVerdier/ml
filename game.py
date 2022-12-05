@@ -135,7 +135,7 @@ def check_game_over(game_state):
             for row in rowcol:
                 score += score_row(row)
         
-        return score * 0.02
+        return score / 2
 
 
 def take_action(game_state, action):
