@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import datetime
 import random
@@ -28,10 +29,12 @@ def play(players, games, training=False):
     players = sorted(set(players.values()))
 
     if training:
+        length = 0
         product = []
     else:
         outcomes = [[], []]
 
+    og_games = games
     game_count = 0
     starts = 1
     while game_count < games:
@@ -59,14 +62,14 @@ def play(players, games, training=False):
 
                 if training:
                     for i, var in enumerate(["action", "pi_action", "logit_a", "value", "reward"]):
-                        storage[-1][var] = [action, pi_action, y_a, value, 0.0 if outcome is None else outcome][i]
+                        storage[-1][var] = [action, pi_action, y_a, value, 0.0][i]
 
                 turn += 1
             starts *= -1
 
             # print(f"We are " + ("training" if training else "evaluating"))
             # print(f"Game outcome was: {outcome} ({int(outcome * 50)}), (Agent name: {player.get_name()[0]})")
-            if not game_count % (games / 2):
+            if not game_count % games:
                 print(f"Amount of games played is now: {game_count} ({player.get_name()})\n")
 
             if not training:
@@ -75,20 +78,16 @@ def play(players, games, training=False):
                 player.outcomes["length"] += 1
                 player.outcomes["average"] = (player.outcomes["average"] * (player.outcomes["length"] - 1) + outcome) / player.outcomes["length"]
             else:
-                storage[-1]["state"].deck += [storage[-1]["state"].drawn_card]
-                storage[-1]["state"].drawn_card = 0
+                storage.append({"state": player.mcts})
                 storage[-1]["value"] = outcome
 
                 for i, data in sorted(enumerate(storage[:-1]), reverse=True):
                     data["V_targ"] = V_targ(storage, i)
                     data["delta"] = delta(storage, i)
 
-                for i, data in enumerate(storage[:-1]):
+                for t, data in sorted(enumerate(storage[:-1]), reverse=True):
                     data["advantage"] = advantage(storage, i)
-                storage[-1]["advantage"] = 0
-                storage[-1]["V_targ"] = outcome
 
-                for t, data in sorted(enumerate(storage), reverse=True):
                     legal_moves = np.zeros(game.MOVE_AMOUNT)
                     legal_moves[game.get_legal_moves(data["state"])] = 1
 
@@ -97,8 +96,17 @@ def play(players, games, training=False):
                     states = np.array(game.generate_nn_pass(game_states, True), dtype=object).tolist()
                     for flip in states: product.append(np.array([flip, data["action"].item(), data["pi_action"], data["advantage"]] + list(legal_moves) + [data["V_targ"]], dtype=object))
 
-                if game_count == games:
-                    np.save(files.get_path("positions.npy"), np.array(product[::-1], dtype=object))
+                if not game_count % games:
+                    length = files.add_to_file(files.get_path("positions.npy"), np.array(product[::-1], dtype=object), config.POSITION_AMOUNT)
+                    product = []
+
+                    print(f"Position length is now: {length}")
+
+                left = config.POSITION_AMOUNT - length
+                if not left:
+                    if not os.path.exists(f"{config.SAVE_PATH}backup/positions_{config.POSITION_AMOUNT}.json"): files.make_backup("positions.npy", f"positions_{config.POSITION_AMOUNT}.npy")
+                else:
+                    if games == game_count: games += np.ceil(left / (game.GAME_LENGTH * 16 * np.floor(left / (game.GAME_LENGTH * 16 * og_games))))
 
     if not training: return outcomes
 

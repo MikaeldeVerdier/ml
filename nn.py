@@ -84,15 +84,14 @@ class NeuralNetwork:
             self.model.load_weights(path).expect_partial()
 
     def J_vf(self, y_true, y_pred):
-        V_targ = y_true[0][0]
-        J_vf = tf.math.abs(y_pred[0][0] - V_targ) ** 2
+        J_vf = tf.math.abs(y_true[0][0] - y_pred[0][0]) ** 2
 
         return J_vf
 
     def vf_mae(self, y_true, y_pred):
         loss = tf.math.abs(y_true[0][0] - y_pred[0][0])
         
-        return loss
+        return loss  # Should be meaned somehow I think, maybe right now it just uses the last one
 
     @staticmethod
     def softmax(logits, action, legal_moves):
@@ -122,9 +121,8 @@ class NeuralNetwork:
         r_theta = tf.cast(pi_theta, tf.float32) / pi_theta_old
 
         L_cpi = r_theta * advantage
-        L_clip = tf.math.minimum(r_theta, 1 + config.EPSILON if advantage > 0 else 1 - config.EPSILON) * advantage
+        L_clip = tf.math.minimum(r_theta, 1 + config.EPSILON if advantage > 0 else 1 - config.EPSILON) * advantage  # Is this clip even correct?
         J_clip = tf.math.minimum(L_cpi, L_clip)
-        # J_clip = L_cpi
 
         mask = tf.greater(logits, 0)
         masked = tf.boolean_mask(logits, mask)
