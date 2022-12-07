@@ -89,7 +89,7 @@ class NeuralNetwork:
         return J_vf
 
     def vf_mae(self, y_true, y_pred):
-        loss = tf.math.abs(y_true[0][0] - y_pred[0][0])
+        loss = tf.math.abs(y_true - y_pred)
         
         return loss  # Should be meaned somehow I think, maybe right now it just uses the last one
 
@@ -268,18 +268,20 @@ class CurrentNeuralNetwork(NeuralNetwork):
                 ax_index = ax_index[0 if "loss" in metric else 1]
                 ax = axs[ax_index]
 
-                ax.plot(data, label=metric)
+                deriv = np.mean(np.diff(data))
+
+                ax.plot(data, label=f"{metric}\n(avg. deriv. = {deriv:5f}")
                 ax.axhline(data[-1], color="black", linestyle=":")
 
-                if derivative_lines:
-                    deriv = (data[-1] - data[0]) / (len(data) - 1)  # np.mean(np.diff(data)) 
-                    y = [deriv * x + data[0] for x in range(len(data))]
-                    ax.plot(y, color="black", linestyle="-.")
+            if derivative_lines:
+                y = [deriv * x + data[0] for x in range(len(data))]
+                ax.plot(y, color="black", linestyle="-.")
 
         for ax_index, metric in enumerate(["Loss", "MAE", "Validation Loss", "Validation MAE"]):
             ax = axs[ax_index]
             ax.set_title(metric)
             ax.set_ylabel(metric)
+            ax.set_xscale("linear")
             box = ax.get_position()
             ax.set_position([box.x0, box.y0, box.width * 0.9, box.height])
             ax.yaxis.set_tick_params(labelbottom=True)
@@ -288,9 +290,9 @@ class CurrentNeuralNetwork(NeuralNetwork):
                 iterations = self.iterations
                 [ax.axvline(np.sum(iterations[:i2 + 1]) - 1, color="black", linestyle=":") for i2 in range(len(iterations))]
 
+        plt.ioff()
         plt.savefig(f"{config.SAVE_PATH}metrics.png", dpi=300)
-        plt.pause(0.1)
-        plt.close("all")
+        plt.close()
     
     def plot_outcomes(self, derivative_line=False):
         loaded = files.load_file("save.json")
@@ -298,18 +300,23 @@ class CurrentNeuralNetwork(NeuralNetwork):
 
         x = list(map(int, data.keys()))
         data = list(data.values())
-        plt.plot(x, data)
+
+        deriv = (data[-1] - data[0]) / x[-1]
+
+        plt.plot(x, data, label=f"Outcome\n(avg. deriv. = {deriv:5f}")
+
         plt.xlabel("Version")
         plt.ylabel("Average outcome")
         plt.title("Average outcome for versions")
+        plt.gca().set_xscale("linear")
+        plt.legend()
 
         if derivative_line:
-            deriv = (data[-1] - data[0]) / x[-1]
             y = [deriv * x + data[0] for x in range(x[-1])]
             plt.plot(y, color="black", linestyle="-.")
         
+        plt.ioff()
         plt.savefig(f"{config.SAVE_PATH}outcomes.png", dpi=300)
-        plt.pause(0.1)
         plt.close("all")
 
     def save_metrics(self, agent_kind):
