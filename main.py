@@ -56,13 +56,13 @@ def play(players, games, training=False):
                 if turn == config.TURNS_UNTIL_TAU: tau = 1e-2
                 storage.append({"state": player.mcts})
 
-                action, pi_action, y_a, value = player.play_turn(storage, tau)
+                action, pi_action, value = player.play_turn(storage, tau)
 
                 outcome = game.check_game_over(player.mcts)
 
                 if training:
-                    for i, var in enumerate(["action", "pi_action", "logit_a", "value", "reward"]):
-                        storage[-1][var] = [action, pi_action, y_a, value, 0.0][i]
+                    for i, var in enumerate(["action", "pi_action", "value", "reward"]):
+                        storage[-1][var] = [action, pi_action, value, 0.0][i]
 
                 turn += 1
             starts *= -1
@@ -73,7 +73,7 @@ def play(players, games, training=False):
                 print(f"Amount of games played is now: {game_count} ({player.get_name()})\n")
 
             if not training:
-                outcome = int(outcome * 2)
+                outcome = int(outcome * 50)
                 outcomes[i].append(outcome)
                 player.outcomes["length"] += 1
                 player.outcomes["average"] = (player.outcomes["average"] * (player.outcomes["length"] - 1) + outcome) / player.outcomes["length"]
@@ -86,7 +86,7 @@ def play(players, games, training=False):
                     data["delta"] = delta(storage, i)
 
                 for t, data in sorted(enumerate(storage[:-1]), reverse=True):
-                    data["advantage"] = advantage(storage, i)
+                    data["advantage"] = advantage(storage, t)
 
                     legal_moves = np.zeros(game.MOVE_AMOUNT)
                     legal_moves[game.get_legal_moves(data["state"])] = 1

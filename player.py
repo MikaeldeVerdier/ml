@@ -47,7 +47,7 @@ class Agent():
 
     def play_turn(self, history, tau):
         game_states = game.generate_game_states(history, len(history) - 1)
-        (nn_value, probs, logits) = self.nn.get_preds(game_states)
+        (nn_value, probs, _) = self.nn.get_preds(game_states)
 
         action = self.choose_action(probs, tau)
 
@@ -55,7 +55,7 @@ class Agent():
 
         # self.print_move(self.mcts, probs, action, nn_value)
 
-        return action, probs[action], logits[action], nn_value
+        return action, probs[action], nn_value
 
     def getAV(self, tau):
         pi = np.zeros(game.MOVE_AMOUNT)
