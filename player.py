@@ -47,7 +47,7 @@ class Agent():
 
     def play_turn(self, history, tau):
         game_states = game.generate_game_states(history, len(history) - 1)
-        (nn_value, probs, _) = self.nn.get_preds(game_states)
+        nn_value, probs = self.nn.get_preds(game_states)
 
         action = self.choose_action(probs, tau)
 

@@ -228,7 +228,7 @@ class NeuralNetwork:
         odds = np.exp(logits).astype(np.float64)
         probs = odds / np.sum(odds)
 
-        return (value, probs, logits)
+        return value, probs
 
 
 class CurrentNeuralNetwork(NeuralNetwork):
@@ -317,7 +317,7 @@ class CurrentNeuralNetwork(NeuralNetwork):
         
         plt.ioff()
         plt.savefig(f"{config.SAVE_PATH}outcomes.png", dpi=300)
-        plt.close("all")
+        plt.close()
 
     def save_metrics(self, agent_kind):
         loaded = files.load_file("save.json")
