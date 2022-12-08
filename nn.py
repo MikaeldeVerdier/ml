@@ -270,7 +270,7 @@ class CurrentNeuralNetwork(NeuralNetwork):
 
                 deriv = np.mean(np.diff(data))
 
-                ax.plot(data, label=f"{metric}\n(avg. deriv. = {deriv:5f}")
+                ax.plot(data, label=f"{metric}\n(avg. deriv. = {deriv:5f}\n(last point: {data[-1]:5f})")
                 ax.axhline(data[-1], color="black", linestyle=":")
 
             if derivative_lines:
@@ -303,7 +303,7 @@ class CurrentNeuralNetwork(NeuralNetwork):
 
         deriv = (data[-1] - data[0]) / x[-1]
 
-        plt.plot(x, data, label=f"Outcome\n(avg. deriv. = {deriv:5f}")
+        plt.plot(x, data, label=f"Outcome\n(avg. deriv. = {deriv:5f}\n(last point: {data[-1]:5f})")
 
         plt.xlabel("Version")
         plt.ylabel("Average outcome")
