@@ -247,7 +247,7 @@ class CurrentNeuralNetwork(NeuralNetwork):
     def train(self, x, y):
         self.get_preds.cache_clear()
 
-        fit = self.model.fit(x, y, batch_size=32, epochs=config.EPOCHS, verbose=1, validation_split=config.VALIDATION_SPLIT)
+        fit = self.model.fit(x, y, batch_size=1, epochs=config.EPOCHS, verbose=1, validation_split=config.VALIDATION_SPLIT)
         for metric in fit.history:
             [self.metrics[metric].append(fit.history[metric][i]) for i in range(config.EPOCHS)]
 
