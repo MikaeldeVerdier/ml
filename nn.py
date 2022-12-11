@@ -218,7 +218,7 @@ class NeuralNetwork:
     @cache
     def get_preds(self, history):
         data = [np.expand_dims(dat, 0) for dat in game.generate_nn_pass(history)[0]]
-        (v, p) = self.model.predict(data)
+        (v, p) = self.model.predict_on_batch(data)
 
         value = v[0][0]
         logits = p[0]
