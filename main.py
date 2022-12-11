@@ -63,7 +63,7 @@ def play(players, games, training=False):
                 if training:
                     for i, var in enumerate(["action", "pi_action", "value", "reward"]):
                         storage[-1][var] = [action, pi_action, value, 0.0][i]
-
+    
                 turn += 1
             starts *= -1
 

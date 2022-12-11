@@ -94,7 +94,7 @@ class NeuralNetwork:
         return loss
 
     @staticmethod
-    def softmax(logits, action, legal_moves):
+    def softmax(logits, legal_moves):
         where = tf.equal(legal_moves, [0])
 
         negatives = tf.fill(tf.shape(logits), -100.0)
@@ -102,9 +102,7 @@ class NeuralNetwork:
 
         pi = tf.nn.softmax(p)
         
-        results = tf.gather_nd(pi, tf.stack([tf.range(tf.shape(action)[0]), action[:, 0]], axis=1))
-        
-        return tf.convert_to_tensor(results)
+        return pi
 
     def J_clip(self, y_true, y_pred):
         logits = tf.reshape(y_pred, (tf.shape(y_true)[0], -1))
@@ -114,17 +112,18 @@ class NeuralNetwork:
         advantage = tf.gather(y_true, 2, axis=1)
         legal_moves = tf.gather(y_true, tf.range(3, 3 + game.MOVE_AMOUNT), axis=1)
 
-        pi_theta_old = pi_action
-        pi_theta = self.softmax(logits, action, legal_moves)
-        r_theta = pi_theta / pi_theta_old
+        pi_old = pi_action
+
+        pi_new = self.softmax(logits, legal_moves)
+        pi_theta = tf.gather_nd(pi_new, tf.stack([tf.range(tf.shape(action)[0]), action[:, 0]], axis=1))
+
+        r_theta = pi_theta / pi_old
 
         L_cpi = r_theta * advantage
         L_clip = tf.clip_by_value(r_theta, 1 - config.EPSILON, 1 + config.EPSILON) * advantage
         J_clip = tf.math.minimum(L_cpi, L_clip)
 
-        mask = tf.greater(logits, 0)
-        masked = tf.boolean_mask(logits, mask)
-        S_pi = -tf.math.reduce_sum(masked * tf.math.log(masked)) * 1e-3
+        S_pi = -tf.math.reduce_sum(pi_new * tf.math.log(pi_new + 1e-8), axis=-1) * config.BETA
 
         loss = -J_clip - S_pi
 
@@ -139,7 +138,9 @@ class NeuralNetwork:
         legal_moves = tf.gather(y_true, tf.range(3, 3 + game.MOVE_AMOUNT), axis=1)
 
         pi_theta_old = pi_action
-        pi_theta = tf.cast(self.softmax(logits, action, legal_moves), tf.float32)
+        
+        policy = self.softmax(logits, legal_moves)
+        pi_theta = tf.gather_nd(policy, tf.stack([tf.range(tf.shape(action)[0]), action[:, 0]], axis=1))
 
         return tf.math.abs((pi_theta_old - pi_theta) * advantage)
 
