@@ -112,18 +112,17 @@ class NeuralNetwork:
         advantage = tf.gather(y_true, 2, axis=1)
         legal_moves = tf.gather(y_true, tf.range(3, 3 + game.MOVE_AMOUNT), axis=1)
 
-        pi_old = pi_action
-
         pi_new = self.softmax(logits, legal_moves)
         pi_theta = tf.gather_nd(pi_new, tf.stack([tf.range(tf.shape(action)[0]), action[:, 0]], axis=1))
 
-        r_theta = pi_theta / pi_old
+        r_theta = pi_theta / pi_action
 
         L_cpi = r_theta * advantage
         L_clip = tf.clip_by_value(r_theta, 1 - config.EPSILON, 1 + config.EPSILON) * advantage
         J_clip = tf.math.minimum(L_cpi, L_clip)
+        # J_clip = L_cpi
 
-        S_pi = -tf.math.reduce_sum(pi_new * tf.math.log(pi_new + 1e-8), axis=-1) * config.BETA
+        S_pi = -tf.math.reduce_sum(pi_new * tf.math.log(pi_new + 1e-45), axis=-1) * config.BETA
 
         loss = -J_clip - S_pi
 
