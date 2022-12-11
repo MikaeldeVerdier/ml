@@ -58,7 +58,7 @@ class NeuralNetwork:
         ph = self.policy_head(x)
 
         self.model = Model(inputs=[position_input, deck_input, drawn_card_input], outputs=[vh, ph])
-        self.model.compile(loss={"value_head": "mse", "policy_head": self.J_clip}, optimizer=SGD(learning_rate=config.LEARNING_RATE, momentum=config.MOMENTUM), loss_weights = {"value_head": 1, "policy_head": 0.5}, metrics={"value_head": self.vf_mae, "policy_head": self.ph_mae})
+        self.model.compile(loss={"value_head": self.J_vf, "policy_head": self.J_clip}, optimizer=SGD(learning_rate=config.LEARNING_RATE, momentum=config.MOMENTUM), loss_weights = {"value_head": 1, "policy_head": 0.5}, metrics={"value_head": self.vf_mae, "policy_head": self.ph_mae})
         
         if load:
             self.load_version(version, from_weights=True)
@@ -84,62 +84,59 @@ class NeuralNetwork:
             self.model.load_weights(path).expect_partial()
 
     def J_vf(self, y_true, y_pred):
-        J_vf = tf.math.abs(y_true[0][0] - y_pred[0][0])
+        J_vf = tf.math.abs(y_true - y_pred)
 
         return J_vf
 
     def vf_mae(self, y_true, y_pred):
         loss = tf.math.abs(y_true - y_pred)
         
-        return loss  # Should be meaned somehow I think, maybe right now it just uses the last one
+        return loss
 
     @staticmethod
     def softmax(logits, action, legal_moves):
-        mask = tf.equal(legal_moves, [1])
+        where = tf.equal(legal_moves, [0])
 
-        new = np.full(game.MOVE_AMOUNT, -100)
-        for i in range(len((new))):
-            if tf.get_static_value(mask[i]):
-                new[i] = logits[i]
+        negatives = tf.fill(tf.shape(logits), -100.0)
+        p = tf.where(where, negatives, logits)
 
-        odds = np.exp(new).astype(np.float64)
-        pi = odds / np.sum(odds)
-
-        return tf.convert_to_tensor(pi)[action]
+        pi = tf.nn.softmax(p)
+        
+        results = tf.gather_nd(pi, tf.stack([tf.range(tf.shape(action)[0]), action[:, 0]], axis=1))
+        
+        return tf.convert_to_tensor(results)
 
     def J_clip(self, y_true, y_pred):
-        y_true = y_true[0]
-        logits = y_pred[0]
+        logits = tf.reshape(y_pred, (tf.shape(y_true)[0], -1))
 
-        action = tf.cast(y_true[0], tf.int32)
-        pi_action = y_true[1]
-        advantage = y_true[2]
-        legal_moves = y_true[-game.MOVE_AMOUNT:]
+        action = tf.cast(tf.gather(y_true, tf.constant([0]), axis=1), tf.int32)
+        pi_action = tf.gather(y_true, 1, axis=1)
+        advantage = tf.gather(y_true, 2, axis=1)
+        legal_moves = tf.gather(y_true, tf.range(3, 3 + game.MOVE_AMOUNT), axis=1)
 
         pi_theta_old = pi_action
         pi_theta = self.softmax(logits, action, legal_moves)
-        r_theta = tf.cast(pi_theta, tf.float32) / pi_theta_old
+        r_theta = pi_theta / pi_theta_old
 
         L_cpi = r_theta * advantage
-        L_clip = tf.math.minimum(r_theta, 1 + config.EPSILON if advantage > 0 else 1 - config.EPSILON) * advantage  # Is this clip even correct?
+        L_clip = tf.clip_by_value(r_theta, 1 - config.EPSILON, 1 + config.EPSILON) * advantage
         J_clip = tf.math.minimum(L_cpi, L_clip)
 
         mask = tf.greater(logits, 0)
         masked = tf.boolean_mask(logits, mask)
-        S_pi = -tf.math.reduce_sum(masked * tf.math.log(masked)) * 0.5
+        S_pi = -tf.math.reduce_sum(masked * tf.math.log(masked))
 
         loss = -J_clip - S_pi
 
         return loss
 
     def ph_mae(self, y_true, y_pred):
-        y_true = y_true[0]
-        logits = y_pred[0]
+        logits = tf.reshape(y_pred, (tf.shape(y_true)[0], -1))
 
-        action = tf.cast(y_true[0], tf.int32)
-        pi_action = y_true[1]
-        advantage = y_true[2]
-        legal_moves = y_true[-game.MOVE_AMOUNT:]
+        action = tf.cast(tf.gather(y_true, tf.constant([0]), axis=1), tf.int32)
+        pi_action = tf.gather(y_true, 1, axis=1)
+        advantage = tf.gather(y_true, 2, axis=1)
+        legal_moves = tf.gather(y_true, tf.range(3, 3 + game.MOVE_AMOUNT), axis=1)
 
         pi_theta_old = pi_action
         pi_theta = tf.cast(self.softmax(logits, action, legal_moves), tf.float32)
@@ -165,18 +162,21 @@ class NeuralNetwork:
         for filter_amount, kernel_size in config.CONVOLUTIONAL_LAYERS_POSITION: x = self.convolutional_layer_3D(x, filter_amount, kernel_size)  # , config.POOLING_SIZE_POSITION)
         x = Flatten()(x)
         for neuron_amount in config.DENSE_POSITION: x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
+        
         return x
 
     def deck_cnn(self, x):
         for filter_amount, kernel_size in config.CONVOLUTIONAL_LAYERS_DECK: x = self.convolutional_layer_1D(x, filter_amount, kernel_size)
         x = Flatten()(x)
         for neuron_amount in config.DENSE_DECK: x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
+        
         return x
 
     def drawn_card_cnn(self, x):
         for filter_amount, kernel_size in config.CONVOLUTIONAL_LAYERS_DRAWN_CARD: x = self.convolutional_layer_1D(x, filter_amount, kernel_size)
         x = Flatten()(x)
         for neuron_amount in config.DENSE_DRAWN_CARD: x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
+        
         return x
 
     @staticmethod
@@ -184,6 +184,7 @@ class NeuralNetwork:
         x = Conv3D(filters=filters, kernel_size=kernel_size, data_format="channels_last", padding="same", use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         x = BatchNormalization()(x)
         x = ReLU()(x)
+        
         return x
 
     @staticmethod
@@ -191,23 +192,27 @@ class NeuralNetwork:
         x = Conv1D(filters=filters, kernel_size=kernel_size, data_format="channels_last", padding="same", use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         x = BatchNormalization()(x)
         x = ReLU()(x)
+        
         return x
 
     @staticmethod
     def shared_mlp(x):
         for neuron_amount in config.DENSE_SHARED: x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
+        
         return x
 
     @staticmethod
     def value_head(x):
         for neuron_amount in config.DENSE_VALUE_HEAD: x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         x = Dense(1, use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST), name="value_head")(x)
+        
         return x
 
     @staticmethod
     def policy_head(x):
         for neuron_amount in config.DENSE_POLICY_HEAD: x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         x = Dense(game.MOVE_AMOUNT, use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST), name="policy_head")(x)
+        
         return x
 
     @cache
@@ -247,7 +252,7 @@ class CurrentNeuralNetwork(NeuralNetwork):
     def train(self, x, y):
         self.get_preds.cache_clear()
 
-        fit = self.model.fit(x, y, batch_size=1, epochs=config.EPOCHS, verbose=1, validation_split=config.VALIDATION_SPLIT)
+        fit = self.model.fit(x, y, batch_size=config.BATCH_SIZE[1], epochs=config.EPOCHS, verbose=1, validation_split=config.VALIDATION_SPLIT)
         for metric in fit.history:
             [self.metrics[metric].append(fit.history[metric][i]) for i in range(config.EPOCHS)]
 

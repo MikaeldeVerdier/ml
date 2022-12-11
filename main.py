@@ -94,7 +94,7 @@ def play(players, games, training=False):
                     game_states = game.generate_game_states(storage, t)
 
                     states = np.array(game.generate_nn_pass(game_states, True), dtype=object).tolist()
-                    for flip in states: product.append(np.array([flip, data["action"].item(), data["pi_action"], data["advantage"]] + list(legal_moves) + [data["V_targ"]], dtype=object))
+                    for flip in states: product.append(np.array([flip, data["action"], data["pi_action"], data["advantage"]] + list(legal_moves) + [data["V_targ"]], dtype=object))
 
                 if not game_count % games:
                     length = files.add_to_file(files.get_path("positions.npy"), np.array(product[::-1], dtype=object), config.POSITION_AMOUNT)
@@ -141,7 +141,7 @@ def retrain_network(agent):
     positions = np.load(files.get_path("positions.npy"), allow_pickle=True).tolist()
 
     for _ in range(config.TRAINING_ITERATIONS):
-        minibatch = random.sample(positions, config.BATCH_SIZE)
+        minibatch = random.sample(positions, config.BATCH_SIZE[0])
 
 
         x = [[], [], []]
