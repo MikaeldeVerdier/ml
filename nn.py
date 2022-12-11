@@ -122,7 +122,7 @@ class NeuralNetwork:
         J_clip = tf.math.minimum(L_cpi, L_clip)
         # J_clip = L_cpi
 
-        S_pi = -tf.math.reduce_sum(pi_new * tf.math.log(pi_new + 1e-45), axis=-1) * config.BETA
+        S_pi = -tf.math.reduce_sum(pi_new * tf.math.log(pi_new + 1e-15), axis=-1) * config.BETA
 
         loss = -J_clip - S_pi
 
@@ -135,13 +135,11 @@ class NeuralNetwork:
         pi_action = tf.gather(y_true, 1, axis=1)
         advantage = tf.gather(y_true, 2, axis=1)
         legal_moves = tf.gather(y_true, tf.range(3, 3 + game.MOVE_AMOUNT), axis=1)
-
-        pi_theta_old = pi_action
         
-        policy = self.softmax(logits, legal_moves)
-        pi_theta = tf.gather_nd(policy, tf.stack([tf.range(tf.shape(action)[0]), action[:, 0]], axis=1))
+        pi_new = self.softmax(logits, legal_moves)
+        pi_theta = tf.gather_nd(pi_new, tf.stack([tf.range(tf.shape(action)[0]), action[:, 0]], axis=1))
 
-        return tf.math.abs((pi_theta_old - pi_theta) * advantage)
+        return tf.math.abs(pi_action - pi_theta)
 
     @staticmethod
     def softmax_cross_entropy_with_logits(y_true, y_pred):
