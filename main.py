@@ -106,7 +106,7 @@ def play(players, games, training=False):
                 if not left:
                     if not os.path.exists(f"{config.SAVE_PATH}backup/positions_{config.POSITION_AMOUNT}.json"): files.make_backup("positions.npy", f"positions_{config.POSITION_AMOUNT}.npy")
                 else:
-                    if games == game_count: games += np.ceil(left / (game.GAME_LENGTH * 16 * np.floor(left / (game.GAME_LENGTH * 16 * og_games))))
+                    if games == game_count: games += np.ceil(left / (game.GAME_LENGTH * 16 * left // (game.GAME_LENGTH * 16 * og_games)))
 
     if not training: return outcomes
 

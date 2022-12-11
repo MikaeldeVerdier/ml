@@ -71,7 +71,7 @@ def generate_nn_pass(game_states, mirror=False):
 
 def check_index(board, index, checking_index, checking_func, multiplier_func, multiplier):
     if 0 <= checking_index < np.prod(GAME_DIMENSIONS):
-        if np.floor(checking_index / GAME_DIMENSIONS[1]) == np.floor(index / GAME_DIMENSIONS[1]) + multiplier_func(multiplier):
+        if checking_index // GAME_DIMENSIONS[1] == index // GAME_DIMENSIONS[1] + multiplier_func(multiplier):
             return checking_func(board[checking_index])
 
 
@@ -94,7 +94,7 @@ def get_legal_moves(game_state):  # , all_moves):
 
 
 def get_card(value):
-    suit = np.floor((value - 1) / 13)
+    suit = (value - 1) // 13
     value = ((value - 1) % 13) + 2
     return suit, value
 

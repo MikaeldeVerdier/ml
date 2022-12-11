@@ -133,7 +133,6 @@ class NeuralNetwork:
 
         action = tf.cast(tf.gather(y_true, tf.constant([0]), axis=1), tf.int32)
         pi_action = tf.gather(y_true, 1, axis=1)
-        advantage = tf.gather(y_true, 2, axis=1)
         legal_moves = tf.gather(y_true, tf.range(3, 3 + game.MOVE_AMOUNT), axis=1)
         
         pi_new = self.softmax(logits, legal_moves)
