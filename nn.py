@@ -124,7 +124,7 @@ class NeuralNetwork:
 
         mask = tf.greater(logits, 0)
         masked = tf.boolean_mask(logits, mask)
-        S_pi = -tf.math.reduce_sum(masked * tf.math.log(masked))
+        S_pi = -tf.math.reduce_sum(masked * tf.math.log(masked)) * 1e-3
 
         loss = -J_clip - S_pi
 
