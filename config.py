@@ -20,16 +20,17 @@ USE_BIAS = True
 GAME_AMOUNT_SELF_PLAY = 30
 POSITION_AMOUNT = 30000
 DEPTH = 1
-TURNS_UNTIL_TAU = 20
+TURNS_UNTIL_TAU = 20  # Turn when agent starts tryharding
 
 # Retraining network
 TRAINING_ITERATIONS = 10
 BATCH_SIZE = (256, 32)
 EPOCHS = 1
-GAMMA = 0.5
-LAMBDA = 0.5
-EPSILON = 0.8
-BETA = 1e-3
+GAMMA = 0.5  # Discounting factor
+LAMBDA = 0.5  # Factor for trade-off of bias and variance for advantage
+EPSILON = 0.8  # Reglates clipping values for L_clip
+OMEGA = 0.5  # Coefficient for J_vf
+BETA = 1e-3  # Coefficient for entropy bonus H
 VALIDATION_SPLIT = 0.2
 REG_CONST = 1e-4
 LEARNING_RATE = 1e-5
