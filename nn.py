@@ -84,7 +84,7 @@ class NeuralNetwork:
             self.model.load_weights(path).expect_partial()
 
     def J_vf(self, y_true, y_pred):
-        J_vf = tf.math.abs(y_true - y_pred)
+        J_vf = tf.math.abs(y_true - y_pred) * config.OMEGA
 
         return J_vf
 
