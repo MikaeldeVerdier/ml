@@ -73,7 +73,7 @@ def play(players, games, training=False):
                 print(f"Amount of games played is now: {game_count} ({player.get_name()})\n")
 
             if not training:
-                outcome = int(outcome * 50)
+                outcome = int(outcome * 20)
                 outcomes[i].append(outcome)
                 player.outcomes["length"] += 1
                 player.outcomes["average"] = (player.outcomes["average"] * (player.outcomes["length"] - 1) + outcome) / player.outcomes["length"]

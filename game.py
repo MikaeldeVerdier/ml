@@ -135,7 +135,7 @@ def check_game_over(game_state):
             for row in rowcol:
                 score += score_row(row)
         
-        return score / 50
+        return score / 20
 
 
 def take_action(game_state, action):
@@ -143,7 +143,7 @@ def take_action(game_state, action):
     deck = game_state.deck.copy()
     card = game_state.drawn_card
 
-    if action != 25: board[action] = card
+    if action != np.prod(GAME_DIMENSIONS): board[action] = card
     card = deck.pop()
 
     return (board, deck, card)
