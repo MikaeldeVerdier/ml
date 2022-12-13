@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+import matplotlib
 import matplotlib.pyplot as plt
 import os
 import json
@@ -13,6 +14,7 @@ from tensorflow.keras.optimizers import SGD
 from keras.utils.vis_utils import plot_model
 
 try:
+    matplotlib.use("Agg")
     from functools import cache
     raise ImportError  # functools cache is really slow for some reason
 except ImportError:
@@ -272,7 +274,7 @@ class CurrentNeuralNetwork(NeuralNetwork):
 
                 deriv = np.mean(np.diff(data))
 
-                ax.plot(data, label=f"{metric}\n(avg. deriv. = {deriv:5f}\n(last point: {data[-1]:5f})")
+                ax.plot(data, label=f"{metric}\n(avg. deriv. (x1000) = {(deriv * 1000):5f}\n(last point: {data[-1]:5f})")
                 ax.axhline(data[-1], color="black", linestyle=":")
 
             if derivative_lines:
