@@ -1,22 +1,22 @@
 import numpy as np
 import config
 
-GAME_DIMENSIONS = (5, 5)
+GAME_DIMENSIONS = (3, 3)
 NN_INPUT_DIMENSIONS = [(config.DEPTH,) + GAME_DIMENSIONS + (52,), (config.DEPTH, 52), (config.DEPTH, 52)]
 MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
 REPLACE_CARDS = 3
 GAME_LENGTH = np.prod(GAME_DIMENSIONS) + REPLACE_CARDS
 
-def generate_game_states(history, t):
+def generate_nodes(history, t):
     data = history[:t + 1]
-    game_states = ({"state": None},) * (config.DEPTH - len(data)) + tuple(data)[-config.DEPTH:]
-    game_states = tuple([game_state["state"] for game_state in game_states])
+    nodes = ({"state": None},) * (config.DEPTH - len(data)) + tuple(data)[-config.DEPTH:]
+    nodes = tuple([node["state"] for node in nodes])
 
-    return game_states
+    return nodes
 
 
-def generate_nn_pass(game_states, mirror=False):
-    game_state = game_states[-1]
+def generate_nn_pass(nodes, mirror=False):
+    node = nodes[-1]
 
     if mirror:
         flips = [None, 0, 1, (0, 1)]
@@ -27,13 +27,13 @@ def generate_nn_pass(game_states, mirror=False):
 
     nn_pass = []
     for flip in flips:
-        s = game_state.s if flip is None else np.flip(game_state.s.reshape(GAME_DIMENSIONS), flip).flatten()
+        s = node.s if flip is None else np.flip(node.s.reshape(GAME_DIMENSIONS), flip).flatten()
         
         for suit_change in suit_changes:
             nn_pass.append([[], [], []])
             for depth in range(config.DEPTH):
-                de = game_state.deck
-                dr = [game_state.drawn_card]
+                de = node.deck
+                dr = [node.drawn_card]
                 for var in [s, de, dr]:
                     for i, card in enumerate(var):
                         if card != 0: var[i] += suit_change
@@ -57,7 +57,7 @@ def generate_nn_pass(game_states, mirror=False):
                 nn_pass[-1][2].append(drawn_card.tolist())
 
                 if depth != config.DEPTH -1:
-                    if game_states[-depth - 2]: game_state = game_states[-depth - 2]
+                    if nodes[-depth - 2]: node = nodes[-depth - 2]
                     else:
                         for _ in range(config.DEPTH - depth - 1):
                             for i, func in enumerate([np.zeros, np.ones, np.zeros]):
@@ -75,19 +75,19 @@ def check_index(board, index, checking_index, checking_func, multiplier_func, mu
             return checking_func(board[checking_index])
 
 
-def get_legal_moves(game_state):  # , all_moves):
-    if not len(np.where(game_state.s != 0)[0]): return list(range(np.prod(GAME_DIMENSIONS)))
+def get_legal_moves(node):  # , all_moves):
+    if not len(np.where(node.s != 0)[0]): return list(range(np.prod(GAME_DIMENSIONS)))
 
-    if game_state.replace_card: return list(range(MOVE_AMOUNT))
+    if node.replace_card: return list(range(MOVE_AMOUNT))
 
     legal_moves = []
 
-    for index in np.where(game_state.s != 0)[0]:
+    for index in np.where(node.s != 0)[0]:
         for checks, func in [[(GAME_DIMENSIONS[1] + 1, GAME_DIMENSIONS[1] - 1, GAME_DIMENSIONS[1]), lambda m: m], [(1,), lambda m: 0]]:
             for check in checks:
                 for multiplier in [1, -1]:
                     checking_index = index + check * multiplier
-                    if checking_index not in legal_moves and check_index(game_state.s, index, checking_index, lambda x: x == 0, func, multiplier):
+                    if checking_index not in legal_moves and check_index(node.s, index, checking_index, lambda x: x == 0, func, multiplier):
                         legal_moves.append(checking_index)
 
     return legal_moves  # Prob can be more efficient
@@ -126,10 +126,10 @@ def score_row(cards):
     return score
     
 
-def check_game_over(game_state):
-    if len(game_state.deck) == 51 - GAME_LENGTH:
+def check_game_over(node):
+    if len(node.deck) == 51 - GAME_LENGTH:
         score = 0
-        board = game_state.s.reshape(GAME_DIMENSIONS)
+        board = node.s.reshape(GAME_DIMENSIONS)
         # print(print_board(board.flatten()))
         for rowcol in [board, board.T]:
             for row in rowcol:
@@ -138,15 +138,19 @@ def check_game_over(game_state):
         return score / 20
 
 
-def take_action(game_state, action):
-    board = game_state.s.copy()
-    deck = game_state.deck.copy()
-    card = game_state.drawn_card
+def take_action(node, action):
+    board = node.s.copy()
 
-    if action != np.prod(GAME_DIMENSIONS): board[action] = card
-    card = deck.pop()
+    node_info = []
+    for card in node.deck:
+        deck = node.deck.copy()
 
-    return (board, deck, card)
+        if action != np.prod(GAME_DIMENSIONS): board[action] = node.drawn_card
+
+        deck.remove(card)
+
+        node_info.append((board, deck, card))
+    return node_info
 
 
 def format_card(card):

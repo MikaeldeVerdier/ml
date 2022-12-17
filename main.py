@@ -6,7 +6,7 @@ import game
 import config
 import files
 from nn import NeuralNetwork, CurrentNeuralNetwork, BestNeuralNetwork
-from game_state import GameState
+from mcts import Node, Tree
 from player import User, Agent, CurrentAgent, BestAgent
 
 def initiate():
@@ -45,7 +45,7 @@ def play(players, games, training=False):
         # deck = [0] + deck[:(np.prod(game.GAME_DIMENSIONS) + game.REPLACE_CARDS)]
         drawn_card = deck.pop()
         for i, player in enumerate(players):
-            player.mcts = GameState(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], deck, drawn_card)
+            player.mcts = Node(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], deck, drawn_card, Tree())
 
             storage = []
             turn = 1
@@ -91,9 +91,9 @@ def play(players, games, training=False):
                     legal_moves = np.zeros(game.MOVE_AMOUNT)
                     legal_moves[game.get_legal_moves(data["state"])] = 1
 
-                    game_states = game.generate_game_states(storage, t)
+                    nodes = game.generate_nodes(storage, t)
 
-                    states = np.array(game.generate_nn_pass(game_states, True), dtype=object).tolist()
+                    states = np.array(game.generate_nn_pass(nodes, True), dtype=object).tolist()
                     for flip in states: product.append(np.array([flip, data["action"], data["pi_action"], data["advantage"]] + list(legal_moves) + [data["V_targ"]], dtype=object))
 
                 if not game_count % games:

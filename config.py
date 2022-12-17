@@ -1,5 +1,5 @@
 # Main loop
-LOOP_ITERATIONS = 200
+LOOP_ITERATIONS = 1000
 
 # Network architecture
 CONVOLUTIONAL_LAYERS_POSITION = [(32, (3, 3, 3)), (64, (3, 3, 3)), (128, (3, 3, 3)), (256, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3))]
@@ -19,7 +19,10 @@ USE_BIAS = True
 # Self-play
 GAME_AMOUNT_SELF_PLAY = 30
 POSITION_AMOUNT = 30000
+MCTS_SIMS = 50
 DEPTH = 1
+CPUCT = 1.4  # MCTS exploration
+ALPHA = 1  # Dirichlet randomness in MCTS
 TURNS_UNTIL_TAU = 20  # Turn when agent starts tryharding
 
 # Retraining network
