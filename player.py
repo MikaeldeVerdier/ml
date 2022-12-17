@@ -28,7 +28,6 @@ class User():
     def print_move(root, action):
         print(f"Move to make is: {action}")
         print(f"Position is now:\n{game.print_board(root.s)}\n")
-        print(f"Drawn card is: {game.format_card(root.drawn_card)}")
         print(f"Amount of cards left is now: {len(root.deck)}")
 
 
@@ -53,7 +52,7 @@ class Agent():
 
         self.mcts = self.mcts.update_root(action)
 
-        # self.print_move(self.mcts, probs, action, nn_value)
+        self.print_move(self.mcts, probs, action, nn_value)
 
         return action, probs[action], nn_value
 
@@ -88,7 +87,6 @@ class Agent():
         print(f"Move to make is: {action}")
         print(f"Position is now:\n{game.print_board(root.s)}")
         print(f"NN percieved value is: {nn_value:.3f} ({(nn_value * 50):.3f})")
-        print(f"Drawn card is: {game.format_card(root.drawn_card)}")
         print(f"Amount of cards left is now: {len(root.deck)}")
 
 

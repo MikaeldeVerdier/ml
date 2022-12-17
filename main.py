@@ -43,9 +43,8 @@ def play(players, games, training=False):
         deck = list(range(1, 53))
         random.shuffle(deck)
         # deck = [0] + deck[:(np.prod(game.GAME_DIMENSIONS) + game.REPLACE_CARDS)]
-        drawn_card = deck.pop()
         for i, player in enumerate(players):
-            player.mcts = GameState(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], deck, drawn_card)
+            player.mcts = GameState(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], deck)
 
             storage = []
             turn = 1
@@ -144,7 +143,7 @@ def retrain_network(agent):
         minibatch = random.sample(positions, config.BATCH_SIZE[0])
 
 
-        x = [[], [], []]
+        x = [[], []]  # [[]] * len(game.NN_INPUT_DIMENSIONS)
         y = {"value_head": [], "policy_head": []}
 
         for position in minibatch:
