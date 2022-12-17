@@ -52,7 +52,7 @@ class Agent():
 
         self.mcts = self.mcts.update_root(action)
 
-        self.print_move(self.mcts, probs, action, nn_value)
+        # self.print_move(self.mcts, probs, action, nn_value)
 
         return action, probs[action], nn_value
 

@@ -4,7 +4,8 @@ import config
 GAME_DIMENSIONS = (52,)
 NN_INPUT_DIMENSIONS = [(config.DEPTH, GAME_DIMENSIONS[0], 52), (config.DEPTH, 52)]
 MOVE_AMOUNT = GAME_DIMENSIONS[0] * 2 + 1
-SUIT_LENGTH = GAME_DIMENSIONS[0]/4
+SUIT_LENGTH = GAME_DIMENSIONS[0] / 4
+GAME_LENGTH = 52
 
 def generate_game_states(history, t):
     data = history[:t + 1]
