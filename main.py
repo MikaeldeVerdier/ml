@@ -143,8 +143,7 @@ def retrain_network(agent):
     for _ in range(config.TRAINING_ITERATIONS):
         minibatch = random.sample(positions, config.BATCH_SIZE[0])
 
-
-        x = [[], [], []]
+        x = [[], [], []]  # [[]] * len(game.NN_INPUT_DIMENSIONS)
         y = {"value_head": [], "policy_head": []}
 
         for position in minibatch:
