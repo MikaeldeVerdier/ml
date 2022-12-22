@@ -5,29 +5,25 @@ import random
 import game
 import config
 import files
-from nn import NeuralNetwork, CurrentNeuralNetwork, BestNeuralNetwork
+from nn import NeuralNetwork
 from game_state import GameState
-from player import User, Agent, CurrentAgent, BestAgent
+from player import User, Agent
 
 def initiate():
-    load = [False, False]
+    load = False
 
     files.setup_files()
-    if not any(load):
+    if not load:
         files.reset_file("save.json")
         files.reset_file("positions.npy")
         files.reset_file("log.txt")
 
-    current_agent = CurrentAgent(CurrentNeuralNetwork, load[0], to_weights=True)
-    best_agent = BestAgent(BestNeuralNetwork, load[1])
-    agents = {1: best_agent, -1: current_agent}
+    agent = Agent(load, to_weights=True)
 
-    return agents
+    return agent
 
 
 def play(players, games, training=False):
-    players = sorted(set(players.values()))
-
     if training:
         length = 0
         product = []
@@ -42,7 +38,6 @@ def play(players, games, training=False):
         
         deck = list(range(1, 53))
         random.shuffle(deck)
-        # deck = [0] + deck[:(np.prod(game.GAME_DIMENSIONS) + game.REPLACE_CARDS)]
         drawn_card = deck.pop()
         for i, player in enumerate(players):
             player.mcts = GameState(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], deck, drawn_card)
@@ -126,10 +121,14 @@ def advantage(data, t):
     li = [(config.GAMMA * config.LAMBDA) ** i * data[t + i]["delta"] for i in range(len(data) - t - 1)]
     return sum(li)
 
+def Q(data, t):
+    li = [config.GAMMA ** i * data[t + i]["reward"] for i in range(len(data) - t - 1)]
+    return sum(li)
+
 
 def self_play(agent):
     print("\nSelf-play started!\n")
-    play({1: agent, -1: agent}, config.GAME_AMOUNT_SELF_PLAY, True)
+    play([agent], config.GAME_AMOUNT_SELF_PLAY, True)
 
     # outcome = agent.outcomes["average"]
     # print(f"The average outcome from self-play was: {outcome}")
@@ -173,51 +172,34 @@ def retrain_network(agent):
     agent.nn.iterations.append(config.TRAINING_ITERATIONS * config.EPOCHS)
     agent.nn.version += 1
     agent.nn.save_model()
-    agent.nn.save_metrics("current_agent")
+    agent.nn.save_metrics()
     agent.outcomes = {"average": 0, "length": 0}
     agent.nn.plot_metrics()
 
 
-def evaluate_network(agents):
-    print("\nEvaluation of agents started!\n")
+def evaluate_network(agent):
+    print("\nEvaluation of agent started!\n")
 
-    outcomes = play(agents, config.GAME_AMOUNT_EVALUATION)
-
-    for agent in agents.values():
-        agent.save_outcomes("current_agent")
+    outcomes = play([agent], config.GAME_AMOUNT_EVALUATION)
+    agent.save_outcomes()
 
     for i, player in enumerate(outcomes):
         outcomes[i] = np.sum(player) / len(player)
 
-    log(agents, outcomes)
-    agents[-1].nn.plot_outcomes()
+    log(agent, outcomes)
+    agent.nn.plot_outcomes()
 
     print(f"The results were: {outcomes}")
-    if outcomes[1] > outcomes[0] * config.WINNING_THRESHOLD:
-        agents[1].copy_profile(agents[-1])
-        print(f"The best_agent has copied the current_agent's profile")
-
-    return agents
 
 
-def log(agents, results):
-    names = [agents[1].get_name(), agents[-1].get_name()]
-
-    best_name = names[np.argmax(results)]
-    best = f"{best_name} is the best" if results[0] != results[1] else "They are equally good"
-
-    message = f"""{datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')}:
------------- {names[0]} vs {names[1]} ------------
-Results are: {results}
-{best}!
-
-"""
+def log(agent, result):
+    message = f"{agent.get_name()} had an average score of: {result}"
     files.write("log.txt", message, "a")
 
 
 def play_test(version, games):
     you = User()
-    agents = {1: Agent(NeuralNetwork, True, version=version), -1: you}
+    agents = [Agent(True, version=version), you]
     results = play(agents, games)
 
     print(f"The results were: {results}")
@@ -225,7 +207,7 @@ def play_test(version, games):
 
 
 def play_versions(versions, games):
-    agents = {1 - 2 * i: Agent(NeuralNetwork, True, version=v) for i, v in enumerate(versions)}
+    agents = [Agent(True, version=v) for v in versions]
     results = play(agents, games)
     
     print(f"The results between versions {versions[0]} and {versions[1]} were: {results}")
@@ -235,12 +217,12 @@ def play_versions(versions, games):
 
 
 def main():
-    agents = initiate()
+    agent = initiate()
 
     for _ in range(config.LOOP_ITERATIONS):
-        self_play(agents[1])
-        retrain_network(agents[-1])
-        if (agents[-1].nn.version - 1) % config.EVALUATION_FREQUENCY == 0: agents = evaluate_network(agents)
+        self_play(agent)
+        retrain_network(agent)
+        if (agent.nn.version - 1) % config.EVALUATION_FREQUENCY == 0: evaluate_network(agent)
 
     # play_versions([1, agents[1].nn.version], config.GAME_AMOUNT_PLAY_VERSIONS)
     # play_test(agents[1].nn.version, config.GAME_AMOUNT_PLAY_TEST)

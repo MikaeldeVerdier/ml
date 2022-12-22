@@ -35,13 +35,18 @@ except ImportError:
 
 
 class NeuralNetwork:
-    def __init__(self, load, version):
+    def __init__(self, load, version, to_weights=True):
         self.version = version
+        self.to_weights = to_weights
+
+        loaded = files.load_file("save.json")
+        self.metrics = loaded["metrics"]
+        self.iterations = loaded["iterations"]
+        if version is None: self.version = loaded["version"]
 
         if load:
-            if self.load_version(version):
-                print(f"NN loaded with version: {version}")
-                return
+            if self.load_version(self.version):
+                print(f"NN loaded with version: {self.version}")
 
         position_input = Input(shape=game.NN_INPUT_DIMENSIONS[0], name="position_input")
         position = self.position_cnn(position_input)
@@ -63,14 +68,15 @@ class NeuralNetwork:
         self.model.compile(loss={"value_head": self.J_vf, "policy_head": self.J_clip}, optimizer=SGD(learning_rate=config.LEARNING_RATE, momentum=config.MOMENTUM), loss_weights = {"value_head": 0.5, "policy_head": 0.5}, metrics={"value_head": self.vf_mae, "policy_head": self.ph_mae})
         
         if load:
-            self.load_version(version, from_weights=True)
-            print(f"Weights loaded from version: {version}")
+            self.load_version(self.version, from_weights=True)
+            print(f"Weights loaded from version: {self.version}")
         else:
             try:
                 plot_model(self.model, to_file=files.get_path("model.png"), show_shapes=True, show_layer_names=True)
             except ImportError:
                 print("You need to download pydot and graphviz to plot model.")
 
+        print(f"Num GPUs Available: {len(tf.config.list_physical_devices('GPU'))}")
         self.model.summary()
 
     def __hash__(self):
@@ -234,20 +240,6 @@ class NeuralNetwork:
 
         return value, probs
 
-
-class CurrentNeuralNetwork(NeuralNetwork):
-    def __init__(self, load, version, to_weights=False):
-        self.to_weights = to_weights
-
-        loaded = files.load_file("save.json")["current_agent"]
-        self.metrics = loaded["metrics"]
-        self.iterations = loaded["iterations"]
-        if version is None: version = loaded["version"]
-
-        super().__init__(load, version)
-        if not load: self.save_model()
-        # self.model.save(f"{config.SAVE_PATH}training/v.{version}")
-
     def train(self, x, y):
         self.get_preds.cache_clear()
 
@@ -300,7 +292,7 @@ class CurrentNeuralNetwork(NeuralNetwork):
     
     def plot_outcomes(self, derivative_line=False):
         loaded = files.load_file("save.json")
-        data = loaded["current_agent"]["version_outcomes"] 
+        data = loaded["version_outcomes"] 
 
         x = list(map(int, data.keys()))
         data = list(data.values())
@@ -323,20 +315,10 @@ class CurrentNeuralNetwork(NeuralNetwork):
         plt.savefig(f"{config.SAVE_PATH}outcomes.png", dpi=300)
         plt.close()
 
-    def save_metrics(self, agent_kind):
+    def save_metrics(self):
         loaded = files.load_file("save.json")
-        loaded[agent_kind]["version"] = self.version
-        loaded[agent_kind]["iterations"] = self.iterations
-        loaded[agent_kind]["metrics"] = self.metrics
+        loaded["version"] = self.version
+        loaded["iterations"] = self.iterations
+        loaded["metrics"] = self.metrics
 
         files.write("save.json", json.dumps(loaded))
-
-class BestNeuralNetwork(NeuralNetwork):
-    def __init__(self, load, version, **kwargs):
-        print(f"Num GPUs Available: {len(tf.config.list_physical_devices('GPU'))}")
-
-        if version is None:
-            loaded = files.load_file("save.json")["best_agent" if load else "current_agent"]
-            version = loaded["version"]
-
-        super().__init__(True, version)

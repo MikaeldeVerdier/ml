@@ -5,87 +5,20 @@ import config
 from shutil import copyfile
 
 EMPTY_SAVE = json.dumps({
-    "best_agent": {
-        "version": 0,
-        "version_outcomes": {
-            
-        },
-        "iterations": [
-
-        ],
-        "metrics": {
-            "loss": [
-
-            ],
-            "value_head_loss": [
-
-            ],
-            "policy_head_loss": [
-
-            ],
-            "value_head_vf_mae": [
-
-            ],
-            "policy_head_ph_mae": [
-
-            ],
-            "val_loss": [
-
-            ],
-            "val_value_head_loss": [
-
-            ],
-            "val_policy_head_loss": [
-
-            ],
-            "val_value_head_vf_mae": [
-
-            ],
-            "val_policy_head_ph_mae": [
-
-            ]
-        }
-    },
-    "current_agent": {
-        "version": 0,
-        "version_outcomes": {
-            
-        },
-        "iterations": [
-
-        ],
-        "metrics": {
-            "loss": [
-
-            ],
-            "value_head_loss": [
-
-            ],
-            "policy_head_loss": [
-
-            ],
-            "value_head_vf_mae": [
-
-            ],
-            "policy_head_ph_mae": [
-
-            ],
-            "val_loss": [
-
-            ],
-            "val_value_head_loss": [
-
-            ],
-            "val_policy_head_loss": [
-
-            ],
-            "val_value_head_vf_mae": [
-
-            ],
-            "val_policy_head_ph_mae": [
-
-            ]
-        }
+    "version": 0,
+    "version_outcomes": {},
+    "iterations": [],
+    "metrics": {
+        "loss": [],
+        "value_head_loss": [],
+        "policy_head_loss": [],
+        "value_head_vf_mae": [],
+        "policy_head_ph_mae": [],
+        "val_loss": [],
+        "val_value_head_loss": [],
+        "val_policy_head_loss": [],
+        "val_value_head_vf_mae": [],
+        "val_policy_head_ph_mae": []
     }
 })
 EMPTY_POSITIONS = np.array([])

@@ -2,6 +2,7 @@ import json
 import numpy as np
 import game
 import files
+from nn import NeuralNetwork
 
 class User():
     def __init__(self):
@@ -33,14 +34,11 @@ class User():
 
 
 class Agent():
-    def __init__(self, nn_class, load, version=None, name=None, to_weights=False):
-        self.nn = nn_class(load, version, to_weights=to_weights)
+    def __init__(self, load, version=None, name=None, to_weights=False):
+        self.nn = NeuralNetwork(load, version, to_weights=to_weights)
         self.name = name
         
         self.outcomes = {"average": 0, "length": 0}
-
-    def __gt__(self, other):
-        return type(other) == BestAgent or type(self) == CurrentAgent and other.nn.version > self.nn.version
 
     def get_name(self):
         return f"Version {self.nn.version}" if not self.name else self.name
@@ -76,9 +74,9 @@ class Agent():
 
         return action
 
-    def save_outcomes(self, agent_kind):
+    def save_outcomes(self):
         loaded = files.load_file("save.json")
-        loaded[agent_kind]["version_outcomes"][self.nn.version] = self.outcomes["average"]
+        loaded["version_outcomes"][self.nn.version] = self.outcomes["average"]
 
         files.write("save.json", json.dumps(loaded))
     
@@ -90,28 +88,3 @@ class Agent():
         print(f"NN percieved value is: {nn_value:.3f} ({(nn_value * 50):.3f})")
         print(f"Drawn card is: {game.format_card(root.drawn_card)}")
         print(f"Amount of cards left is now: {len(root.deck)}")
-
-
-class CurrentAgent(Agent):  # Redundant currently
-    def __init__(self, nn_class, load, version=None, name=None, to_weights=False):
-        super().__init__(nn_class, load, version, name, to_weights)
-
-    # def __lt__(self, other):
-    #     return True if type(other) == type(self) and other.nn.version > self.nn.version else False
-
-
-class BestAgent(Agent):
-    def __init__(self, nn_class, load, version=None, name=None):
-        super().__init__(nn_class, load, version, name)
-    
-    def copy_profile(self, agent):
-        self.outcomes = agent.outcomes
-
-        loaded = files.load_file("save.json")
-        loaded["best_agent"] = loaded["current_agent"]
-
-        files.write("save.json", json.dumps(loaded))
-
-        self.nn.get_preds.cache_clear()
-        self.nn.version = agent.nn.version
-        self.nn.load_version(self.nn.version)

@@ -18,12 +18,12 @@ USE_BIAS = True
 
 # Self-play
 GAME_AMOUNT_SELF_PLAY = 30
-POSITION_AMOUNT = 30000
+POSITION_AMOUNT = 256
 DEPTH = 1
 TURNS_UNTIL_TAU = 20  # Turn when agent starts tryharding
 
 # Retraining network
-TRAINING_ITERATIONS = 10
+TRAINING_ITERATIONS = 1
 BATCH_SIZE = (256, 32)
 EPOCHS = 1
 GAMMA = 0.5  # Discounting factor
