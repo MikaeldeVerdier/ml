@@ -1,11 +1,9 @@
 import os
 import numpy as np
-import datetime
 import random
 import game
 import config
 import files
-from nn import NeuralNetwork
 from game_state import GameState
 from player import User, Agent
 
@@ -28,7 +26,7 @@ def play(players, games, training=False):
         length = 0
         product = []
     else:
-        outcomes = [[], []]
+        outcome = []
 
     og_games = games
     game_count = 0
@@ -69,7 +67,7 @@ def play(players, games, training=False):
 
             if not training:
                 outcome = int(outcome * 20)
-                outcomes[i].append(outcome)
+                outcome.append(outcome)
                 player.outcomes["length"] += 1
                 player.outcomes["average"] = (player.outcomes["average"] * (player.outcomes["length"] - 1) + outcome) / player.outcomes["length"]
             else:
@@ -103,7 +101,7 @@ def play(players, games, training=False):
                 else:
                     if games == game_count: games += np.ceil(left / (game.GAME_LENGTH * 16 * left // (game.GAME_LENGTH * 16 * og_games)))
 
-    if not training: return outcomes
+    if not training: return outcome
 
 
 # V_targ is how good a position is
@@ -124,6 +122,10 @@ def advantage(data, t):
 def Q(data, t):
     li = [config.GAMMA ** i * data[t + i]["reward"] for i in range(len(data) - t - 1)]
     return sum(li)
+
+def y(data, t):
+    pass
+    # data[t]["reward"] + config.GAMMA *
 
 
 def self_play(agent):
@@ -180,16 +182,15 @@ def retrain_network(agent):
 def evaluate_network(agent):
     print("\nEvaluation of agent started!\n")
 
-    outcomes = play([agent], config.GAME_AMOUNT_EVALUATION)
+    outcome = play([agent], config.GAME_AMOUNT_EVALUATION)
     agent.save_outcomes()
 
-    for i, player in enumerate(outcomes):
-        outcomes[i] = np.sum(player) / len(player)
+    outcome = np.sum(outcome) / len(outcome)
 
-    log(agent, outcomes)
+    log(agent, outcome)
     agent.nn.plot_outcomes()
 
-    print(f"The results were: {outcomes}")
+    print(f"The results were: {outcome}")
 
 
 def log(agent, result):
