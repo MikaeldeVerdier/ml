@@ -1,6 +1,7 @@
 import json
 import numpy as np
 import game
+import config
 import files
 from nn import NeuralNetwork
 
@@ -35,51 +36,42 @@ class User():
 
 class Agent():
     def __init__(self, load, version=None, name=None, to_weights=False):
-        self.nn = NeuralNetwork(load, version, to_weights=to_weights)
+        self.main_nn = NeuralNetwork(load, version, to_weights=to_weights)
+        self.target_nn = NeuralNetwork(load, version, to_weights=to_weights)
         self.name = name
         
         self.outcomes = {"average": 0, "length": 0}
 
     def get_name(self):
-        return f"Version {self.nn.version}" if not self.name else self.name
+        return f"Version {self.main_nn.version}" if not self.name else self.name
 
-    def play_turn(self, history, tau):
+    def play_turn(self, history):
         game_states = game.generate_game_states(history, len(history) - 1)
-        nn_value, probs = self.nn.get_preds(game_states)
+        probs = self.main_nn.get_preds(game_states)
 
-        action = self.choose_action(probs, tau)
+        action = self.choose_action(probs)
 
         self.mcts = self.mcts.update_root(action)
 
-        # self.print_move(self.mcts, probs, action, nn_value)
+        return action
 
-        return action, probs[action], nn_value
-
-    def getAV(self, tau):
-        pi = np.zeros(game.MOVE_AMOUNT)
-
-        for edge in self.mcts.edges:
-            pi[edge.action] = edge.n  # ** 1/tau
-
-        pi /= np.sum(pi)
-
-        return pi
-
-    @staticmethod
-    def choose_action(pi, tau):
-        if tau == 1e-2:
-            actions = np.flatnonzero(pi == np.max(pi))
-            action = np.random.choice(actions)
-        else: action = np.where(np.random.multinomial(1, pi) == 1)[0][0]
+    def choose_action(self, pi):
+        epsilon = config.EPSILON[0] - config.EPSILON_STEP_SIZE * self.main_nn.version if self.main_nn.version < config.EPSILON[2] else config.EPSILON[1]
+        action = np.random.randint(len(pi)) if np.random.rand() <= epsilon else np.argmax(pi)
 
         return action
 
-    def save_outcomes(self):
-        loaded = files.load_file("save.json")
-        loaded["version_outcomes"][self.nn.version] = self.outcomes["average"]
+    def calculate_target(self, data, t):
+        game_states = game.generate_game_states(data, t, "next_state")
+        return data[t]["reward"] + config.GAMMA * np.max(self.target_nn.get_preds(game_states))
 
-        files.write("save.json", json.dumps(loaded))
-    
+    def change_version(self):
+        self.main_nn.iterations.append(config.TRAINING_ITERATIONS * config.EPOCHS)
+        self.main_nn.version += 1
+        self.main_nn.save_model()
+        self.main_nn.save_metrics()
+        self.outcomes = {"average": 0, "length": 0}
+
     @staticmethod
     def print_move(root, pi, action, nn_value):
         game.print_values(pi)

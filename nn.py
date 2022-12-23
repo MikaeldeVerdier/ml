@@ -10,7 +10,7 @@ import files
 from tensorflow.keras import regularizers
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.layers import Input, Dense, Conv3D, Conv1D, Flatten, BatchNormalization, ReLU, Concatenate
-from tensorflow.keras.optimizers import SGD
+from tensorflow.keras.optimizers import Adam
 from keras.utils.vis_utils import plot_model
 
 try:
@@ -40,9 +40,11 @@ class NeuralNetwork:
         self.to_weights = to_weights
 
         loaded = files.load_file("save.json")
-        self.metrics = loaded["metrics"]
+        if version is None:
+            self.version = loaded["version"]
+        self.version_outcomes = loaded["version_outcomes"]
         self.iterations = loaded["iterations"]
-        if version is None: self.version = loaded["version"]
+        self.metrics = loaded["metrics"]
 
         if load:
             if self.load_version(self.version):
@@ -61,11 +63,10 @@ class NeuralNetwork:
 
         x = self.shared_mlp(x)
 
-        vh = self.value_head(x)
         ph = self.policy_head(x)
 
-        self.model = Model(inputs=[position_input, deck_input, drawn_card_input], outputs=[vh, ph])
-        self.model.compile(loss={"value_head": self.J_vf, "policy_head": self.J_clip}, optimizer=SGD(learning_rate=config.LEARNING_RATE, momentum=config.MOMENTUM), loss_weights = {"value_head": 0.5, "policy_head": 0.5}, metrics={"value_head": self.vf_mae, "policy_head": self.ph_mae})
+        self.model = Model(inputs=[position_input, deck_input, drawn_card_input], outputs=ph)
+        self.model.compile(loss=self.loss, optimizer=Adam(learning_rate=config.LEARNING_RATE))
         
         if load:
             self.load_version(self.version, from_weights=True)
@@ -86,53 +87,20 @@ class NeuralNetwork:
         path = f"{config.SAVE_PATH}training/v.{version}/checkpoint"
         if not from_weights:
             if not os.path.exists(path):
-                self.model = load_model(f"{config.SAVE_PATH}training/v.{version}", custom_objects={"J_vf": self.J_vf, "J_clip": self.J_clip})
+                self.model = load_model(f"{config.SAVE_PATH}training/v.{version}", custom_objects={"loss": self.loss})
                 return True
         else:
             self.model.load_weights(path).expect_partial()
 
-    def J_vf(self, y_true, y_pred):
-        J_vf = tf.math.abs(y_true - y_pred) * config.OMEGA
-
-        return J_vf
-
-    def vf_mae(self, y_true, y_pred):
-        loss = tf.math.abs(y_true - y_pred)
-        
-        return loss
-
-    @staticmethod
-    def softmax(logits, legal_moves):
-        where = tf.equal(legal_moves, [0])
-
-        negatives = tf.fill(tf.shape(logits), -100.0)
-        p = tf.where(where, negatives, logits)
-
-        pi = tf.nn.softmax(p)
-        
-        return pi
-
-    def J_clip(self, y_true, y_pred):
+    def loss(self, y_true, y_pred):
         logits = tf.reshape(y_pred, (tf.shape(y_true)[0], -1))
 
-        action = tf.cast(tf.gather(y_true, tf.constant([0]), axis=1), tf.int32)
-        pi_action = tf.gather(y_true, 1, axis=1)
-        advantage = tf.gather(y_true, 2, axis=1)
-        legal_moves = tf.gather(y_true, tf.range(3, 3 + game.MOVE_AMOUNT), axis=1)
+        actions = tf.cast(tf.gather(y_true, tf.constant([0]), axis=1), tf.int32)
+        targets = tf.gather(y_true, 1, axis=1)
 
-        pi_new = self.softmax(logits, legal_moves)
-        pi_theta = tf.gather_nd(pi_new, tf.stack([tf.range(tf.shape(action)[0]), action[:, 0]], axis=1))
-
-        r_theta = pi_theta / pi_action
-
-        L_cpi = r_theta * advantage
-        L_clip = tf.clip_by_value(r_theta, 1 - config.EPSILON, 1 + config.EPSILON) * advantage
-        J_clip = tf.math.minimum(L_cpi, L_clip)
-        # J_clip = L_cpi
-
-        S_pi = -tf.math.reduce_sum(pi_new * tf.math.log(pi_new + 1e-15), axis=-1) * config.BETA
-
-        loss = -J_clip - S_pi
+        index_tensor = tf.stack([tf.range(tf.shape(actions)[0]), actions[:, 0]], axis=1)
+        preds = tf.gather_nd(logits, index_tensor)
+        loss = tf.math.square(targets - preds)
 
         return loss
 
@@ -207,13 +175,6 @@ class NeuralNetwork:
         return x
 
     @staticmethod
-    def value_head(x):
-        for neuron_amount in config.DENSE_VALUE_HEAD: x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
-        x = Dense(1, use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST), name="value_head")(x)
-        
-        return x
-
-    @staticmethod
     def policy_head(x):
         for neuron_amount in config.DENSE_POLICY_HEAD: x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         x = Dense(game.MOVE_AMOUNT, use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST), name="policy_head")(x)
@@ -223,22 +184,15 @@ class NeuralNetwork:
     @cache
     def get_preds(self, history):
         data = [np.expand_dims(dat, 0) for dat in game.generate_nn_pass(history)[0]]
-        (v, p) = self.model.predict_on_batch(data)
-
-        value = v[0][0]
-        logits = p[0]
+        logits = self.model.predict_on_batch(data)[0]
 
         mask = np.full(logits.shape, True)
         legal_moves = game.get_legal_moves(history[-1])
         mask[legal_moves] = False
 
-        # if max(logits) > 85: logits *= 85 / max(logits)
-        logits[mask] = -100
+        logits[mask] = 0
 
-        odds = np.exp(logits).astype(np.float64)
-        probs = odds / np.sum(odds)
-
-        return value, probs
+        return logits
 
     def train(self, x, y):
         self.get_preds.cache_clear()
@@ -253,27 +207,60 @@ class NeuralNetwork:
         else:
             self.model.save_weights(f"{config.SAVE_PATH}training/v.{self.version}/checkpoint")
 
+    def plot_agent(self, iteration_lines=False):
+        _, axs = plt.subplots(4, figsize=(20, 20))
+        for metric in self.metrics:
+            data = self.metrics[metric]
+            if data:
+                axs[0].plot(data, label=f"{metric}\n(last point: {data[-1]:5f})")
+                axs[0].axhline(data[-1], color="black", linestyle=":")
+
+                x = list(range(1, len(data)))
+                deriv = np.diff(data)
+                axs[1].plot(x, deriv, label=f"Derivative of {metric}")
+        
+        data = self.version_outcomes
+        if data:
+            x = list(map(int, data.keys()))
+            data = [value["average"] for value in data.values()]
+            axs[2].plot(x, data, label=f"Outcome\n(last point: {data[-1]:5f})")
+
+            deriv = np.diff(data)
+            axs[3].plot(x[1:], deriv, label=f"Derivative of outcome")
+
+        for ax_index, axis in enumerate(["Loss", "Loss derivatives", "Outcome", "Outcome derivative"]):
+            ax = axs[ax_index]
+            ax.set_title(axis)
+            ax.set_xlabel("Training iteration" if "Loss" in axis else "Version")
+            ax.set_ylabel(axis)
+            ax.set_xscale("linear")
+            box = ax.get_position()
+            ax.set_position([box.x0, box.y0, box.width * 0.9, box.height])
+            ax.yaxis.set_tick_params(labelbottom=True)
+            ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
+            if iteration_lines:
+                iterations = self.iterations
+                [ax.axvline(np.sum(iterations[:i2 + 1]) - 1, color="black", linestyle=":") for i2 in range(len(iterations))]
+
+        plt.ioff()
+        plt.savefig(f"{config.SAVE_PATH}agent.png", dpi=300)
+        plt.close()
+
     def plot_metrics(self, iteration_lines=False, derivative_lines=False):
-        _, axs = plt.subplots(4, sharey="row", figsize=(20, 15))
+        _, axs = plt.subplots(2, figsize=(20, 8))
         plt.xlabel("Training Iteration")
 
         for metric in self.metrics:
             data = self.metrics[metric]
             if data:
-                ax_index = (2, 3) if "val_" in metric else (0, 1)
-                ax_index = ax_index[0 if "loss" in metric else 1]
-                ax = axs[ax_index]
+                deriv = np.diff(data)
 
-                deriv = np.mean(np.diff(data))
+                axs[0].plot(data, label=f"{metric}\n(last point: {data[-1]:5f})")
+                axs[0].axhline(data[-1], color="black", linestyle=":")
 
-                ax.plot(data, label=f"{metric}\n(avg. deriv. (x1000) = {(deriv * 1000):5f}\n(last point: {data[-1]:5f})")
-                ax.axhline(data[-1], color="black", linestyle=":")
+                axs[1].plot(deriv, label=f"Derivative of {metric}")
 
-            if derivative_lines:
-                y = [deriv * x + data[0] for x in range(len(data))]
-                ax.plot(y, color="black", linestyle="-.")
-
-        for ax_index, metric in enumerate(["Loss", "MAE", "Validation Loss", "Validation MAE"]):
+        for ax_index, metric in enumerate(["Loss", "Derivatives"]):
             ax = axs[ax_index]
             ax.set_title(metric)
             ax.set_ylabel(metric)
@@ -292,12 +279,21 @@ class NeuralNetwork:
     
     def plot_outcomes(self, derivative_line=False):
         loaded = files.load_file("save.json")
-        data = loaded["version_outcomes"] 
+        data = loaded["version_outcomes"]
+
+        data = {"0": {"average": 5},
+        "1": {"average": 7},
+        "4": {"average": 9}
+        }
 
         x = list(map(int, data.keys()))
-        data = list(data.values())
+        data = [dic["average"] for dic in data.values()]
 
-        deriv = (data[-1] - data[0]) / x[-1]
+        # deriv = []
+        # for i in range(len(x) - 1):
+        #     deriv.extend([(data[i + 1] - data[i]) / (x[i + 1] - x[i])] * (x[i + 1] - x[i]))
+
+        deriv = np.diff(data)
 
         plt.plot(x, data, label=f"Outcome\n(avg. deriv. = {deriv:5f}\n(last point: {data[-1]:5f})")
 
@@ -314,6 +310,20 @@ class NeuralNetwork:
         plt.ioff()
         plt.savefig(f"{config.SAVE_PATH}outcomes.png", dpi=300)
         plt.close()
+
+    def register_result(self, result):
+        if not self.version in self.version_outcomes:
+            self.version_outcomes[self.version] = {"length": 1, "average": result}
+            return
+        
+        self.version_outcomes[self.version]["length"] += 1
+        self.version_outcomes[self.version]["average"] = (self.version_outcomes[self.version]["average"] * (self.version_outcomes[self.version]["length"] - 1) + result) / self.version_outcomes[self.version]["length"]
+
+    def save_outcomes(self):
+        loaded = files.load_file("save.json")
+        loaded["version_outcomes"] = self.version_outcomes
+
+        files.write("save.json", json.dumps(loaded))
 
     def save_metrics(self):
         loaded = files.load_file("save.json")

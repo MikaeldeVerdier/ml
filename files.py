@@ -10,15 +10,7 @@ EMPTY_SAVE = json.dumps({
     "iterations": [],
     "metrics": {
         "loss": [],
-        "value_head_loss": [],
-        "policy_head_loss": [],
-        "value_head_vf_mae": [],
-        "policy_head_ph_mae": [],
         "val_loss": [],
-        "val_value_head_loss": [],
-        "val_policy_head_loss": [],
-        "val_value_head_vf_mae": [],
-        "val_policy_head_ph_mae": []
     }
 })
 EMPTY_POSITIONS = np.array([])
