@@ -30,7 +30,6 @@ GAMMA = 0.9  # Discounting factor for future rewards when calculating targets
 VALIDATION_SPLIT = 0.2
 REG_CONST = 1e-4
 LEARNING_RATE = 1e-4
-MOMENTUM = 0.5
 
 # Evaluating network
 GAME_AMOUNT_EVALUATION = 50

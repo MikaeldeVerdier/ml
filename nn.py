@@ -217,7 +217,7 @@ class NeuralNetwork:
 
                 x = list(range(1, len(data)))
                 deriv = np.diff(data)
-                axs[1].plot(x[1:], deriv, label=f"Derivative of {metric}")
+                axs[1].plot(x, deriv, label=f"Derivative of {metric}")
         
         data = self.version_outcomes
         if data:

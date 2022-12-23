@@ -74,7 +74,7 @@ def play(players, games, starts=False, training=False):
                     for flip in states: product.append(np.array([flip, data["action"], data["target"]], dtype=object))
 
                 if not game_count % games:
-                    length = files.add_to_file(files.get_path("positions.npy"), np.array(product[::-1], dtype=object), config.POSITION_AMOUNT)
+                    length = files.add_to_file(files.get_path("positions.npy"), np.array(product, dtype=object), config.POSITION_AMOUNT)
                     product = []
 
                     print(f"Position length is now: {length}")
