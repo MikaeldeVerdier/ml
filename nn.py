@@ -217,7 +217,7 @@ class NeuralNetwork:
 
                 x = list(range(1, len(data)))
                 deriv = np.diff(data)
-                axs[1].plot(x, deriv, label=f"Derivative of {metric}")
+                axs[1].plot(x[1:], deriv, label=f"Derivative of {metric}")
         
         data = self.version_outcomes
         if data:
@@ -244,71 +244,6 @@ class NeuralNetwork:
 
         plt.ioff()
         plt.savefig(f"{config.SAVE_PATH}agent.png", dpi=300)
-        plt.close()
-
-    def plot_metrics(self, iteration_lines=False, derivative_lines=False):
-        _, axs = plt.subplots(2, figsize=(20, 8))
-        plt.xlabel("Training Iteration")
-
-        for metric in self.metrics:
-            data = self.metrics[metric]
-            if data:
-                deriv = np.diff(data)
-
-                axs[0].plot(data, label=f"{metric}\n(last point: {data[-1]:5f})")
-                axs[0].axhline(data[-1], color="black", linestyle=":")
-
-                axs[1].plot(deriv, label=f"Derivative of {metric}")
-
-        for ax_index, metric in enumerate(["Loss", "Derivatives"]):
-            ax = axs[ax_index]
-            ax.set_title(metric)
-            ax.set_ylabel(metric)
-            ax.set_xscale("linear")
-            box = ax.get_position()
-            ax.set_position([box.x0, box.y0, box.width * 0.9, box.height])
-            ax.yaxis.set_tick_params(labelbottom=True)
-            ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
-            if iteration_lines:
-                iterations = self.iterations
-                [ax.axvline(np.sum(iterations[:i2 + 1]) - 1, color="black", linestyle=":") for i2 in range(len(iterations))]
-
-        plt.ioff()
-        plt.savefig(f"{config.SAVE_PATH}metrics.png", dpi=300)
-        plt.close()
-    
-    def plot_outcomes(self, derivative_line=False):
-        loaded = files.load_file("save.json")
-        data = loaded["version_outcomes"]
-
-        data = {"0": {"average": 5},
-        "1": {"average": 7},
-        "4": {"average": 9}
-        }
-
-        x = list(map(int, data.keys()))
-        data = [dic["average"] for dic in data.values()]
-
-        # deriv = []
-        # for i in range(len(x) - 1):
-        #     deriv.extend([(data[i + 1] - data[i]) / (x[i + 1] - x[i])] * (x[i + 1] - x[i]))
-
-        deriv = np.diff(data)
-
-        plt.plot(x, data, label=f"Outcome\n(avg. deriv. = {deriv:5f}\n(last point: {data[-1]:5f})")
-
-        plt.xlabel("Version")
-        plt.ylabel("Average outcome")
-        plt.title("Average outcome for versions")
-        plt.gca().set_xscale("linear")
-        plt.legend()
-
-        if derivative_line:
-            y = [deriv * x + data[0] for x in range(x[-1])]
-            plt.plot(y, color="black", linestyle="-.")
-        
-        plt.ioff()
-        plt.savefig(f"{config.SAVE_PATH}outcomes.png", dpi=300)
         plt.close()
 
     def register_result(self, result):
