@@ -6,7 +6,7 @@ NN_INPUT_DIMENSIONS = [(config.DEPTH,) + GAME_DIMENSIONS + (52,), (config.DEPTH,
 MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
 REPLACE_CARDS = 3
 GAME_LENGTH = np.prod(GAME_DIMENSIONS) + REPLACE_CARDS
-REWARD_FACTOR = 0.05
+REWARD_FACTOR = 0.5
 
 def generate_game_states(history, t, key="state"):
     data = history[:t + 1]
@@ -19,12 +19,15 @@ def generate_game_states(history, t, key="state"):
 def generate_nn_pass(game_states, mirror=False):
     game_state = game_states[-1]
 
-    if mirror:
-        flips = [None, 0, 1, (0, 1)]
-        suit_changes = [0, 13, 26, 39]
-    else:
-        flips = [None]
-        suit_changes = [0]
+    # if mirror:
+    #     flips = [None, 0, 1, (0, 1)]
+    #     suit_changes = [0, 13, 26, 39]
+    # else:
+    #     flips = [None]
+    #     suit_changes = [0]
+
+    flips = [None]
+    suit_changes = [0]
 
     nn_pass = []
     for flip in flips:
