@@ -16,7 +16,7 @@ DENSE_POLICY_HEAD = [512, 512]
 USE_BIAS = True
 
 # Self-play
-GAME_AMOUNT_SELF_PLAY = 480
+GAME_AMOUNT_SELF_PLAY = 50
 POSITION_AMOUNT = 30000
 DEPTH = 1
 EPSILON = [1, 0.1, LOOP_ITERATIONS * 0.9]  # Exploration rate in the form of: [initial, final, duration]
@@ -29,7 +29,7 @@ EPOCHS = 1
 GAMMA = 0.99  # Discounting factor for future rewards when calculating targets
 VALIDATION_SPLIT = 0.2
 REG_CONST = 1e-4
-LEARNING_RATE = 1e-4
+LEARNING_RATE = 1e-5
 
 # Evaluating network
 GAME_AMOUNT_EVALUATION = 50

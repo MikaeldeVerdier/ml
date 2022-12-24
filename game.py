@@ -19,15 +19,12 @@ def generate_game_states(history, t, key="state"):
 def generate_nn_pass(game_states, mirror=False):
     game_state = game_states[-1]
 
-    # if mirror:
-    #     flips = [None, 0, 1, (0, 1)]
-    #     suit_changes = [0, 13, 26, 39]
-    # else:
-    #     flips = [None]
-    #     suit_changes = [0]
-
-    flips = [None]
-    suit_changes = [0]
+    if mirror:
+        flips = [None, 0, 1, (0, 1)]
+        suit_changes = [0, 13, 26, 39]
+    else:
+        flips = [None]
+        suit_changes = [0]
 
     nn_pass = []
     for flip in flips:
