@@ -120,6 +120,9 @@ def retrain_network(agent):
 
         agent.main_nn.train(x, y)
 
+    if agent.main_nn.version % config.VERSION_OFFSET:
+        agent.copy_network()
+
     # data = [np.expand_dims(dat, 0) for dat in positions[-1][0]]
     # real = positions[-1]
     # p = agent.main_nn.model.predict(data)
@@ -143,7 +146,7 @@ def evaluate_network(agent):
 
 
 def log(agent, result):
-    message = f"{agent.get_name()} had an average score of: {result}"
+    message = f"{agent.get_name()} had an average score of: {result}\n"
     files.write("log.txt", message, "a")
 
 

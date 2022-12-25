@@ -36,8 +36,8 @@ class User():
 
 class Agent():
     def __init__(self, load, version=None, name=None, to_weights=False):
-        self.main_nn = NeuralNetwork(load, version, to_weights=to_weights)
-        self.target_nn = NeuralNetwork(load, version, to_weights=to_weights)
+        self.main_nn = NeuralNetwork(load, version, kind="main_nn", to_weights=to_weights)
+        self.target_nn = NeuralNetwork(load, version, kind="target_nn", to_weights=to_weights)
         self.name = name
         
         self.outcomes = {"average": 0, "length": 0}
@@ -65,6 +65,9 @@ class Agent():
     def calculate_target(self, data, t):
         game_states = game.generate_game_states(data, t, "next_state")
         return data[t]["reward"] + config.GAMMA * np.max(self.target_nn.get_preds(game_states))
+
+    def copy_network(self):
+        self.target_nn.load_version(self.main_nn.version)
 
     def change_version(self):
         self.main_nn.iterations.append(config.TRAINING_ITERATIONS * config.EPOCHS)

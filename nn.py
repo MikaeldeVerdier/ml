@@ -35,13 +35,13 @@ except ImportError:
 
 
 class NeuralNetwork:
-    def __init__(self, load, version, to_weights=True):
+    def __init__(self, load, version, kind=None, to_weights=True):
         self.version = version
         self.to_weights = to_weights
 
         loaded = files.load_file("save.json")
         if version is None:
-            self.version = loaded["version"]
+            self.version = loaded[f"{kind}_version"]
         self.version_outcomes = loaded["version_outcomes"]
         self.iterations = loaded["iterations"]
         self.metrics = loaded["metrics"]
@@ -262,7 +262,7 @@ class NeuralNetwork:
 
     def save_metrics(self):
         loaded = files.load_file("save.json")
-        loaded["version"] = self.version
+        loaded[f"main_nn_version"] = self.version
         loaded["iterations"] = self.iterations
         loaded["metrics"] = self.metrics
 

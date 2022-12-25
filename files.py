@@ -5,7 +5,8 @@ import config
 from shutil import copyfile
 
 EMPTY_SAVE = json.dumps({
-    "version": 0,
+    "main_nn_version": 0,
+    "target_nn_version": 0,
     "version_outcomes": {},
     "iterations": [],
     "metrics": {

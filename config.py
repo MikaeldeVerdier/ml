@@ -27,6 +27,7 @@ TRAINING_ITERATIONS = 10
 BATCH_SIZE = (256, 32)
 EPOCHS = 1
 GAMMA = 0.99  # Discounting factor for future rewards when calculating targets
+VERSION_OFFSET = 50
 VALIDATION_SPLIT = 0.2
 REG_CONST = 1e-4
 LEARNING_RATE = 1e-5
