@@ -45,18 +45,19 @@ class Agent():
     def get_name(self):
         return f"Version {self.main_nn.version}" if not self.name else self.name
 
-    def play_turn(self, history):
+    def play_turn(self, history, epsilon):
         game_states = game.generate_game_states(history, len(history) - 1)
         probs = self.main_nn.get_preds(game_states)
 
-        action = self.choose_action(probs)
+        action = self.choose_action(probs, epsilon)
 
         self.mcts = self.mcts.update_root(action)
 
         return action
 
-    def choose_action(self, pi):
-        epsilon = config.EPSILON[0] - config.EPSILON_STEP_SIZE * self.main_nn.version if self.main_nn.version < config.EPSILON[2] else config.EPSILON[1]
+    def choose_action(self, pi, epsilon):
+        if epsilon is None:
+            epsilon = config.EPSILON[0] - config.EPSILON_STEP_SIZE * self.main_nn.version if self.main_nn.version < config.EPSILON[2] else config.EPSILON[1]
         action = np.random.randint(len(pi)) if np.random.rand() <= epsilon else np.argmax(pi)
 
         return action

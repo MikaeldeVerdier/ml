@@ -21,7 +21,7 @@ def initiate():
     return agent
 
 
-def play(players, games, starts=False, training=False):
+def play(players, games, starts=False, epsilon=None, training=False):
     if training:
         length = 0
         product = []
@@ -45,7 +45,7 @@ def play(players, games, starts=False, training=False):
             while outcome is None:
                 storage.append({"state": player.mcts})
 
-                action = player.play_turn(storage)
+                action = player.play_turn(storage, epsilon)
 
                 outcome = game.check_game_over(player.mcts)
 
@@ -120,9 +120,9 @@ def retrain_network(agent):
 
         agent.main_nn.train(x, y)
 
-    data = [np.expand_dims(dat, 0) for dat in positions[-1][0]]
-    real = positions[-1]
-    p = agent.main_nn.model.predict(data)
+    # data = [np.expand_dims(dat, 0) for dat in positions[-1][0]]
+    # real = positions[-1]
+    # p = agent.main_nn.model.predict(data)
 
     agent.change_version()
     agent.main_nn.plot_agent()
@@ -131,7 +131,7 @@ def retrain_network(agent):
 def evaluate_network(agent):
     print("\nEvaluation of agent started!\n")
 
-    outcome = play([agent], config.GAME_AMOUNT_EVALUATION)
+    outcome = play([agent], config.GAME_AMOUNT_EVALUATION, epsilon=0.05)
     agent.main_nn.save_outcomes()
 
     outcome = np.mean(outcome)
