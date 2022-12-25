@@ -6,7 +6,7 @@ NN_INPUT_DIMENSIONS = [(config.DEPTH,) + GAME_DIMENSIONS + (52,), (config.DEPTH,
 MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
 REPLACE_CARDS = 3
 GAME_LENGTH = np.prod(GAME_DIMENSIONS) + REPLACE_CARDS
-REWARD_FACTOR = 0.5
+REWARD_FACTOR = 0.02
 
 def generate_game_states(history, t, key="state"):
     data = history[:t + 1]

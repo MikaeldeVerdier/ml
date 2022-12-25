@@ -154,7 +154,7 @@ class NeuralNetwork:
 
     @staticmethod
     def convolutional_layer_3D(x, filters, kernel_size):
-        x = Conv3D(filters=filters, kernel_size=kernel_size, data_format="channels_last", padding="same", use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
+        x = Conv3D(filters=filters, kernel_size=kernel_size, data_format="channels_last", padding="same", use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         x = BatchNormalization()(x)
         x = ReLU()(x)
         
@@ -162,7 +162,7 @@ class NeuralNetwork:
 
     @staticmethod
     def convolutional_layer_1D(x, filters, kernel_size):
-        x = Conv1D(filters=filters, kernel_size=kernel_size, data_format="channels_last", padding="same", use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
+        x = Conv1D(filters=filters, kernel_size=kernel_size, data_format="channels_last", padding="same", use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         x = BatchNormalization()(x)
         x = ReLU()(x)
         

@@ -120,9 +120,9 @@ def retrain_network(agent):
 
         agent.main_nn.train(x, y)
 
-    # data = [np.expand_dims(dat, 0) for dat in positions[-1][0]]
-    # real = positions[-1]
-    # p = agent.main_nn.model.predict(data)
+    data = [np.expand_dims(dat, 0) for dat in positions[-1][0]]
+    real = positions[-1]
+    p = agent.main_nn.model.predict(data)
 
     agent.change_version()
     agent.main_nn.plot_agent()
