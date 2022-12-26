@@ -21,7 +21,7 @@ def initiate():
     return agent
 
 
-def play(players, games, starts=False, epsilon=None, training=False):
+def play(players, games, starts=False, epsilons=[None, None], training=False):
     if training:
         length = 0
         product = []
@@ -45,7 +45,7 @@ def play(players, games, starts=False, epsilon=None, training=False):
             while outcome is None:
                 storage.append({"state": player.mcts})
 
-                action = player.play_turn(storage, epsilon)
+                action = player.play_turn(storage, epsilons[i])
 
                 outcome = game.check_game_over(player.mcts)
 
@@ -134,7 +134,7 @@ def retrain_network(agent):
 def evaluate_network(agent):
     print("\nEvaluation of agent started!\n")
 
-    outcome = play([agent], config.GAME_AMOUNT_EVALUATION, epsilon=0.05)
+    outcome = play([agent], config.GAME_AMOUNT_EVALUATION, epsilons=[0.05])
     agent.main_nn.save_outcomes()
 
     outcome = np.mean(outcome)
@@ -161,12 +161,13 @@ def play_test(version, games, starts=False):
 
 def play_versions(versions, games, starts=False):
     agents = [Agent(True, version=version) for version in versions]
-    results = play(agents, games, starts=starts)
+    results = play(agents, games, starts=starts, epsilons=[0.05, 0.05])
+
+    outcomes = np.mean(results)
     
-    print(f"The results between versions {versions[0]} and {versions[1]} were: {results}")
-    best = versions[np.argmax(results)]
+    print(f"The results between versions {versions[0]} and {versions[1]} were: {outcomes}")
+    best = versions[np.argmax(outcomes)]
     print(f"The best version was: version {best}")
-    log(agents, results)
 
 
 def main():
