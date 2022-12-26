@@ -2,7 +2,7 @@
 LOOP_ITERATIONS = 10000
 
 # Network architecture
-CONVOLUTIONAL_LAYERS_POSITION = [(32, (3, 3, 3)), (64, (3, 3, 3)), (128, (3, 3, 3)), (256, (3, 3, 3)), (512, (3, 3, 3)) (512, (3, 3, 3))]
+CONVOLUTIONAL_LAYERS_POSITION = [(32, (3, 3, 3)), (64, (3, 3, 3)), (128, (3, 3, 3)), (256, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3))]
 DENSE_POSITION = [1024, 1024, 1024]
 
 CONVOLUTIONAL_LAYERS_DECK = [(32, 3), (64, 3), (64, 3)]
