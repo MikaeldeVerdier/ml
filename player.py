@@ -3,33 +3,33 @@ import game
 import config
 from nn import NeuralNetwork
 
-# class User():
-#     def __init__(self):
-#         pass
+class User():
+    def __init__(self):
+        pass
 
-#     def get_name(self):
-#         return ("You", "are")
+    def get_name(self):
+        return ("You", "are")
 
-#     def play_turn(self, action, tau):
-#         moves = game.get_legal_moves(self.game_state)
-#         legal_moves = [move % game.MOVE_AMOUNT + 1 for move in moves]
-#         user_move = None
-#         while user_move not in legal_moves:
-#             print(f"Legal moves for you are: {legal_moves}")
-#             user_move = int(input("Make your move: "))
-#         action = [move for move in moves if move % 7 + 1 == user_move][0]
-#         self.game_state = self.game_state.update_root(action)
+    def play_turn(self, action, tau):
+        moves = game.get_legal_moves(self.game_state)
+        legal_moves = [move % game.MOVE_AMOUNT + 1 for move in moves]
+        user_move = None
+        while user_move not in legal_moves:
+            print(f"Legal moves for you are: {legal_moves}")
+            user_move = int(input("Make your move: "))
+        action = [move for move in moves if move % 7 + 1 == user_move][0]
+        self.game_state = self.game_state.update_root(action)
 
-#         self.print_move(self.game_state, action)
+        self.print_move(self.game_state, action)
 
-#         return action, None
+        return action, None
 
-#     @staticmethod
-#     def print_move(root, action):
-#         print(f"Move to make is: {action}")
-#         print(f"Position is now:\n{game.print_board(root.s)}\n")
-#         print(f"Drawn card is: {game.format_card(root.drawn_card)}")
-#         print(f"Amount of cards left is now: {len(root.deck)}")
+    @staticmethod
+    def print_move(root, action):
+        print(f"Move to make is: {action}")
+        print(f"Position is now:\n{game.print_board(root.s)}\n")
+        print(f"Drawn card is: {game.format_card(root.drawn_card)}")
+        print(f"Amount of cards left is now: {len(root.deck)}")
 
 
 class Agent():
@@ -51,7 +51,7 @@ class Agent():
 
         self.game_state = self.game_state.update_root(action)
 
-        self.print_move(self.game_state, probs, action)
+        # self.print_move(self.game_state, probs, action)
 
         return action
 

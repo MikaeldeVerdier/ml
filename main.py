@@ -120,7 +120,7 @@ def retrain_network(agent):
 
         agent.main_nn.train(x, y)
 
-    if not agent.main_nn.version % config.VERSION_OFFSET:
+    if not (agent.main_nn.version - 1) % config.VERSION_OFFSET:
         agent.copy_network()
 
     # data = [np.expand_dims(dat, 0) for dat in positions[-1][0]]
