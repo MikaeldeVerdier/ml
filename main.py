@@ -37,21 +37,21 @@ def play(players, games, starts=False, epsilons=[None, None], training=False):
         random.shuffle(deck)
         drawn_card = deck.pop()
         for i, player in sorted(enumerate(players), reverse=starts):
-            player.mcts = GameState(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], deck, drawn_card)
+            player.game_state = GameState(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], deck, drawn_card)
 
             storage = []
 
             outcome = None
             while outcome is None:
-                storage.append({"state": player.mcts})
+                storage.append({"state": player.game_state})
 
                 action = player.play_turn(storage, epsilons[i])
 
-                outcome = game.check_game_over(player.mcts)
+                outcome = game.check_game_over(player.game_state)
 
                 if training:
                     for i2, var in enumerate(["action", "reward", "next_state"]):
-                        storage[-1][var] = [action, 0.0 if outcome is None else outcome, player.mcts][i2]
+                        storage[-1][var] = [action, 0.0 if outcome is None else outcome, player.game_state][i2]
 
             starts ^= starts
 
@@ -120,7 +120,7 @@ def retrain_network(agent):
 
         agent.main_nn.train(x, y)
 
-    if agent.main_nn.version % config.VERSION_OFFSET:
+    if not agent.main_nn.version % config.VERSION_OFFSET:
         agent.copy_network()
 
     # data = [np.expand_dims(dat, 0) for dat in positions[-1][0]]

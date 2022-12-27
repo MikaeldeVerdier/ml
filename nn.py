@@ -47,7 +47,7 @@ class NeuralNetwork:
         self.metrics = loaded["metrics"]
 
         if load:
-            if self.load_version(self.version):
+            if self.load_dir(kind):
                 print(f"NN loaded with version: {self.version}")
 
         position_input = Input(shape=game.NN_INPUT_DIMENSIONS[0], name="position_input")
@@ -66,10 +66,10 @@ class NeuralNetwork:
         ph = self.policy_head(x)
 
         self.model = Model(inputs=[position_input, deck_input, drawn_card_input], outputs=ph)
-        self.model.compile(loss=self.loss, optimizer=Adam(learning_rate=config.LEARNING_RATE))
+        self.model.compile(loss=self.mean_squared_error, optimizer=Adam(learning_rate=config.LEARNING_RATE))
         
         if load:
-            self.load_version(self.version, from_weights=True)
+            self.load_dir(kind, from_weights=True)
             print(f"Weights loaded from version: {self.version}")
         else:
             try:
@@ -83,16 +83,16 @@ class NeuralNetwork:
     def __hash__(self):
         return hash(self.version)
 
-    def load_version(self, version, from_weights=False):
-        path = f"{config.SAVE_PATH}training/v.{version}/checkpoint"
+    def load_dir(self, file, from_weights=False):
+        path = f"{config.SAVE_PATH}training/{file}/checkpoint"
         if not from_weights:
             if not os.path.exists(path):
-                self.model = load_model(f"{config.SAVE_PATH}training/v.{version}", custom_objects={"loss": self.loss})
+                self.model = load_model(f"{config.SAVE_PATH}training{file}", custom_objects={"loss": self.mean_squared_error})
                 return True
         else:
             self.model.load_weights(path).expect_partial()
 
-    def loss(self, y_true, y_pred):
+    def mean_squared_error(self, y_true, y_pred):
         logits = tf.reshape(y_pred, (tf.shape(y_true)[0], -1))
 
         actions = tf.cast(tf.gather(y_true, tf.constant([0]), axis=1), tf.int32)
@@ -201,11 +201,11 @@ class NeuralNetwork:
         for metric in fit.history:
             [self.metrics[metric].append(fit.history[metric][i]) for i in range(config.EPOCHS)]
 
-    def save_model(self):
+    def save_model(self, kind):
         if not self.to_weights:
-            self.model.save(f"{config.SAVE_PATH}training/v.{self.version}")
+            self.model.save(f"{config.SAVE_PATH}training/{kind}")
         else:
-            self.model.save_weights(f"{config.SAVE_PATH}training/v.{self.version}/checkpoint")
+            self.model.save_weights(f"{config.SAVE_PATH}training/{kind}/checkpoint")
 
     def plot_agent(self, iteration_lines=False):
         _, axs = plt.subplots(4, figsize=(20, 20))

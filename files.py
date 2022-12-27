@@ -79,6 +79,10 @@ def add_to_file(file, content, max_len):
         return len(loaded)
 
 
+def copy_file(file, new_path):
+    copyfile(get_path(file), new_path)
+
+
 def make_backup(file, new_name=None):
     new_name = new_name if new_name else file
     copyfile(get_path(file), f"{config.SAVE_PATH}backup/{new_name}")
