@@ -51,14 +51,14 @@ class Agent():
 
         self.game_state = self.game_state.update_root(action)
 
-        # self.print_move(self.game_state, probs, action)
+        self.print_move(self.game_state, probs, action)
 
         return action
 
     def choose_action(self, pi, epsilon):
         if epsilon is None:
             epsilon = config.EPSILON[0] - config.EPSILON_STEP_SIZE * self.main_nn.version if self.main_nn.version < config.EPSILON[2] else config.EPSILON[1]
-        action = np.random.randint(len(pi)) if np.random.rand() <= epsilon else np.argmax(pi)
+        action = np.random.choice(np.where(pi != 0)[0]) if np.random.rand() <= epsilon else np.argmax(pi)
 
         return action
 
