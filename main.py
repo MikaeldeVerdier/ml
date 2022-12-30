@@ -4,7 +4,7 @@ import random
 import game
 import config
 import files
-from game_state import GameState
+from game import GameState
 from player import User, Agent
 
 def initiate():
@@ -55,8 +55,6 @@ def play(players, games, starts=False, epsilons=[None, None], training=False):
 
             starts ^= starts
 
-            # print(f"We are " + ("training" if training else "evaluating"))
-            # print(f"Game outcome was: {outcome} ({int(outcome * 50)}), (Agent name: {player.get_name()[0]})")
             if not game_count % games:
                 print(f"Amount of games played is now: {game_count} ({player.get_name()})\n")
 
@@ -90,12 +88,10 @@ def play(players, games, starts=False, epsilons=[None, None], training=False):
     if not training:
         return result
 
+
 def self_play(agent):
     print("\nSelf-play started!\n")
     play([agent], config.GAME_AMOUNT_SELF_PLAY, training=True)
-
-    # outcome = agent.outcomes["average"]
-    # print(f"The average outcome from self-play was: {outcome}")
 
 
 def retrain_network(agent):

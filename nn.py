@@ -187,8 +187,7 @@ class NeuralNetwork:
         logits = self.model.predict_on_batch(data)[0]
 
         mask = np.full(logits.shape, True)
-        legal_moves = game.get_legal_moves(history[-1])
-        mask[legal_moves] = False
+        mask[history[-1].legal_moves] = False
 
         logits[mask] = 0
 

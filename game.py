@@ -16,10 +16,10 @@ def generate_game_states(history, t, key="state"):
     return game_states
 
 
-def generate_nn_pass(game_states, mirror=False):
+def generate_nn_pass(game_states, modify=False):
     game_state = game_states[-1]
 
-    if mirror:
+    if modify:
         flips = [None, 0, 1, (0, 1)]
         suit_changes = [0, 13, 26, 39]
     else:
@@ -76,7 +76,7 @@ def check_index(board, index, checking_index, checking_func, multiplier_func, mu
             return checking_func(board[checking_index])
 
 
-def get_legal_moves(game_state):  # , all_moves):
+def get_legal_moves(game_state):
     if not len(np.where(game_state.s != 0)[0]): return list(range(np.prod(GAME_DIMENSIONS)))
 
     if game_state.replace_card: return list(range(MOVE_AMOUNT))
@@ -131,7 +131,6 @@ def check_game_over(game_state):
     if len(game_state.deck) == 51 - GAME_LENGTH:
         score = 0
         board = game_state.s.reshape(GAME_DIMENSIONS)
-        # print(print_board(board.flatten()))
         for rowcol in [board, board.T]:
             for row in rowcol:
                 score += score_row(row)
@@ -178,3 +177,20 @@ def print_board(board):
 
 def print_values(values):
     print(f"Action values are: {[values[-1]]}\n{values[:-1].reshape(GAME_DIMENSIONS)}")
+
+
+class GameState:
+    def __init__(self, state, deck, drawn_card):
+        self.s = state
+        self.deck = deck
+        self.drawn_card = drawn_card
+
+        self.replace_card = not len(np.where(state == 0)[0])
+        self.legal_moves = get_legal_moves(self)
+
+    def __hash__(self):
+        return hash(tuple(self.s) + tuple(self.deck) + (self.drawn_card,))
+
+    def update_root(self, action):
+        self.s, self.deck, self.drawn_card = take_action(self, action)
+        return GameState(self.s, self.deck, self.drawn_card)
