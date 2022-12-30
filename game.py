@@ -1,7 +1,7 @@
 import numpy as np
 import config
 
-GAME_DIMENSIONS = (3, 3)
+GAME_DIMENSIONS = (5, 5)
 NN_INPUT_DIMENSIONS = [(config.DEPTH,) + GAME_DIMENSIONS + (52,), (config.DEPTH, 52), (config.DEPTH, 52)]
 MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
 REPLACE_CARDS = 3
@@ -91,7 +91,7 @@ def get_legal_moves(game_state):
                     if checking_index not in legal_moves and check_index(game_state.s, index, checking_index, lambda x: x == 0, func, multiplier):
                         legal_moves.append(checking_index)
 
-    return legal_moves  # Prob can be more efficient
+    return legal_moves
 
 
 def get_card(value):
@@ -160,13 +160,13 @@ def format_card(card):
 def inverse_format_card(card):
     suit_dict = {"sp": 0, "hj": 1, "ru": 2, "kl": 3}
 
-    c = int(card[2:]) - 1
-    c += 13 * suit_dict[card[:2]]
+    card_num = int(card[2:]) - 1
+    card_num += 13 * suit_dict[card[:2]]
 
-    return c
+    return card_num
 
 
-def print_board(board):
+def shape_board(board):
     board = board.astype("<U4")
     board[board == "0.0"] = "---"
     for i, pos in enumerate(board):

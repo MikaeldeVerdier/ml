@@ -4,6 +4,7 @@ import random
 import game
 import config
 import files
+from datetime import datetime
 from game import GameState
 from player import User, Agent
 
@@ -16,7 +17,7 @@ def initiate():
         files.reset_file("positions.npy")
         files.reset_file("log.txt")
 
-    agent = Agent(load, to_weights=True)
+    agent = Agent(load=load, trainable=True)
 
     return agent
 
@@ -133,36 +134,39 @@ def evaluate_network(agent):
     outcome = play([agent], config.GAME_AMOUNT_EVALUATION, epsilons=[0.05])
     agent.main_nn.save_outcomes()
 
-    outcome = np.mean(outcome)
+    average = np.mean(outcome)
 
-    log(agent, outcome)
+    log([agent], average)
     agent.main_nn.plot_agent()
 
-    print(f"The result was: {outcome}")
+    print(f"The result was: {average}")
 
 
-def log(agent, result):
-    message = f"{agent.get_name()} had an average score of: {result}\n"
+def log(agent_s, average_s):
+    message = f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}: {' vs '.join([agent.get_name() for agent in agent_s])}:\nAverage results were {average_s}"
     files.write("log.txt", message, "a")
 
 
-def play_test(version, games, starts=False):
+def play_test(load, games, starts=False):
     you = User()
-    agents = [Agent(True, version=version), you]
-    results = play(agents, games, starts=starts)
+    agents = [Agent(load=load), you]
+    outcomes = play(agents, games, starts=starts)
 
-    print(f"The results were: {results}")
-    log(agents, results)
+    averages = np.mean(outcomes, axis=1)
+
+    print(f"The results were: {averages}")
 
 
-def play_versions(versions, games, starts=False):
-    agents = [Agent(True, version=version) for version in versions]
-    results = play(agents, games, starts=starts, epsilons=[0.05, 0.05])
+def play_versions(loads, games, starts=False):
+    agents = [Agent(load=load) for load in loads]
+    outcomes = play(agents, games, starts=starts, epsilons=[0.05, 0.05])
 
-    outcomes = np.mean(results)
-    
-    print(f"The results between versions {versions[0]} and {versions[1]} were: {outcomes}")
-    best = versions[np.argmax(outcomes)]
+    averages = np.mean(outcomes, axis=1)
+
+    log(loads, averages)
+
+    print(f"The results between versions named {loads[0]} and {loads[1]} were: {averages}")
+    best = loads[np.argmax(averages)].get_name()
     print(f"The best version was: version {best}")
 
 

@@ -35,19 +35,20 @@ except ImportError:
 
 
 class NeuralNetwork:
-    def __init__(self, load, version, kind=None, to_weights=True):
-        self.version = version
+    def __init__(self, load, kind, to_weights):
         self.to_weights = to_weights
 
-        loaded = files.load_file("save.json")
-        if version is None:
+        if kind is not None:
+            if load:
+                load = kind
+            loaded = files.load_file("save.json")
             self.version = loaded[f"{kind}_version"]
-        self.version_outcomes = loaded["version_outcomes"]
-        self.iterations = loaded["iterations"]
-        self.metrics = loaded["metrics"]
+            self.version_outcomes = loaded["version_outcomes"]
+            self.iterations = loaded["iterations"]
+            self.metrics = loaded["metrics"]
 
         if load:
-            if self.load_dir(kind):
+            if self.load_dir(load):
                 print(f"NN loaded with version: {self.version}")
 
         position_input = Input(shape=game.NN_INPUT_DIMENSIONS[0], name="position_input")
@@ -69,7 +70,7 @@ class NeuralNetwork:
         self.model.compile(loss=self.mean_squared_error, optimizer=Adam(learning_rate=config.LEARNING_RATE))
         
         if load:
-            self.load_dir(kind, from_weights=True)
+            self.load_dir(load, from_weights=True)
             print(f"Weights loaded from version: {self.version}")
         else:
             try:

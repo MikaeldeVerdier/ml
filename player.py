@@ -27,15 +27,20 @@ class User():
     @staticmethod
     def print_move(root, action):
         print(f"Move to make is: {action}")
-        print(f"Position is now:\n{game.print_board(root.s)}\n")
+        print(f"Position is now:\n{game.shape_board(root.s)}\n")
         print(f"Drawn card is: {game.format_card(root.drawn_card)}")
         print(f"Amount of cards left is now: {len(root.deck)}")
 
 
 class Agent():
-    def __init__(self, load, version=None, name=None, to_weights=False):
-        self.main_nn = NeuralNetwork(load, version, kind="main_nn", to_weights=to_weights)
-        self.target_nn = NeuralNetwork(load, version, kind="target_nn", to_weights=to_weights)
+    def __init__(self, load=False, name=None, trainable=False, to_weights=False):
+        main_kind = "main_nn" if trainable else None
+        if trainable:
+            main_kind = "main_nn"
+            self.target_nn = NeuralNetwork(load, kind="target_nn", to_weights=to_weights)
+        else:
+            main_kind = None
+        self.main_nn = NeuralNetwork(load, main_kind, to_weights)
         self.name = name
         
         self.outcomes = {"average": 0, "length": 0}
@@ -51,7 +56,7 @@ class Agent():
 
         self.game_state = self.game_state.update_root(action)
 
-        # self.print_move(self.game_state, probs, action)
+        self.print_move(self.game_state, probs, action)
 
         return action
 
@@ -81,6 +86,6 @@ class Agent():
     def print_move(game_state, pi, action):
         game.print_values(pi)
         print(f"Move to make is: {action}")
-        print(f"Position is now:\n{game.print_board(game_state.s)}")
+        print(f"Position is now:\n{game.shape_board(game_state.s)}")
         print(f"Drawn card is: {game.format_card(game_state.drawn_card)}")
         print(f"Amount of cards left is now: {len(game_state.deck)}")
