@@ -179,8 +179,8 @@ def main():
         if not (agent.main_nn.version - 1) % config.EVALUATION_FREQUENCY:
             evaluate_network(agent)
 
-    # play_versions([1, agents[1].nn.version], config.GAME_AMOUNT_PLAY_VERSIONS)
-    # play_test(agents[1].nn.version, config.GAME_AMOUNT_PLAY_TEST)
+    # play_versions(["untrained_version", "trained version"], co)
+    # play_test("trained_version", config.GAME_AMOUNT_PLAY_TEST)
     # print(files.add_to_file("positions.json", files.load_file("poss.json"), config.POSITION_AMOUNT)[0])
 
 

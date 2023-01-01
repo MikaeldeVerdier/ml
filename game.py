@@ -83,7 +83,7 @@ def get_legal_moves(game_state):
                 if not multiplier and not add_on:
                     continue
                 check_index = index + GAME_DIMENSIONS[1] * multiplier + add_on
-                if 0 <= check_index <= np.prod(GAME_DIMENSIONS) and check_index // GAME_DIMENSIONS[1] - index // GAME_DIMENSIONS[1] == multiplier:
+                if check_index not in legal_moves and 0 <= check_index < np.prod(GAME_DIMENSIONS) and check_index // GAME_DIMENSIONS[1] - index // GAME_DIMENSIONS[1] == multiplier:
                     legal_moves.append(check_index)
 
     return legal_moves

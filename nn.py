@@ -46,10 +46,14 @@ class NeuralNetwork:
             self.version_outcomes = loaded["version_outcomes"]
             self.iterations = loaded["iterations"]
             self.metrics = loaded["metrics"]
+        else:
+            self.version = load
+            self.version_outcomes = {}
 
         if load:
             if self.load_dir(load):
-                print(f"NN loaded with version: {self.version}")
+                print(f"NN loaded with version called: {load}")
+                return
 
         position_input = Input(shape=game.NN_INPUT_DIMENSIONS[0], name="position_input")
         position = self.position_cnn(position_input)
@@ -71,7 +75,7 @@ class NeuralNetwork:
         
         if load:
             self.load_dir(load, from_weights=True)
-            print(f"Weights loaded from version: {self.version}")
+            print(f"Weights loaded from version called: {load}")
         else:
             try:
                 plot_model(self.model, to_file=files.get_path("model.png"), show_shapes=True, show_layer_names=True)

@@ -8,27 +8,41 @@ class User():
         pass
 
     def get_name(self):
-        return ("You", "are")
+        return "You"
 
-    def play_turn(self, action, tau):
-        moves = self.game_state.legal_moves
-        legal_moves = [move % game.MOVE_AMOUNT + 1 for move in moves]
+    @staticmethod
+    def string_to_tuple(s):
+        a = s.replace(" ", "").replace("(", "").replace(")", "")
+        b = a.split(',')
+        res = tuple(int(el) for el in b)
+
+        return res
+
+    def play_turn(self, *args):
+        print(f"Drawn card is: {game.format_card(self.game_state.drawn_card)}")
+
+        legal_moves = self.game_state.legal_moves
+        moves = [(legal_move % game.GAME_DIMENSIONS[1] + 1, game.GAME_DIMENSIONS[1] - legal_move // game.GAME_DIMENSIONS[1]) for legal_move in legal_moves]
         user_move = None
-        while user_move not in legal_moves:
-            print(f"Legal moves for you are: {legal_moves}")
-            user_move = int(input("Make your move: "))
-        action = [move for move in moves if move % 7 + 1 == user_move][0]
+        while user_move not in moves:
+            print(f"Legal moves for you are: {moves}")
+            try:
+                user_move = self.string_to_tuple(input("Make your move: "))
+            except ValueError:
+                print("Please enter a valid move.")
+        
+        action = legal_moves[moves.index(user_move)]
+
         self.game_state = self.game_state.update_root(action)
 
         self.print_move(self.game_state, action)
 
-        return action, None
+        return action
 
     @staticmethod
     def print_move(root, action):
         print(f"Move to make is: {action}")
         print(f"Position is now:\n{game.shape_board(root.s)}\n")
-        print(f"Drawn card is: {game.format_card(root.drawn_card)}")
         print(f"Amount of cards left is now: {len(root.deck)}")
 
 
