@@ -56,7 +56,7 @@ class Agent():
 
         self.game_state = self.game_state.update_root(action)
 
-        self.print_move(self.game_state, probs, action)
+        # self.print_move(self.game_state, probs, action)
 
         return action
 

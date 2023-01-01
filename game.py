@@ -70,12 +70,6 @@ def generate_nn_pass(game_states, modify=False):
     return nn_pass
 
 
-def check_index(board, index, checking_index, checking_func, multiplier_func, multiplier):
-    if 0 <= checking_index < np.prod(GAME_DIMENSIONS):
-        if checking_index // GAME_DIMENSIONS[1] == index // GAME_DIMENSIONS[1] + multiplier_func(multiplier):
-            return checking_func(board[checking_index])
-
-
 def get_legal_moves(game_state):
     if not len(np.where(game_state.s != 0)[0]): return list(range(np.prod(GAME_DIMENSIONS)))
 
@@ -84,12 +78,13 @@ def get_legal_moves(game_state):
     legal_moves = []
 
     for index in np.where(game_state.s != 0)[0]:
-        for checks, func in [[(GAME_DIMENSIONS[1] + 1, GAME_DIMENSIONS[1] - 1, GAME_DIMENSIONS[1]), lambda m: m], [(1,), lambda m: 0]]:
-            for check in checks:
-                for multiplier in [1, -1]:
-                    checking_index = index + check * multiplier
-                    if checking_index not in legal_moves and check_index(game_state.s, index, checking_index, lambda x: x == 0, func, multiplier):
-                        legal_moves.append(checking_index)
+        for multiplier in [-1, 0, 1]:
+            for add_on in [-1, 0, 1]:
+                if not multiplier and not add_on:
+                    continue
+                check_index = index + GAME_DIMENSIONS[1] * multiplier + add_on
+                if 0 <= check_index <= np.prod(GAME_DIMENSIONS) and check_index // GAME_DIMENSIONS[1] - index // GAME_DIMENSIONS[1] == multiplier:
+                    legal_moves.append(check_index)
 
     return legal_moves
 
@@ -120,8 +115,7 @@ def score_row(cards):
     if stege:
         score += 10
 
-        op = values[-2] == 13
-        if op:
+        if values[-2] == 13:
             return 3 * score - 10
     
     return score
@@ -141,13 +135,11 @@ def check_game_over(game_state):
 def take_action(game_state, action):
     board = game_state.s.copy()
     deck = game_state.deck.copy()
-    card = game_state.drawn_card
 
     if action != np.prod(GAME_DIMENSIONS):
-        board[action] = card
-    card = deck.pop()
+        board[action] = game_state.drawn_card
 
-    return (board, deck, card)
+    return (board, deck, deck.pop())
 
 
 def format_card(card):
