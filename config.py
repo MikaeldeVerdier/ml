@@ -17,7 +17,7 @@ USE_BIAS = True
 
 # Self-play
 GAME_AMOUNT_SELF_PLAY = 50
-POSITION_AMOUNT = 100000
+POSITION_AMOUNT = 30000
 DEPTH = 1
 EPSILON = [1, 0.1, LOOP_ITERATIONS * 0.9]  # Exploration rate in the form of: [initial, final, duration]
 EPSILON_STEP_SIZE = (EPSILON[0] - EPSILON[1]) / EPSILON[2]  # Step size of EPSILON
