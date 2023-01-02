@@ -4,7 +4,9 @@ import config
 from funcs import format_card, score_row
 
 class Environment:
-    def __init__(self):
+    def __init__(self, verbose=False):
+        self.verbose = verbose
+
         self.GAME_DIMENSIONS = (5, 5)
         self.NN_INPUT_DIMENSIONS = [(config.DEPTH,) + self.GAME_DIMENSIONS + (52,), (config.DEPTH, 52), (config.DEPTH, 52)]
         self.MOVE_AMOUNT = np.prod(self.GAME_DIMENSIONS) + 1
@@ -16,7 +18,8 @@ class Environment:
         s, deck, drawn_card = self.game_state.take_action(action)
         self.game_state = GameState(self.game_state.history, s, deck, drawn_card)
 
-        self.print_state()
+        if self.verbose:
+            self.print_state()
 
     def reset(self):
         deck = list(range(1, 53))

@@ -26,7 +26,8 @@ class User():
         
         action = legal_moves[moves.index(user_move)]
 
-        self.print_action(action)
+        if self.env.verbose:
+            self.print_action(action)
 
         return action
 
@@ -35,13 +36,13 @@ class User():
 
 
 class Agent():
-    def __init__(self, load=False, name=None, trainable=False, to_weights=False):
-        self.env = Environment()
+    def __init__(self, verbose=False, load=False, name=None, trainable=False, to_weights=False):
+        self.env = Environment(verbose=verbose)
 
         main_kind = "main_nn" if trainable else None
         if trainable:
             main_kind = "main_nn"
-            self.target_nn = NeuralNetwork(self.env, load, kind="target_nn", to_weights=to_weights)
+            self.target_nn = NeuralNetwork(self.env, load, "target_nn", to_weights)
         else:
             main_kind = None
         self.main_nn = NeuralNetwork(self.env, load, main_kind, to_weights)
@@ -57,7 +58,8 @@ class Agent():
 
         action = self.choose_action(probs, epsilon)
 
-        self.print_action(probs, action)
+        if self.env.verbose:
+            self.print_action(probs, action)
 
         return action
 

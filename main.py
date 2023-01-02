@@ -78,7 +78,7 @@ def play(players, games, starts=False, epsilons=[None, None], training=False):
                         files.make_backup("positions.npy", f"positions_{config.POSITION_AMOUNT}.npy")
                 else:
                     if games == game_count:
-                        games += np.ceil(left / (player.env.GAME_LENGTH * 16 * left // (player.env.GAME_LENGTH * 16 * og_games)))
+                        games += np.ceil(left / (player.env.GAME_LENGTH * 16) % og_games)
 
     if not training:
         return result
@@ -143,7 +143,7 @@ def log(agent_s, average_s):
 
 def play_test(load, games, starts=False):
     you = User()
-    agents = [Agent(load=load), you]
+    agents = [Agent(verbose=True, load=load), you]
     outcomes = play(agents, games, starts=starts)
 
     averages = np.mean(outcomes, axis=1)
@@ -152,7 +152,7 @@ def play_test(load, games, starts=False):
 
 
 def play_versions(loads, games, starts=False):
-    agents = [Agent(load=load) for load in loads]
+    agents = [Agent(verbose=True, load=load) for load in loads]
     outcomes = play(agents, games, starts=starts, epsilons=[0.05, 0.05])
 
     averages = np.mean(outcomes, axis=1)
