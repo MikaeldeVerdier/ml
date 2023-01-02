@@ -81,7 +81,7 @@ class Agent():
         self.target_nn.load_dir("main_nn")
         self.target_nn.save_model("target_nn")
 
-        files.edit_key("save.json", "target_nn_version", self.main_nn.version)
+        files.edit_key("save.json", ["target_nn_version"], [self.main_nn.version])
 
     def change_version(self):
         self.main_nn.iterations.append(config.TRAINING_ITERATIONS * config.EPOCHS)

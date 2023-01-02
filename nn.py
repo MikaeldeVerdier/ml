@@ -258,15 +258,7 @@ class NeuralNetwork:
         self.version_outcomes[self.version]["average"] = (self.version_outcomes[self.version]["average"] * (self.version_outcomes[self.version]["length"] - 1) + result) / self.version_outcomes[self.version]["length"]
 
     def save_outcomes(self):
-        loaded = files.load_file("save.json")
-        loaded["version_outcomes"] = self.version_outcomes
-
-        files.write("save.json", json.dumps(loaded))
+        files.edit_key("save.json", ["version_outcomes"], [self.version_outcomes])
 
     def save_metrics(self):
-        loaded = files.load_file("save.json")
-        loaded[f"main_nn_version"] = self.version
-        loaded["iterations"] = self.iterations
-        loaded["metrics"] = self.metrics
-
-        files.write("save.json", json.dumps(loaded))
+        files.edit_key("save.json", ["main_nn_version", "iterations", "metrics"], [self.version, self.iterations, self.metrics])
