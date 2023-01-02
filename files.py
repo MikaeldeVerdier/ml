@@ -57,10 +57,16 @@ def reset_file(file):
         np.save(file_path, EMPTY_FILES[file])
 
 
+def edit_key(file, key, value):
+    loaded = load_file(file)
+    loaded[key] = value
+    write(file, json.dumps(loaded))
+
+
 def reset_key(file, key):
     loaded = load_file(file)
     loaded[key] = EMPTY_FILES[file][key]
-    write(file, json.loads(loaded))
+    write(file, json.dumps(loaded))
 
 
 def add_to_file(file, content, max_len):
