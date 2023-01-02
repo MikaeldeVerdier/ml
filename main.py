@@ -1,11 +1,9 @@
 import os
 import numpy as np
 import random
-import game
 import config
 import files
 from datetime import datetime
-from game import GameState
 from player import User, Agent
 
 def initiate():
@@ -33,26 +31,24 @@ def play(players, games, starts=False, epsilons=[None, None], training=False):
     game_count = 0
     while game_count < games:
         game_count += 1
-        
-        deck = list(range(1, 53))
-        random.shuffle(deck)
-        drawn_card = deck.pop()
+
         for i, player in sorted(enumerate(players), reverse=starts):
-            player.game_state = GameState(np.zeros(np.prod(game.GAME_DIMENSIONS))[::], deck, drawn_card)
+            player.env.reset()
 
             storage = []
 
             outcome = None
             while outcome is None:
-                storage.append({"state": player.game_state})
+                storage.append({"state": player.env.game_state})
 
-                action = player.play_turn(storage, epsilons[i])
+                action = player.get_action(epsilons[i])
+                player.env.step(action)
 
-                outcome = game.check_game_over(player.game_state)
+                outcome = player.env.game_state.check_game_over()
 
                 if training:
                     for i2, var in enumerate(["action", "reward", "next_state"]):
-                        storage[-1][var] = [action, 0.0 if outcome is None else outcome, player.game_state][i2]
+                        storage[-1][var] = [action, 0.0 if outcome is None else outcome, player.env.game_state][i2]
 
             starts ^= starts
 
@@ -60,16 +56,14 @@ def play(players, games, starts=False, epsilons=[None, None], training=False):
                 print(f"Amount of games played is now: {game_count} ({player.get_name()})\n")
 
             if not training:
-                outcome = int(outcome / game.REWARD_FACTOR)
+                outcome = int(outcome / player.env.REWARD_FACTOR)
                 result[i].append(outcome)
                 player.main_nn.register_result(outcome)
             else:
                 for t, data in enumerate(storage):
                     data["target"] = player.calculate_target(storage, t) if t != len(storage) - 1 else data["reward"]
 
-                    game_states = game.generate_game_states(storage, t)
-
-                    states = np.array(game.generate_nn_pass(game_states, True), dtype=object).tolist()
+                    states = np.array(data["state"].generate_nn_pass(modify=True), dtype=object).tolist()
                     for flip in states: product.append(np.array([flip, data["action"], data["target"]], dtype=object))
 
                 if not game_count % games:
@@ -84,7 +78,7 @@ def play(players, games, starts=False, epsilons=[None, None], training=False):
                         files.make_backup("positions.npy", f"positions_{config.POSITION_AMOUNT}.npy")
                 else:
                     if games == game_count:
-                        games += np.ceil(left / (game.GAME_LENGTH * 16 * left // (game.GAME_LENGTH * 16 * og_games)))
+                        games += np.ceil(left / (player.env.GAME_LENGTH * 16 * left // (player.env.GAME_LENGTH * 16 * og_games)))
 
     if not training:
         return result
@@ -103,7 +97,7 @@ def retrain_network(agent):
     for _ in range(config.TRAINING_ITERATIONS):
         minibatch = random.sample(positions, config.BATCH_SIZE[0])
 
-        x = [[] for _ in range(len(game.NN_INPUT_DIMENSIONS))]
+        x = [[] for _ in range(len(agent.env.NN_INPUT_DIMENSIONS))]
         y = []
 
         for position in minibatch:

@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import os
 import json
 import config
-import game
 import files
 from tensorflow.keras import regularizers
 from tensorflow.keras.models import Model, load_model
@@ -35,7 +34,8 @@ except ImportError:
 
 
 class NeuralNetwork:
-    def __init__(self, load, kind, to_weights):
+    def __init__(self, env, load, kind, to_weights):
+        self.env = env
         self.to_weights = to_weights
 
         if kind is not None:
@@ -55,13 +55,13 @@ class NeuralNetwork:
                 print(f"NN loaded with version called: {load}")
                 return
 
-        position_input = Input(shape=game.NN_INPUT_DIMENSIONS[0], name="position_input")
+        position_input = Input(shape=env.NN_INPUT_DIMENSIONS[0], name="position_input")
         position = self.position_cnn(position_input)
 
-        deck_input = Input(shape=game.NN_INPUT_DIMENSIONS[1], name="deck_input")
+        deck_input = Input(shape=env.NN_INPUT_DIMENSIONS[1], name="deck_input")
         deck = self.deck_cnn(deck_input)
 
-        drawn_card_input = Input(shape=game.NN_INPUT_DIMENSIONS[2], name="drawn_card_input")
+        drawn_card_input = Input(shape=env.NN_INPUT_DIMENSIONS[2], name="drawn_card_input")
         drawn_card = self.drawn_card_cnn(drawn_card_input)
 
         x = Concatenate()([position, deck, drawn_card])
@@ -114,7 +114,7 @@ class NeuralNetwork:
 
         action = tf.cast(tf.gather(y_true, tf.constant([0]), axis=1), tf.int32)
         pi_action = tf.gather(y_true, 1, axis=1)
-        legal_moves = tf.gather(y_true, tf.range(3, 3 + game.MOVE_AMOUNT), axis=1)
+        legal_moves = tf.gather(y_true, tf.range(3, 3 + self.env.MOVE_AMOUNT), axis=1)
         
         pi_new = self.softmax(logits, legal_moves)
         pi_theta = tf.gather_nd(pi_new, tf.stack([tf.range(tf.shape(action)[0]), action[:, 0]], axis=1))
@@ -159,7 +159,7 @@ class NeuralNetwork:
 
     @staticmethod
     def convolutional_layer_3D(x, filters, kernel_size):
-        x = Conv3D(filters=filters, kernel_size=kernel_size, data_format="channels_last", padding="same", use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
+        x = Conv3D(filters=filters, kernel_size=kernel_size, data_format="channels_last", padding="same", use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         x = BatchNormalization()(x)
         x = ReLU()(x)
         
@@ -167,7 +167,7 @@ class NeuralNetwork:
 
     @staticmethod
     def convolutional_layer_1D(x, filters, kernel_size):
-        x = Conv1D(filters=filters, kernel_size=kernel_size, data_format="channels_last", padding="same", use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
+        x = Conv1D(filters=filters, kernel_size=kernel_size, data_format="channels_last", padding="same", use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         x = BatchNormalization()(x)
         x = ReLU()(x)
         
@@ -179,20 +179,19 @@ class NeuralNetwork:
         
         return x
 
-    @staticmethod
-    def policy_head(x):
+    def policy_head(self, x):
         for neuron_amount in config.DENSE_POLICY_HEAD: x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
-        x = Dense(game.MOVE_AMOUNT, use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST), name="policy_head")(x)
+        x = Dense(self.env.MOVE_AMOUNT, use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST), name="policy_head")(x)
         
         return x
 
     @cache
-    def get_preds(self, history):
-        data = [np.expand_dims(dat, 0) for dat in game.generate_nn_pass(history)[0]]
+    def get_preds(self, game_state):
+        data = [np.expand_dims(dat, 0) for dat in game_state.generate_nn_pass()[0]]
         logits = self.model.predict_on_batch(data)[0]
 
         mask = np.full(logits.shape, True)
-        mask[history[-1].legal_moves] = False
+        mask[game_state.legal_moves] = False
 
         logits[mask] = 0
 
