@@ -1,3 +1,5 @@
+import numpy as np
+
 def get_card(value):
     suit = (value - 1) // 13
     value = ((value - 1) % 13) + 2
@@ -52,3 +54,7 @@ def string_to_tuple(s):
         res = tuple(int(el) for el in b)
 
         return res
+
+
+def moving_average(data, n):
+    return [np.mean(data[i:i + n]) for i in np.arange(0, len(data) - n + 1)]

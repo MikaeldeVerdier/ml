@@ -86,9 +86,15 @@ class Agent():
     def change_version(self):
         self.main_nn.iterations.append(config.TRAINING_ITERATIONS * config.EPOCHS)
         self.main_nn.version += 1
-        self.main_nn.save_model("main_nn")
-        self.main_nn.save_metrics()
         self.outcomes = {"average": 0, "length": 0}
+
+        if not (self.main_nn.version - 1) % config.SAVING_FREQUENCY:
+            self.main_nn.save_model("main_nn")
+            self.main_nn.save_metrics()
+            self.main_nn.plot_agent()
+
+        if not (self.main_nn.version - 1) % config.VERSION_OFFSET:
+            self.copy_network()
 
     def print_action(self, values, action):
         print(f"Action values are: {[values[-1]]}\n{np.round(values[:-1], 8).reshape(self.env.GAME_DIMENSIONS)}")

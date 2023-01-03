@@ -116,17 +116,11 @@ def retrain_network(agent):
         y = np.array(y)
 
         agent.main_nn.train(x, y)
-
-    if not (agent.main_nn.version - 1) % config.VERSION_OFFSET:
-        agent.copy_network()
+    agent.change_version()
 
     # data = [np.expand_dims(dat, 0) for dat in positions[-1][0]]
     # real = positions[-1]
     # p = agent.main_nn.model.predict(data)
-
-    agent.change_version()
-    if not (agent.main_nn.version - 1) % config.PLOTTING_FREQUENCY:
-        agent.main_nn.plot_agent()
 
 
 def evaluate_network(agent):

@@ -10,6 +10,7 @@ from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.layers import Input, Dense, Conv3D, Conv1D, Flatten, BatchNormalization, ReLU, Concatenate
 from tensorflow.keras.optimizers import Adam
 from keras.utils.vis_utils import plot_model
+from funcs import moving_average
 
 try:
     matplotlib.use("Agg")
@@ -216,22 +217,29 @@ class NeuralNetwork:
         for i, metric in enumerate(self.metrics):
             data = self.metrics[metric]
             if data:
+                n = int(np.ceil(len(data) / 50))
+                data = moving_average(data, n)
+
                 ax = axis_dict[metric]
                 color = list(matplotlib.colors.BASE_COLORS.keys())[i]
                 axs[ax].plot(data, color=color, label=f"{metric}\n(last point: {data[-1]:5f})")
                 axs[ax].axhline(data[-1], color="black", linestyle=":")
 
                 x = list(range(1, len(data)))
+
                 deriv = np.diff(data)
                 axs[ax[0] + 1, ax[1]].plot(x, deriv, color=color, label=f"Derivative of {metric}")
         
         data = self.version_outcomes
         if data:
+            n = int(np.ceil(len(data) / 50))
+            data = moving_average(data, n)
+
             x = list(map(int, data.keys()))
             data = [value["average"] for value in data.values()]
             axs[2, 0].plot(x, data, color="c", label=f"Outcome\n(last point: {data[-1]:5f})")
 
-            deriv = np.diff(data)
+            deriv = moving_average(np.diff(data), n)
             axs[3, 0].plot(x[1:], deriv, color="c", label=f"Derivative of outcome")
 
         for ax_index, axis in enumerate(["Loss", "Loss derivative", "Outcome", "Outcome derivative", "Validation loss", "Validation loss derivative", "Average Q-value", "Average Q-value derivative"]):
