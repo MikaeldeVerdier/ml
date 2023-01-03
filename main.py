@@ -20,7 +20,7 @@ def initiate():
     return agent
 
 
-def play(players, games, starts=False, epsilons=[None, None], training=False):
+def play(players, games, starts=0, epsilons=[None, None], training=False):
     if training:
         length = 0
         product = []
@@ -32,8 +32,9 @@ def play(players, games, starts=False, epsilons=[None, None], training=False):
     while game_count < games:
         game_count += 1
 
-        for i, player in sorted(enumerate(players), reverse=starts):
+        for i, player in enumerate(players[starts - 1:] + players[:starts - 1]):
             player.env.reset()
+            cumulative_q_value = 0
 
             storage = []
 
@@ -41,8 +42,10 @@ def play(players, games, starts=False, epsilons=[None, None], training=False):
             while outcome is None:
                 storage.append({"state": player.env.game_state})
 
-                action = player.get_action(epsilons[i])
+                action, q_value = player.get_action(epsilons[i])
                 player.env.step(action)
+
+                cumulative_q_value += q_value
 
                 outcome = player.env.game_state.check_game_over()
 
@@ -51,6 +54,8 @@ def play(players, games, starts=False, epsilons=[None, None], training=False):
                         storage[-1][var] = [action, 0.0 if outcome is None else outcome, player.env.game_state][i2]
 
             starts ^= starts
+
+            player.main_nn.metrics["average_q_value"].append(cumulative_q_value / player.env.GAME_LENGTH)
 
             if not game_count % games:
                 print(f"Amount of games played is now: {game_count} ({player.get_name()})\n")
@@ -119,7 +124,8 @@ def retrain_network(agent):
     # p = agent.main_nn.model.predict(data)
 
     agent.change_version()
-    agent.main_nn.plot_agent()
+    if not (agent.main_nn.version - 1) % config.PLOTTING_FREQUENCY:
+        agent.main_nn.plot_agent()
 
 
 def evaluate_network(agent):
@@ -131,7 +137,6 @@ def evaluate_network(agent):
     average = np.mean(outcome)
 
     log([agent], average)
-    agent.main_nn.plot_agent()
 
     print(f"The result was: {average}")
 
@@ -141,7 +146,7 @@ def log(agent_s, average_s):
     files.write("log.txt", message, "a")
 
 
-def play_test(load, games, starts=False):
+def play_test(load, games, starts=1):
     you = User()
     agents = [Agent(verbose=True, load=load), you]
     outcomes = play(agents, games, starts=starts)
@@ -151,7 +156,7 @@ def play_test(load, games, starts=False):
     print(f"The results were: {averages}")
 
 
-def play_versions(loads, games, starts=False):
+def play_versions(loads, games, starts=0):
     agents = [Agent(verbose=True, load=load) for load in loads]
     outcomes = play(agents, games, starts=starts, epsilons=[0.05, 0.05])
 
@@ -173,7 +178,7 @@ def main():
         if not (agent.main_nn.version - 1) % config.EVALUATION_FREQUENCY:
             evaluate_network(agent)
 
-    # play_versions(["untrained_version", "trained version"], co)
+    # play_versions(["untrained_version", "trained version"], config.GAME_AMOUNT_PLAY_VERSIONS)
     # play_test("trained_version", config.GAME_AMOUNT_PLAY_TEST)
     # print(files.add_to_file("positions.json", files.load_file("poss.json"), config.POSITION_AMOUNT)[0])
 

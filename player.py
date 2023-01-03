@@ -62,7 +62,7 @@ class Agent():
         if self.env.verbose:
             self.print_action(probs, action)
 
-        return action
+        return action, probs[action]
 
     def choose_action(self, pi, epsilon):
         masked = np.full_like(pi, -np.inf)

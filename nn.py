@@ -3,7 +3,6 @@ import tensorflow as tf
 import matplotlib
 import matplotlib.pyplot as plt
 import os
-import json
 import config
 import files
 from tensorflow.keras import regularizers
@@ -210,40 +209,41 @@ class NeuralNetwork:
         else:
             self.model.save_weights(f"{config.SAVE_PATH}training/{kind}/checkpoint")
 
-    def plot_agent(self, iteration_lines=False):
-        _, axs = plt.subplots(4, figsize=(20, 20))
-        for metric in self.metrics:
+    def plot_agent(self):
+        _, axs = plt.subplots(4, 2, figsize=(40, 20))
+
+        axis_dict = {"loss": (0, 0), "val_loss": (0, 1), "average_q_value": (2, 1)}
+        for i, metric in enumerate(self.metrics):
             data = self.metrics[metric]
             if data:
-                axs[0].plot(data, label=f"{metric}\n(last point: {data[-1]:5f})")
-                axs[0].axhline(data[-1], color="black", linestyle=":")
+                ax = axis_dict[metric]
+                color = list(matplotlib.colors.BASE_COLORS.keys())[i]
+                axs[ax].plot(data, color=color, label=f"{metric}\n(last point: {data[-1]:5f})")
+                axs[ax].axhline(data[-1], color="black", linestyle=":")
 
                 x = list(range(1, len(data)))
                 deriv = np.diff(data)
-                axs[1].plot(x, deriv, label=f"Derivative of {metric}")
+                axs[ax[0] + 1, ax[1]].plot(x, deriv, color=color, label=f"Derivative of {metric}")
         
         data = self.version_outcomes
         if data:
             x = list(map(int, data.keys()))
             data = [value["average"] for value in data.values()]
-            axs[2].plot(x, data, label=f"Outcome\n(last point: {data[-1]:5f})")
+            axs[2, 0].plot(x, data, color="c", label=f"Outcome\n(last point: {data[-1]:5f})")
 
             deriv = np.diff(data)
-            axs[3].plot(x[1:], deriv, label=f"Derivative of outcome")
+            axs[3, 0].plot(x[1:], deriv, color="c", label=f"Derivative of outcome")
 
-        for ax_index, axis in enumerate(["Loss", "Loss derivatives", "Outcome", "Outcome derivative"]):
-            ax = axs[ax_index]
+        for ax_index, axis in enumerate(["Loss", "Loss derivative", "Outcome", "Outcome derivative", "Validation loss", "Validation loss derivative", "Average Q-value", "Average Q-value derivative"]):
+            ax = axs.T.flatten()[ax_index]
             ax.set_title(axis)
-            ax.set_xlabel("Training iteration" if "Loss" in axis else "Version")
+            ax.set_xlabel("Training iteration" if "Loss" in axis else "Version" if "Outcome" in axis else "Loop iteration")
             ax.set_ylabel(axis)
             ax.set_xscale("linear")
             box = ax.get_position()
             ax.set_position([box.x0, box.y0, box.width * 0.9, box.height])
             ax.yaxis.set_tick_params(labelbottom=True)
             ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
-            if iteration_lines:
-                iterations = self.iterations
-                [ax.axvline(np.sum(iterations[:i2 + 1]) - 1, color="black", linestyle=":") for i2 in range(len(iterations))]
 
         plt.ioff()
         plt.savefig(f"{config.SAVE_PATH}agent.png", dpi=300)

@@ -16,7 +16,7 @@ DENSE_POLICY_HEAD = [512, 512, 256]
 USE_BIAS = True
 
 # Self-play
-GAME_AMOUNT_SELF_PLAY = 50
+GAME_AMOUNT_SELF_PLAY = 30
 POSITION_AMOUNT = 30000
 DEPTH = 1
 EPSILON = [1, 0.1, LOOP_ITERATIONS * 0.9]  # Exploration rate in the form of: [initial, final, duration]
@@ -28,6 +28,7 @@ BATCH_SIZE = (256, 32)
 EPOCHS = 1
 GAMMA = 0.99  # Discounting factor for future rewards when calculating targets
 VERSION_OFFSET = 50
+PLOTTING_FREQUENCY = 25
 VALIDATION_SPLIT = 0.2
 REG_CONST = 1e-4
 LEARNING_RATE = 1e-5

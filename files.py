@@ -12,6 +12,7 @@ EMPTY_SAVE = json.dumps({
     "metrics": {
         "loss": [],
         "val_loss": [],
+        "average_q_value": []
     }
 })
 EMPTY_POSITIONS = np.array([])
