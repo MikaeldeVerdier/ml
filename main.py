@@ -53,7 +53,8 @@ def play(players, games, starts=0, epsilons=[None, None], training=False):
                     for i2, var in enumerate(["action", "reward", "next_state"]):
                         storage[-1][var] = [action, 0.0 if outcome is None else outcome, player.env.game_state][i2]
 
-            starts ^= starts
+            starts += 1
+            starts %= len(players)
 
             player.main_nn.metrics["average_q_value"].append(cumulative_q_value / player.env.GAME_LENGTH)
 
