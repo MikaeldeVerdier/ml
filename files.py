@@ -7,11 +7,11 @@ from shutil import copyfile
 EMPTY_SAVE = json.dumps({
     "main_nn_version": 0,
     "target_nn_version": 0,
-    "version_outcomes": {},
     "iterations": [],
     "metrics": {
         "loss": [],
         "val_loss": [],
+        "outcomes": {},
         "average_q_value": []
     }
 })

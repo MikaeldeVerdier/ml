@@ -49,8 +49,6 @@ class Agent():
         self.main_nn = NeuralNetwork(self.env, load, main_kind, to_weights)
         self.name = name
 
-        self.outcomes = {"average": 0, "length": 0}
-
     def get_name(self):
         return f"Version {self.main_nn.version}" if not self.name else self.name
 
@@ -84,9 +82,7 @@ class Agent():
         files.edit_key("save.json", ["target_nn_version"], [self.main_nn.version])
 
     def change_version(self):
-        self.main_nn.iterations.append(config.TRAINING_ITERATIONS * config.EPOCHS)
         self.main_nn.version += 1
-        self.outcomes = {"average": 0, "length": 0}
 
         if not (self.main_nn.version - 1) % config.SAVING_FREQUENCY:
             self.main_nn.save_model("main_nn")

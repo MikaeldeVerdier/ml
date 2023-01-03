@@ -43,12 +43,9 @@ class NeuralNetwork:
                 load = kind
             loaded = files.load_file("save.json")
             self.version = loaded[f"{kind}_version"]
-            self.version_outcomes = loaded["version_outcomes"]
-            self.iterations = loaded["iterations"]
             self.metrics = loaded["metrics"]
         else:
             self.version = load
-            self.version_outcomes = {}
 
         if load:
             if self.load_dir(load):
@@ -213,34 +210,23 @@ class NeuralNetwork:
     def plot_agent(self):
         _, axs = plt.subplots(4, 2, figsize=(40, 20))
 
-        axis_dict = {"loss": (0, 0), "val_loss": (0, 1), "average_q_value": (2, 1)}
         for i, metric in enumerate(self.metrics):
             data = self.metrics[metric]
+            if type(data) is list:
+                data = dict(enumerate(data))
             if data:
-                n = int(np.ceil(len(data) / 50))
-                data = moving_average(data, n)
+                x, data = zip(*data.items())
 
-                ax = axis_dict[metric]
+                n = int(np.ceil(len(data) / 50))
+                y = moving_average(data, n)
+
+                ax = (2 * (i // 2), i % 2)
                 color = list(matplotlib.colors.BASE_COLORS.keys())[i]
-                axs[ax].plot(data, color=color, label=f"{metric}\n(last point: {data[-1]:5f})")
+                axs[ax].plot(x, y, color=color, label=f"{metric}\n(last point: {data[-1]:5f})")
                 axs[ax].axhline(data[-1], color="black", linestyle=":")
 
-                x = list(range(1, len(data)))
-
-                deriv = np.diff(data)
-                axs[ax[0] + 1, ax[1]].plot(x, deriv, color=color, label=f"Derivative of {metric}")
-        
-        data = self.version_outcomes
-        if data:
-            n = int(np.ceil(len(data) / 50))
-            data = moving_average(data, n)
-
-            x = list(map(int, data.keys()))
-            data = [value["average"] for value in data.values()]
-            axs[2, 0].plot(x, data, color="c", label=f"Outcome\n(last point: {data[-1]:5f})")
-
-            deriv = moving_average(np.diff(data), n)
-            axs[3, 0].plot(x[1:], deriv, color="c", label=f"Derivative of outcome")
+                deriv = np.diff(y)
+                axs[ax[0] + 1, ax[1]].plot(x[1:], deriv, color=color, label=f"Derivative of {metric}")
 
         for ax_index, axis in enumerate(["Loss", "Loss derivative", "Outcome", "Outcome derivative", "Validation loss", "Validation loss derivative", "Average Q-value", "Average Q-value derivative"]):
             ax = axs.T.flatten()[ax_index]
@@ -257,16 +243,5 @@ class NeuralNetwork:
         plt.savefig(f"{config.SAVE_PATH}agent.png", dpi=300)
         plt.close()
 
-    def register_result(self, result):
-        if not self.version in self.version_outcomes:
-            self.version_outcomes[self.version] = {"length": 1, "average": result}
-            return
-        
-        self.version_outcomes[self.version]["length"] += 1
-        self.version_outcomes[self.version]["average"] = (self.version_outcomes[self.version]["average"] * (self.version_outcomes[self.version]["length"] - 1) + result) / self.version_outcomes[self.version]["length"]
-
-    def save_outcomes(self):
-        files.edit_key("save.json", ["version_outcomes"], [self.version_outcomes])
-
     def save_metrics(self):
-        files.edit_key("save.json", ["main_nn_version", "iterations", "metrics"], [self.version, self.iterations, self.metrics])
+        files.edit_key("save.json", ["main_nn_version", "metrics"], [self.version, self.metrics])

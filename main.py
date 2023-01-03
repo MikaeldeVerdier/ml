@@ -25,7 +25,7 @@ def play(players, games, starts=0, epsilons=[None, None], training=False):
         length = 0
         product = []
     else:
-        result = [[] for _ in range(len(players))]
+        results = [0 for _ in range(len(players))]
 
     og_games = games
     game_count = 0
@@ -34,8 +34,8 @@ def play(players, games, starts=0, epsilons=[None, None], training=False):
 
         for i, player in enumerate(players[starts - 1:] + players[:starts - 1]):
             player.env.reset()
-            cumulative_q_value = 0
 
+            cumulative_q_value = 0
             storage = []
 
             outcome = None
@@ -63,8 +63,7 @@ def play(players, games, starts=0, epsilons=[None, None], training=False):
 
             if not training:
                 outcome = int(outcome / player.env.REWARD_FACTOR)
-                result[i].append(outcome)
-                player.main_nn.register_result(outcome)
+                results[i] += outcome
             else:
                 for t, data in enumerate(storage):
                     data["target"] = player.calculate_target(storage, t) if t != len(storage) - 1 else data["reward"]
@@ -87,7 +86,11 @@ def play(players, games, starts=0, epsilons=[None, None], training=False):
                         games += np.ceil(left / (player.env.GAME_LENGTH * 16) % og_games)
 
     if not training:
-        return result
+        for i, player in enumerate(players):
+            results[i] /= games
+            player.main_nn.metrics["outcomes"][player.main_nn.version] = results[i]
+
+        return results
 
 
 def self_play(agent):
@@ -126,14 +129,11 @@ def retrain_network(agent):
 def evaluate_network(agent):
     print("\nEvaluation of agent started!\n")
 
-    outcome = play([agent], config.GAME_AMOUNT_EVALUATION, epsilons=[0.05])
-    agent.main_nn.save_outcomes()
+    outcome = play([agent], config.GAME_AMOUNT_EVALUATION, epsilons=[0.05])[0]
 
-    average = np.mean(outcome)
+    log([agent], outcome)
 
-    log([agent], average)
-
-    print(f"The result was: {average}")
+    print(f"The result was: {outcome}")
 
 
 def log(agent_s, average_s):
@@ -146,21 +146,17 @@ def play_test(load, games, starts=1):
     agents = [Agent(verbose=True, load=load), you]
     outcomes = play(agents, games, starts=starts)
 
-    averages = np.mean(outcomes, axis=1)
-
-    print(f"The results were: {averages}")
+    print(f"The results were: {outcomes}")
 
 
 def play_versions(loads, games, starts=0):
     agents = [Agent(verbose=True, load=load) for load in loads]
     outcomes = play(agents, games, starts=starts, epsilons=[0.05, 0.05])
 
-    averages = np.mean(outcomes, axis=1)
+    log(loads, outcomes)
 
-    log(loads, averages)
-
-    print(f"The results between versions named {loads[0]} and {loads[1]} were: {averages}")
-    best = loads[np.argmax(averages)].get_name()
+    print(f"The results between versions named {loads[0]} and {loads[1]} were: {outcomes}")
+    best = loads[np.argmax(outcomes)].get_name()
     print(f"The best version was: version {best}")
 
 
@@ -168,10 +164,10 @@ def main():
     agent = initiate()
 
     for _ in range(config.LOOP_ITERATIONS):
+        if not agent.main_nn.version % config.EVALUATION_FREQUENCY:
+            evaluate_network(agent)
         self_play(agent)
         retrain_network(agent)
-        if not (agent.main_nn.version - 1) % config.EVALUATION_FREQUENCY:
-            evaluate_network(agent)
 
     # play_versions(["untrained_version", "trained version"], config.GAME_AMOUNT_PLAY_VERSIONS)
     # play_test("trained_version", config.GAME_AMOUNT_PLAY_TEST)

@@ -56,8 +56,8 @@ class GameState(Environment):
         return hash(self.history[:-1] + tuple(self.s) + tuple(self.deck) + (self.drawn_card,))
 
     def take_action(self, action):
-        board = self.s.copy()
-        deck = self.deck.copy()
+        board = self.s[:]
+        deck = self.deck[:]
 
         if action != np.prod(self.GAME_DIMENSIONS):
             board[action] = self.drawn_card
