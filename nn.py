@@ -237,7 +237,7 @@ class NeuralNetwork:
         for ax_index, axis in enumerate(["Loss", "Loss derivative", "Outcome", "Outcome derivative", "Validation loss", "Validation loss derivative", "Average Q-value", "Average Q-value derivative"]):
             ax = axs.T.flatten()[ax_index]
             ax.set_title(axis)
-            ax.set_xlabel("Training iteration" if "Loss" in axis else "Version" if "Outcome" in axis else "Loop iteration")
+            ax.set_xlabel("Training iteration" if "loss" in axis.lower() else "Version" if "Outcome" in axis else "Game")
             ax.set_ylabel(axis)
             ax.set_xscale("linear")
             box = ax.get_position()
