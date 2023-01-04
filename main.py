@@ -131,13 +131,13 @@ def evaluate_network(agent):
 
     outcome = play([agent], config.GAME_AMOUNT_EVALUATION, epsilons=[0.05])[0]
 
-    log([agent], outcome)
+    # log([agent], outcome)
 
     print(f"The result was: {outcome}")
 
 
 def log(agent_s, average_s):
-    message = f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}: {' vs '.join([agent.get_name() for agent in agent_s])}:\nAverage results were {average_s}"
+    message = f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}: {' vs '.join([agent.get_name() for agent in agent_s])}:\nAverage results were {average_s}\n"
     files.write("log.txt", message, "a")
 
 
