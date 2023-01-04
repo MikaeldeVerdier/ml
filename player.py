@@ -1,7 +1,7 @@
 import numpy as np
 import config
 import files
-from nn import NeuralNetwork
+from nn import NeuralNetwork, MainNeuralNetwork, TargetNeuralNetwork
 from environment import Environment
 from funcs import string_to_tuple, format_card
 
@@ -40,13 +40,11 @@ class Agent():
     def __init__(self, verbose=False, load=False, name=None, trainable=False, to_weights=False):
         self.env = Environment(verbose=verbose)
 
-        main_kind = "main_nn" if trainable else None
         if trainable:
-            main_kind = "main_nn"
-            self.target_nn = NeuralNetwork(self.env, load, "target_nn", to_weights)
+            self.target_nn = TargetNeuralNetwork(self.env, load, to_weights)
+            self.main_nn = MainNeuralNetwork(self.env, load, to_weights)
         else:
-            main_kind = None
-        self.main_nn = NeuralNetwork(self.env, load, main_kind, to_weights)
+            self.main_nn = NeuralNetwork(self.env, load, to_weights)
         self.name = name
 
     def get_name(self):
@@ -63,9 +61,10 @@ class Agent():
         return action, probs[action]
 
     def choose_action(self, pi, epsilon):
-        masked = np.full_like(pi, -np.inf)
         if epsilon is None:
             epsilon = config.EPSILON[0] - config.EPSILON_STEP_SIZE * self.main_nn.version if self.main_nn.version < config.EPSILON[2] else config.EPSILON[1]
+        
+        masked = np.full_like(pi, -np.inf)
         masked[self.env.game_state.legal_moves] = pi[self.env.game_state.legal_moves]
         action = np.random.choice(self.env.game_state.legal_moves) if np.random.rand() <= epsilon else np.argmax(masked)
 

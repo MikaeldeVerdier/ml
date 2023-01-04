@@ -32,7 +32,6 @@ except ImportError:
 
         return caching
 
-
 class NeuralNetwork:
     def __init__(self, env, load, kind, to_weights):
         self.env = env
@@ -94,6 +93,12 @@ class NeuralNetwork:
         else:
             self.model.load_weights(path).expect_partial()
 
+    def save_model(self, kind):
+        if not self.to_weights:
+            self.model.save(f"{config.SAVE_PATH}training/{kind}")
+        else:
+            self.model.save_weights(f"{config.SAVE_PATH}training/{kind}/checkpoint")
+
     def mean_squared_error(self, y_true, y_pred):
         logits = tf.reshape(y_pred, (tf.shape(y_true)[0], -1))
 
@@ -106,35 +111,8 @@ class NeuralNetwork:
 
         return loss
 
-    def ph_mae(self, y_true, y_pred):
-        logits = tf.reshape(y_pred, (tf.shape(y_true)[0], -1))
-
-        action = tf.cast(tf.gather(y_true, tf.constant([0]), axis=1), tf.int32)
-        pi_action = tf.gather(y_true, 1, axis=1)
-        legal_moves = tf.gather(y_true, tf.range(3, 3 + self.env.MOVE_AMOUNT), axis=1)
-        
-        pi_new = self.softmax(logits, legal_moves)
-        pi_theta = tf.gather_nd(pi_new, tf.stack([tf.range(tf.shape(action)[0]), action[:, 0]], axis=1))
-
-        return tf.math.abs(pi_action - pi_theta)
-
-    @staticmethod
-    def softmax_cross_entropy_with_logits(y_true, y_pred):
-        p = y_pred
-        pi = y_true
-
-        zero = tf.zeros(shape=tf.shape(pi), dtype=np.float32)
-        where = tf.equal(pi, zero)
-
-        negatives = tf.fill(tf.shape(pi), -100.0)
-        p = tf.where(where, negatives, p)
-
-        loss = tf.nn.softmax_cross_entropy_with_logits(labels=pi, logits=p)
-
-        return loss
-
     def position_cnn(self, x):
-        for filter_amount, kernel_size in config.CONVOLUTIONAL_LAYERS_POSITION: x = self.convolutional_layer_3D(x, filter_amount, kernel_size)  # , config.POOLING_SIZE_POSITION)
+        for filter_amount, kernel_size in config.CONVOLUTIONAL_LAYERS_POSITION: x = self.convolutional_layer_3D(x, filter_amount, kernel_size)
         x = Flatten()(x)
         for neuron_amount in config.DENSE_POSITION: x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
         
@@ -194,18 +172,17 @@ class NeuralNetwork:
 
         return logits
 
+
+class MainNeuralNetwork(NeuralNetwork):
+    def __init__(self, env, load, to_weights):
+        super().__init__(env, load, "main_nn", to_weights)
+
     def train(self, x, y):
         self.get_preds.cache_clear()
 
         fit = self.model.fit(x, y, batch_size=config.BATCH_SIZE[1], epochs=config.EPOCHS, verbose=1, validation_split=config.VALIDATION_SPLIT)
         for metric in fit.history:
             [self.metrics[metric].append(fit.history[metric][i]) for i in range(config.EPOCHS)]
-
-    def save_model(self, kind):
-        if not self.to_weights:
-            self.model.save(f"{config.SAVE_PATH}training/{kind}")
-        else:
-            self.model.save_weights(f"{config.SAVE_PATH}training/{kind}/checkpoint")
 
     def plot_agent(self):
         _, axs = plt.subplots(4, 2, figsize=(40, 20))
@@ -217,15 +194,15 @@ class NeuralNetwork:
             if data:
                 x, data = zip(*data.items())
 
-                n = int(np.ceil(len(data) / 50))
-                y = moving_average(data, n)
+                # n = int(np.ceil(len(data) / 50))
+                # y = moving_average(data, n)
 
                 ax = (2 * (i // 2), i % 2)
                 color = list(matplotlib.colors.BASE_COLORS.keys())[i]
-                axs[ax].plot(x, y, color=color, label=f"{metric}\n(last point: {data[-1]:5f})")
+                axs[ax].plot(x, data, color=color, label=f"{metric}\n(last point: {data[-1]:5f})")
                 axs[ax].axhline(data[-1], color="black", linestyle=":")
 
-                deriv = np.diff(y)
+                deriv = np.diff(data)
                 axs[ax[0] + 1, ax[1]].plot(x[1:], deriv, color=color, label=f"Derivative of {metric}")
 
         for ax_index, axis in enumerate(["Loss", "Loss derivative", "Outcome", "Outcome derivative", "Validation loss", "Validation loss derivative", "Average Q-value", "Average Q-value derivative"]):
@@ -245,3 +222,8 @@ class NeuralNetwork:
 
     def save_metrics(self):
         files.edit_key("save.json", ["main_nn_version", "metrics"], [self.version, self.metrics])
+
+
+class TargetNeuralNetwork(NeuralNetwork):
+    def __init__(self, env, load, to_weights):
+        super().__init__(env, load, "target_nn", to_weights)
