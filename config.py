@@ -2,8 +2,8 @@
 LOOP_ITERATIONS = 5000
 
 # Network architecture
-CONVOLUTIONAL_LAYERS_POSITION = [(32, (3, 3, 3)), (64, (3, 3, 3)), (128, (3, 3, 3)), (256, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3))]
-DENSE_POSITION = [4092, 4092, 2048, 2048, 1024, 1024]
+CONVOLUTIONAL_LAYERS_POSITION = [(32, (3, 3, 3)), (64, (3, 3, 3)), (128, (3, 3, 3)), (256, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3))]
+DENSE_POSITION = [2048, 4092, 4092]
 
 CONVOLUTIONAL_LAYERS_DECK = [(32, 3), (64, 3), (128, 3), (128, 3), (128, 3)]
 DENSE_DECK = [1024, 2048, 2048, 1024]
@@ -34,8 +34,8 @@ REG_CONST = 1e-4
 LEARNING_RATE = 1e-5
 
 # Evaluating network
-GAME_AMOUNT_EVALUATION = 50
-EVALUATION_FREQUENCY = 2
+GAME_AMOUNT_EVALUATION = 100
+EVALUATION_FREQUENCY = 10
 WINNING_THRESHOLD = 1
 
 # Play versions

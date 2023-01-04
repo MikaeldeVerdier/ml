@@ -92,13 +92,6 @@ class GameState(Environment):
             
             return score * self.REWARD_FACTOR
 
-    def generate_game_states(history, t, key="state"):
-        data = history[:t + 1]
-        game_states = ({key: None},) * (config.DEPTH - len(data)) + tuple(data)[-config.DEPTH:]
-        game_states = tuple([game_state[key] for game_state in game_states])
-
-        return game_states
-
     def generate_nn_pass(self, modify=False):
         game_state = self.history[-1]
 
