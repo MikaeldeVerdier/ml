@@ -78,12 +78,8 @@ def play(players, games, starts=0, epsilons=[None, None], training=False):
                     print(f"Position length is now: {length}")
 
                 left = config.POSITION_AMOUNT - length
-                if not left:
-                    if not os.path.exists(f"{config.SAVE_PATH}backup/positions_{config.POSITION_AMOUNT}.json"):
-                        files.make_backup("positions.npy", f"positions_{config.POSITION_AMOUNT}.npy")
-                else:
-                    if games == game_count:
-                        games += np.ceil(left / (player.env.GAME_LENGTH * 16) % og_games)
+                if left and games == game_count:
+                    games += np.ceil(left / (player.env.GAME_LENGTH * 16) % og_games)
 
     if not training:
         for i, player in enumerate(players):
