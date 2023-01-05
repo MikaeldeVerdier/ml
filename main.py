@@ -30,6 +30,8 @@ def play(players, games, starts=0, epsilons=[None, None], training=False):
     og_games = games
     game_count = 0
     while game_count < games:
+        from timeit import default_timer
+        start = default_timer()
         game_count += 1
 
         for i, player in enumerate(players[starts - 1:] + players[:starts - 1]):
@@ -85,6 +87,7 @@ def play(players, games, starts=0, epsilons=[None, None], training=False):
                     if games == game_count:
                         games += np.ceil(left / (player.env.GAME_LENGTH * 16) % og_games)
 
+        print(f"That took {default_timer() - start}")
     if not training:
         for i, player in enumerate(players):
             results[i] /= games

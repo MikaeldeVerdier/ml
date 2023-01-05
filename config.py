@@ -1,5 +1,5 @@
 # Main loop
-LOOP_ITERATIONS = 5000
+LOOP_ITERATIONS = 10000
 
 # Network architecture
 CONVOLUTIONAL_LAYERS_POSITION = [(32, (3, 3, 3)), (64, (3, 3, 3)), (128, (3, 3, 3)), (256, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3))]
@@ -26,12 +26,12 @@ EPSILON_STEP_SIZE = (EPSILON[0] - EPSILON[1]) / EPSILON[2]  # Step size of EPSIL
 TRAINING_ITERATIONS = 10
 BATCH_SIZE = (256, 32)
 EPOCHS = 1
-GAMMA = 0.99  # Discounting factor for future rewards when calculating targets
+GAMMA = 0.9  # Discounting factor for future rewards when calculating targets
 VERSION_OFFSET = 50
 SAVING_FREQUENCY = 25
 VALIDATION_SPLIT = 0.2
 REG_CONST = 1e-4
-LEARNING_RATE = 1e-5
+LEARNING_RATE = 1e-6
 
 # Evaluating network
 GAME_AMOUNT_EVALUATION = 100
