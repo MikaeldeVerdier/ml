@@ -56,7 +56,7 @@ def play(players, games, starts=0, epsilons=[None, None], training=False):
             starts += 1
             starts %= len(players)
 
-            player.main_nn.metrics["average_q_value"].append(np.mean(q_values, dtype=np.int32))
+            player.main_nn.metrics["average_q_value"].append(float(np.mean(q_values)))
 
             if not game_count % games:
                 print(f"Amount of games played is now: {game_count} ({player.get_name()})\n")
