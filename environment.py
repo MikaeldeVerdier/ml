@@ -25,7 +25,7 @@ class Environment:
         deck = list(range(1, 53))
         random.shuffle(deck)
         drawn_card = deck.pop()
-        
+
         self.game_state = GameState((None,) * config.DEPTH, np.zeros(np.prod(self.GAME_DIMENSIONS)), deck, drawn_card)
 
     def print_state(self):

@@ -50,8 +50,8 @@ def play(players, games, starts=0, epsilons=[None, None], training=False):
                 outcome = player.env.game_state.check_game_over()
 
                 if training:
-                    for i2, var in enumerate(["action", "reward", "next_state"]):
-                        storage[-1][var] = [action, 0.0 if outcome is None else outcome, player.env.game_state][i2]
+                    for i2, var in enumerate(["action", "reward"]):
+                        storage[-1][var] = [action, 0.0 if outcome is None else outcome][i2]
 
             starts += 1
             starts %= len(players)

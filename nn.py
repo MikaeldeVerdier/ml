@@ -10,7 +10,6 @@ from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.layers import Input, Dense, Conv3D, Conv1D, Flatten, BatchNormalization, ReLU, Concatenate
 from tensorflow.keras.optimizers import Adam
 from keras.utils.vis_utils import plot_model
-from funcs import moving_average
 
 try:
     matplotlib.use("Agg")
