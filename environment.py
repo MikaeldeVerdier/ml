@@ -34,7 +34,7 @@ class Environment:
         for i, pos in enumerate(board):
             if pos != "---":
                 board[i] = format_card(float(pos))
-        
+
         print(f"Position is:\n{board.reshape(self.GAME_DIMENSIONS)}")
         print(f"Drawn card is: {format_card(self.game_state.drawn_card)}")
         print(f"Amount of cards left is now: {len(self.game_state.deck)}")

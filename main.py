@@ -144,7 +144,7 @@ def log(agent_s, average_s):
 def play_test(load, games, starts=1):
     you = User()
     agents = [Agent(verbose=True, load=load), you]
-    outcomes = play(agents, games, starts=starts)
+    outcomes = play(agents, games, starts=starts, epsilons=[0.05])
 
     print(f"The results were: {outcomes}")
 
