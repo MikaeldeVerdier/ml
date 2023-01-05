@@ -167,7 +167,7 @@ class NeuralNetwork:
         mask = np.full(logits.shape, True)
         mask[game_state.legal_moves] = False
 
-        logits[mask] = 0
+        logits[mask] = -np.inf
 
         return logits
 

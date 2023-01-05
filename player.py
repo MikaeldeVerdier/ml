@@ -63,11 +63,6 @@ class Agent():
     def choose_action(self, pi, epsilon):
         if epsilon is None:
             epsilon = config.EPSILON[0] - config.EPSILON_STEP_SIZE * self.main_nn.version if self.main_nn.version < config.EPSILON[2] else config.EPSILON[1]
-        
-        mask = np.full(pi.shape, True)
-        mask[self.env.game_state.legal_moves] = False
-
-        pi[mask] = 0
 
         action = np.random.choice(self.env.game_state.legal_moves) if np.random.rand() <= epsilon else np.argmax(pi)
 

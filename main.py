@@ -35,7 +35,7 @@ def play(players, games, starts=0, epsilons=[None, None], training=False):
         for i, player in enumerate(players[starts - 1:] + players[:starts - 1]):
             player.env.reset()
 
-            cumulative_q_value = 0
+            q_values = []
             storage = []
 
             outcome = None
@@ -45,7 +45,7 @@ def play(players, games, starts=0, epsilons=[None, None], training=False):
                 action, q_value = player.get_action(epsilons[i])
                 player.env.step(action)
 
-                cumulative_q_value += q_value
+                q_values.append(q_value)
 
                 outcome = player.env.game_state.check_game_over()
 
@@ -56,7 +56,7 @@ def play(players, games, starts=0, epsilons=[None, None], training=False):
             starts += 1
             starts %= len(players)
 
-            player.main_nn.metrics["average_q_value"].append(cumulative_q_value / player.env.GAME_LENGTH)
+            player.main_nn.metrics["average_q_value"].append(np.mean(q_values))
 
             if not game_count % games:
                 print(f"Amount of games played is now: {game_count} ({player.get_name()})\n")
