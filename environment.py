@@ -7,12 +7,12 @@ class Environment:
     def __init__(self, verbose=False):
         self.verbose = verbose
 
-        self.GAME_DIMENSIONS = (5, 5)
+        self.GAME_DIMENSIONS = (3, 3)
         self.NN_INPUT_DIMENSIONS = [(config.DEPTH,) + self.GAME_DIMENSIONS + (52,), (config.DEPTH, 52), (config.DEPTH, 52)]
         self.MOVE_AMOUNT = np.prod(self.GAME_DIMENSIONS) + 1
         self.REPLACE_CARDS = 3
         self.GAME_LENGTH = np.prod(self.GAME_DIMENSIONS) + self.REPLACE_CARDS
-        self.REWARD_FACTOR = 0.05
+        self.REWARD_FACTOR = 0.1
 
     def step(self, action):
         s, deck, drawn_card = self.game_state.take_action(action)

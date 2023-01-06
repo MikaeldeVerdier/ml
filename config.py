@@ -1,5 +1,5 @@
 # Main loop
-LOOP_ITERATIONS = 10000
+LOOP_ITERATIONS = 2500
 
 # Network architecture
 CONVOLUTIONAL_LAYERS_POSITION = [(32, (3, 3, 3)), (64, (3, 3, 3)), (128, (3, 3, 3)), (256, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3))]
