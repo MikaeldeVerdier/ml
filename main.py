@@ -170,5 +170,9 @@ def main():
     # print(files.add_to_file("positions.json", files.load_file("poss.json"), config.POSITION_AMOUNT)[0])
 
 
+def test():
+    return 2
+
+
 if __name__ == "__main__":
     main()
