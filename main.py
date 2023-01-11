@@ -1,9 +1,11 @@
 import numpy as np
 import random
+import environment
 import config
 import files
 from datetime import datetime
 from player import User, Agent
+from environment import Environment
 
 def initiate():
     load = False
@@ -19,69 +21,64 @@ def initiate():
     return agent
 
 
-def play(players, games, starts=0, epsilons=[None, None], training=False):
+def play(env, games, training=False):
     if training:
         length = 0
         product = []
     else:
-        results = [0 for _ in range(len(players))]
+        results = [0 for _ in range(len(env.players))]
 
     og_games = games
     game_count = 0
     while game_count < games:
         game_count += 1
 
-        for i, player in enumerate(players[starts - 1:] + players[:starts - 1]):
-            player.env.reset()
+        env.reset()
 
-            q_values = []
-            storage = []
+        q_values = [[] for _ in range(len(env.players))]
+        storage = []
 
-            outcome = None
-            while outcome is None:
-                storage.append({"state": player.env.game_state})
+        while env.game_state.outcome is None:
+            storage.append({"state": env.game_state})
 
-                action, q_value = player.get_action(epsilons[i])
-                player.env.step(action)
+            probs, action = env.players[env.turn].get_action(env.game_state, env.epsilons[env.turn])
+            
+            q_values[env.turn].append(probs[action])
 
-                q_values.append(q_value)
+            env.step(probs, action)
 
-                outcome = player.env.game_state.check_game_over()
+            if training:
+                for i2, var in enumerate(["action", "reward"]):
+                    storage[-1][var] = [action, env.game_state.outcome or 0.0][i2]
 
-                if training:
-                    for i2, var in enumerate(["action", "reward"]):
-                        storage[-1][var] = [action, 0.0 if outcome is None else outcome][i2]
+        for i, player in enumerate(env.players):
+            player.main_nn.metrics["average_q_value"].append(float(np.mean(q_values[i])))
 
-            starts += 1
-            starts %= len(players)
+        if not game_count % games:
+            print(f"Amount of games played is now: {game_count} ({player.get_name()})\n")
 
-            player.main_nn.metrics["average_q_value"].append(float(np.mean(q_values)))
+        if not training:
+            formatted_outcome = int(env.game_state.outcome / environment.REWARD_FACTOR)
+            results[i] += formatted_outcome
+        else:
+            for t, data in enumerate(storage):
+                data["target"] = player.calculate_target(storage, t) if t != len(storage) - 1 else data["reward"]
+
+                states = np.array(data["state"].generate_nn_pass(modify=True), dtype=object).tolist()
+                for flip in states: product.append(np.array([flip, data["action"], data["target"]], dtype=object))
 
             if not game_count % games:
-                print(f"Amount of games played is now: {game_count} ({player.get_name()})\n")
+                length = files.add_to_file(files.get_path("positions.npy"), np.array(product, dtype=object), config.POSITION_AMOUNT)
+                product = []
 
-            if not training:
-                outcome = int(outcome / player.env.REWARD_FACTOR)
-                results[i] += outcome
-            else:
-                for t, data in enumerate(storage):
-                    data["target"] = player.calculate_target(storage, t) if t != len(storage) - 1 else data["reward"]
+                print(f"Position length is now: {length}")
 
-                    states = np.array(data["state"].generate_nn_pass(modify=True), dtype=object).tolist()
-                    for flip in states: product.append(np.array([flip, data["action"], data["target"]], dtype=object))
-
-                if not game_count % games:
-                    length = files.add_to_file(files.get_path("positions.npy"), np.array(product, dtype=object), config.POSITION_AMOUNT)
-                    product = []
-
-                    print(f"Position length is now: {length}")
-
-                left = config.POSITION_AMOUNT - length
-                if left and games == game_count:
-                    games += np.ceil(left / (player.env.GAME_LENGTH * 16) % og_games)
+            left = config.POSITION_AMOUNT - length
+            if left and games == game_count:
+                games += np.ceil(left / (environment.GAME_LENGTH * 16) % og_games)
 
     if not training:
-        for i, player in enumerate(players):
+        for i, player in enumerate(env.players):
             results[i] /= games
             player.main_nn.metrics["outcomes"][player.main_nn.version] = results[i]
 
@@ -90,7 +87,7 @@ def play(players, games, starts=0, epsilons=[None, None], training=False):
 
 def self_play(agent):
     print("\nSelf-play started!\n")
-    play([agent], config.GAME_AMOUNT_SELF_PLAY, training=True)
+    play(Environment([agent]), config.GAME_AMOUNT_SELF_PLAY, training=True)
 
 
 def retrain_network(agent):
@@ -124,7 +121,7 @@ def retrain_network(agent):
 def evaluate_network(agent):
     print("\nEvaluation of agent started!\n")
 
-    outcome = play([agent], config.GAME_AMOUNT_EVALUATION, epsilons=[0.05])[0]
+    outcome = play(Environment([agent], epsilons=[0.05]), config.GAME_AMOUNT_EVALUATION)[0]
 
     # log([agent], outcome)
 
@@ -167,10 +164,6 @@ def main():
     # play_versions(["untrained_version", "trained version"], config.GAME_AMOUNT_PLAY_VERSIONS)
     # play_test("trained_version", config.GAME_AMOUNT_PLAY_TEST)
     # print(files.add_to_file("positions.json", files.load_file("poss.json"), config.POSITION_AMOUNT)[0])
-
-
-def test():
-    return 2
 
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@ import tensorflow as tf
 import matplotlib
 import matplotlib.pyplot as plt
 import os
+import environment
 import config
 import files
 from tensorflow.keras import regularizers
@@ -32,9 +33,7 @@ except ImportError:
         return caching
 
 class NeuralNetwork:
-    def __init__(self, env, load, kind):
-        self.env = env
-
+    def __init__(self, load, kind):
         if kind is not None:
             if load:
                 load = kind
@@ -49,13 +48,13 @@ class NeuralNetwork:
                 print(f"NN loaded with version called: {load}")
                 return
 
-        position_input = Input(shape=env.NN_INPUT_DIMENSIONS[0], name="position_input")
+        position_input = Input(shape=environment.NN_INPUT_DIMENSIONS[0], name="position_input")
         position = self.position_cnn(position_input)
 
-        deck_input = Input(shape=env.NN_INPUT_DIMENSIONS[1], name="deck_input")
+        deck_input = Input(shape=environment.NN_INPUT_DIMENSIONS[1], name="deck_input")
         deck = self.deck_cnn(deck_input)
 
-        drawn_card_input = Input(shape=env.NN_INPUT_DIMENSIONS[2], name="drawn_card_input")
+        drawn_card_input = Input(shape=environment.NN_INPUT_DIMENSIONS[2], name="drawn_card_input")
         drawn_card = self.drawn_card_cnn(drawn_card_input)
 
         x = Concatenate()([position, deck, drawn_card])
@@ -154,7 +153,7 @@ class NeuralNetwork:
 
     def policy_head(self, x):
         for neuron_amount in config.DENSE_POLICY_HEAD: x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
-        x = Dense(self.env.MOVE_AMOUNT, use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST), name="policy_head")(x)
+        x = Dense(environment.MOVE_AMOUNT, use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST), name="policy_head")(x)
         
         return x
 
@@ -172,8 +171,8 @@ class NeuralNetwork:
 
 
 class MainNeuralNetwork(NeuralNetwork):
-    def __init__(self, env, load):
-        super().__init__(env, load, "main_nn")
+    def __init__(self, load):
+        super().__init__(load, "main_nn")
 
     def train(self, x, y):
         self.get_preds.cache_clear()
@@ -223,5 +222,5 @@ class MainNeuralNetwork(NeuralNetwork):
 
 
 class TargetNeuralNetwork(NeuralNetwork):
-    def __init__(self, env, load):
-        super().__init__(env, load, "target_nn")
+    def __init__(self, load):
+        super().__init__(load, "target_nn")

@@ -3,47 +3,57 @@ import random
 import config
 from funcs import format_card, score_row
 
+GAME_DIMENSIONS = (3, 3)
+NN_INPUT_DIMENSIONS = [(config.DEPTH,) + GAME_DIMENSIONS + (52,), (config.DEPTH, 52), (config.DEPTH, 52)]
+MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
+REPLACE_CARDS = 3
+GAME_LENGTH = np.prod(GAME_DIMENSIONS) + REPLACE_CARDS
+REWARD_FACTOR = 0.1
+
 class Environment:
-    def __init__(self, verbose=False):
+    def __init__(self, players, epsilons=[None, None], starts=0, verbose=False):
+        self.players = players[1:] + players[:1]
+        self.epsilons = epsilons
+        self.starts = starts
         self.verbose = verbose
 
-        self.GAME_DIMENSIONS = (3, 3)
-        self.NN_INPUT_DIMENSIONS = [(config.DEPTH,) + self.GAME_DIMENSIONS + (52,), (config.DEPTH, 52), (config.DEPTH, 52)]
-        self.MOVE_AMOUNT = np.prod(self.GAME_DIMENSIONS) + 1
-        self.REPLACE_CARDS = 3
-        self.GAME_LENGTH = np.prod(self.GAME_DIMENSIONS) + self.REPLACE_CARDS
-        self.REWARD_FACTOR = 0.1
-
-    def step(self, action):
+    def step(self, probs, action):
         s, deck, drawn_card = self.game_state.take_action(action)
         self.game_state = GameState(self.game_state.history, s, deck, drawn_card)
 
         if self.verbose:
-            self.print_state()
+            self.print_state(probs, action)
+
+        self.turn = self.turn + 1 % len(self.players)
 
     def reset(self):
+        self.turn = 0
+
+        self.players = self.players[self.starts - 1:] + self.players[:self.starts - 1]
+
         deck = list(range(1, 53))
         random.shuffle(deck)
         drawn_card = deck.pop()
 
-        self.game_state = GameState((None,) * config.DEPTH, np.zeros(np.prod(self.GAME_DIMENSIONS)), deck, drawn_card)
+        self.game_state = GameState((None,) * config.DEPTH, np.zeros(np.prod(GAME_DIMENSIONS)), deck, drawn_card)
 
-    def print_state(self):
+    def print_state(self, probs, action):
         board = self.game_state.s.astype("<U4")
         board[board == "0.0"] = "---"
         for i, pos in enumerate(board):
             if pos != "---":
                 board[i] = format_card(float(pos))
 
-        print(f"Position is:\n{board.reshape(self.GAME_DIMENSIONS)}")
+        if probs:
+            print(f"Action values are: {[probs[-1]]}\n{np.round(probs[:-1], 8).reshape(GAME_DIMENSIONS)}")
+        print(f"Action taken by {self.players[self.turn].get_name()} is: {action}")
+        print(f"Position is:\n{board.reshape(GAME_DIMENSIONS)}")
         print(f"Drawn card is: {format_card(self.game_state.drawn_card)}")
         print(f"Amount of cards left is now: {len(self.game_state.deck)}")
 
 
-class GameState(Environment):
+class GameState():
     def __init__(self, history, s, deck, drawn_card):
-        super().__init__()
-
         self.history = history[1:] + (self,)
         self.s = s
         self.deck = deck
@@ -51,6 +61,7 @@ class GameState(Environment):
 
         self.replace_card = not len(np.where(self.s == 0)[0])
         self.legal_moves = self.get_legal_moves()
+        self.outcome = self.check_game_over()
 
     def __hash__(self):
         return hash(self.history[:-1] + tuple(self.s) + tuple(self.deck) + (self.drawn_card,))
@@ -59,15 +70,15 @@ class GameState(Environment):
         board = self.s.copy()
         deck = self.deck.copy()
 
-        if action != np.prod(self.GAME_DIMENSIONS):
+        if action != np.prod(GAME_DIMENSIONS):
             board[action] = self.drawn_card
 
         return (board, deck, deck.pop())
 
     def get_legal_moves(self):
-        if not len(np.where(self.s != 0)[0]): return list(range(np.prod(self.GAME_DIMENSIONS)))
+        if not len(np.where(self.s != 0)[0]): return list(range(np.prod(GAME_DIMENSIONS)))
 
-        if self.replace_card: return list(range(self.MOVE_AMOUNT))
+        if self.replace_card: return list(range(MOVE_AMOUNT))
 
         legal_moves = []
 
@@ -76,21 +87,21 @@ class GameState(Environment):
                 for add_on in [-1, 0, 1]:
                     if not multiplier and not add_on:
                         continue
-                    check_index = index + self.GAME_DIMENSIONS[1] * multiplier + add_on
-                    if check_index not in legal_moves and 0 <= check_index < np.prod(self.GAME_DIMENSIONS) and not self.s[check_index] and check_index // self.GAME_DIMENSIONS[1] - index // self.GAME_DIMENSIONS[1] == multiplier:
+                    check_index = index + GAME_DIMENSIONS[1] * multiplier + add_on
+                    if check_index not in legal_moves and 0 <= check_index < np.prod(GAME_DIMENSIONS) and not self.s[check_index] and check_index // GAME_DIMENSIONS[1] - index // GAME_DIMENSIONS[1] == multiplier:
                         legal_moves.append(check_index)
 
         return legal_moves
 
     def check_game_over(self):
-        if len(self.deck) == 51 - self.GAME_LENGTH:
+        if len(self.deck) == 51 - GAME_LENGTH:
             score = 0
-            board = self.s.reshape(self.GAME_DIMENSIONS)
+            board = self.s.reshape(GAME_DIMENSIONS)
             for rowcol in [board, board.T]:
                 for row in rowcol:
                     score += score_row(row)
             
-            return score * self.REWARD_FACTOR
+            return score * REWARD_FACTOR
 
     def generate_nn_pass(self, modify=False):
         game_state = self.history[-1]
@@ -104,7 +115,7 @@ class GameState(Environment):
 
         nn_pass = []
         for flip in flips:
-            s = game_state.s if flip is None else np.flip(game_state.s.reshape(self.GAME_DIMENSIONS), flip).flatten()
+            s = game_state.s if flip is None else np.flip(game_state.s.reshape(GAME_DIMENSIONS), flip).flatten()
             
             for suit_change in suit_changes:
                 nn_pass.append([[], [], []])
@@ -122,7 +133,7 @@ class GameState(Environment):
                     for i in range(1, 53):
                         position = np.zeros(len(s))
                         position[s == i] = 1
-                        state.append(np.reshape(position, self.NN_INPUT_DIMENSIONS[0][1:-1]))
+                        state.append(np.reshape(position, NN_INPUT_DIMENSIONS[0][1:-1]))
 
                     state = np.moveaxis(state, 0, -1).tolist()
                     nn_pass[-1][0].append(state)
@@ -142,6 +153,6 @@ class GameState(Environment):
                         else:
                             for _ in range(config.DEPTH - depth - 1):
                                 for i, func in enumerate([np.zeros, np.ones, np.zeros]):
-                                    nn_pass[-1][i].append(func(self.NN_INPUT_DIMENSIONS[i][:-1]))
+                                    nn_pass[-1][i].append(func(NN_INPUT_DIMENSIONS[i][:-1]))
                             break
         return nn_pass

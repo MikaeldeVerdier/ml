@@ -1,22 +1,22 @@
 import numpy as np
+import environment
 import config
 import files
 from nn import NeuralNetwork, MainNeuralNetwork, TargetNeuralNetwork
-from environment import Environment
 from funcs import string_to_tuple, format_card
 
 class User():
     def __init__(self):
-        self.env = Environment()
+        pass
 
     def get_name(self):
         return "You"
 
-    def get_action(self, *args):
-        print(f"Drawn card is: {format_card(self.game_state.drawn_card)}")
+    def get_action(self, state, *args):
+        print(f"Drawn card is: {format_card(state.drawn_card)}")
 
-        legal_moves = self.game_state.legal_moves
-        moves = [(legal_move % self.env.GAME_DIMENSIONS[1] + 1, self.env.GAME_DIMENSIONS[1] - legal_move // self.env.GAME_DIMENSIONS[1]) for legal_move in legal_moves]
+        legal_moves = state.legal_moves
+        moves = [(legal_move % environment.GAME_DIMENSIONS[1] + 1, environment.GAME_DIMENSIONS[1] - legal_move // environment.GAME_DIMENSIONS[1]) for legal_move in legal_moves]
         user_move = None
         while user_move not in moves:
             print(f"Legal moves for you are: {moves}")
@@ -27,46 +27,34 @@ class User():
         
         action = legal_moves[moves.index(user_move)]
 
-        if self.env.verbose:
-            self.print_action(action)
-
-        return action
-
-    def print_action(self, action):
-        print(f"Action taken is: {action}")
-
+        return None, action
 
 class Agent():
-    def __init__(self, verbose=False, load=False, name=None, trainable=False, to_weights=False):
+    def __init__(self, load=False, name=None, trainable=False, to_weights=False):
+        self.name = name
         self.to_weights = to_weights
 
-        self.env = Environment(verbose=verbose)
-
         if trainable:
-            self.target_nn = TargetNeuralNetwork(self.env, load)
-            self.main_nn = MainNeuralNetwork(self.env, load)
+            self.target_nn = TargetNeuralNetwork(load)
+            self.main_nn = MainNeuralNetwork(load)
         else:
-            self.main_nn = NeuralNetwork(self.env, load)
-        self.name = name
+            self.main_nn = NeuralNetwork(load)
 
     def get_name(self):
         return f"Version {self.main_nn.version}" if not self.name else self.name
 
-    def get_action(self, epsilon):
-        probs = self.main_nn.get_preds(self.env.game_state)
+    def get_action(self, state, epsilon):
+        probs = self.main_nn.get_preds(state)
 
-        action = self.choose_action(probs, epsilon)
+        action = self.choose_action(state, probs, epsilon)
 
-        if self.env.verbose:
-            self.print_action(probs, action)
+        return probs, action
 
-        return action, probs[action]
-
-    def choose_action(self, pi, epsilon):
+    def choose_action(self, state, pi, epsilon):
         if epsilon is None:
-            epsilon = config.EPSILON[0] - config.EPSILON_STEP_SIZE * self.main_nn.version if self.main_nn.version < config.EPSILON[2] else config.EPSILON[1]
+            epsilon = max(config.EPSILON[0] - config.EPSILON_STEP_SIZE * self.main_nn.version, config.EPSILON[1])
 
-        action = np.random.choice(self.env.game_state.legal_moves) if np.random.rand() <= epsilon else np.argmax(pi)
+        action = np.random.choice(state.legal_moves) if np.random.rand() <= epsilon else np.argmax(pi)
 
         return action
 
@@ -76,7 +64,7 @@ class Agent():
 
     def copy_network(self):
         self.target_nn.load_dir("main_nn")
-        self.target_nn.save_model("target_nn")
+        self.target_nn.save_model("target_nn", self.to_weights)
 
         files.edit_key("save.json", ["target_nn_version"], [self.main_nn.version])
 
@@ -90,7 +78,3 @@ class Agent():
 
         if not (self.main_nn.version - 1) % config.VERSION_OFFSET:
             self.copy_network()
-
-    def print_action(self, values, action):
-        print(f"Action values are: {[values[-1]]}\n{np.round(values[:-1], 8).reshape(self.env.GAME_DIMENSIONS)}")
-        print(f"Action taken is: {action}")
