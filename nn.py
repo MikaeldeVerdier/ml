@@ -32,9 +32,8 @@ except ImportError:
         return caching
 
 class NeuralNetwork:
-    def __init__(self, env, load, kind, to_weights):
+    def __init__(self, env, load, kind):
         self.env = env
-        self.to_weights = to_weights
 
         if kind is not None:
             if load:
@@ -92,11 +91,11 @@ class NeuralNetwork:
         else:
             self.model.load_weights(path).expect_partial()
 
-    def save_model(self, kind):
-        if not self.to_weights:
-            self.model.save(f"{config.SAVE_PATH}training/{kind}")
+    def save_model(self, name, to_weights):
+        if not to_weights:
+            self.model.save(f"{config.SAVE_PATH}training/{name}")
         else:
-            self.model.save_weights(f"{config.SAVE_PATH}training/{kind}/checkpoint")
+            self.model.save_weights(f"{config.SAVE_PATH}training/{name}/checkpoint")
 
     def mean_squared_error(self, y_true, y_pred):
         logits = tf.reshape(y_pred, (tf.shape(y_true)[0], -1))
@@ -173,8 +172,8 @@ class NeuralNetwork:
 
 
 class MainNeuralNetwork(NeuralNetwork):
-    def __init__(self, env, load, to_weights):
-        super().__init__(env, load, "main_nn", to_weights)
+    def __init__(self, env, load):
+        super().__init__(env, load, "main_nn")
 
     def train(self, x, y):
         self.get_preds.cache_clear()
@@ -224,5 +223,5 @@ class MainNeuralNetwork(NeuralNetwork):
 
 
 class TargetNeuralNetwork(NeuralNetwork):
-    def __init__(self, env, load, to_weights):
-        super().__init__(env, load, "target_nn", to_weights)
+    def __init__(self, env, load):
+        super().__init__(env, load, "target_nn")

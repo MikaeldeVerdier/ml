@@ -38,13 +38,15 @@ class User():
 
 class Agent():
     def __init__(self, verbose=False, load=False, name=None, trainable=False, to_weights=False):
+        self.to_weights = to_weights
+
         self.env = Environment(verbose=verbose)
 
         if trainable:
-            self.target_nn = TargetNeuralNetwork(self.env, load, to_weights)
-            self.main_nn = MainNeuralNetwork(self.env, load, to_weights)
+            self.target_nn = TargetNeuralNetwork(self.env, load)
+            self.main_nn = MainNeuralNetwork(self.env, load)
         else:
-            self.main_nn = NeuralNetwork(self.env, load, to_weights)
+            self.main_nn = NeuralNetwork(self.env, load)
         self.name = name
 
     def get_name(self):
@@ -82,7 +84,7 @@ class Agent():
         self.main_nn.version += 1
 
         if not (self.main_nn.version - 1) % config.SAVING_FREQUENCY:
-            self.main_nn.save_model("main_nn")
+            self.main_nn.save_model("main_nn", self.to_weights)
             self.main_nn.save_metrics()
             self.main_nn.plot_agent()
 
