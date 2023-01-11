@@ -2,8 +2,8 @@
 LOOP_ITERATIONS = 5000
 
 # Network architecture
-CONVOLUTIONAL_LAYERS_POSITION = [(32, (3, 3, 3)), (64, (3, 3, 3)), (128, (3, 3, 3)), (256, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3))]
-DENSE_POSITION = [4092, 4092, 4092]
+CONVOLUTIONAL_LAYERS_POSITION = [(32, (3, 3, 3)), (64, (3, 3, 3)), (128, (3, 3, 3)), (256, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3)), (512, (3, 3, 3))]
+DENSE_POSITION = [4092, 4092, 4092, 4092, 4092, 4092, 4092, 4092, 4092]
 
 CONVOLUTIONAL_LAYERS_DECK = [(32, 3), (64, 3), (128, 3), (128, 3), (128, 3)]
 DENSE_DECK = [2048, 2048, 2048, 1024]
@@ -11,12 +11,12 @@ DENSE_DECK = [2048, 2048, 2048, 1024]
 CONVOLUTIONAL_LAYERS_DRAWN_CARD = [(32, 3), (64, 3), (128, 3), (128, 3), (128, 3)]
 DENSE_DRAWN_CARD = [2048, 2048, 2048, 1024]
 
-DENSE_SHARED = [1024, 1024, 1024, 512]
-DENSE_POLICY_HEAD = [512, 512, 256]
+DENSE_SHARED = [1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024, 512]
+DENSE_POLICY_HEAD = [512, 512, 512, 512, 512, 512, 256]
 USE_BIAS = True
 
 # Self-play
-GAME_AMOUNT_SELF_PLAY = 30
+GAME_AMOUNT_SELF_PLAY = 70
 POSITION_AMOUNT = 30000
 DEPTH = 1
 EPSILON = [1, 0.1, LOOP_ITERATIONS * 0.9]  # Exploration rate in the form of: [initial, final, duration]
