@@ -85,7 +85,7 @@ class NeuralNetwork:
         path = f"{config.SAVE_PATH}training/{file}/checkpoint"
         if not from_weights:
             if not os.path.exists(path):
-                self.model = load_model(f"{config.SAVE_PATH}training/{file}", custom_objects={"loss": self.mean_squared_error})
+                self.model = load_model(f"{config.SAVE_PATH}training/{file}", custom_objects={"self.mean_squared_error": self.mean_squared_error})
                 return True
         else:
             self.model.load_weights(path).expect_partial()
