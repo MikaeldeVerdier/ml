@@ -19,23 +19,19 @@ class Environment:
 
     def step(self, probs, action):
         s, deck, drawn_card = self.game_state.take_action(action)
-        self.game_state = GameState(self.game_state.history, s, deck, drawn_card)
+        self.game_state = GameState((self.game_state.turn + 1) % len(self.players), self.game_state.history, s, deck, drawn_card)
 
         if self.verbose:
             self.print_state(probs, action)
 
-        self.turn = self.turn + 1 % len(self.players)
-
     def reset(self):
-        self.turn = 0
-
         self.players = self.players[self.starts - 1:] + self.players[:self.starts - 1]
 
         deck = list(range(1, 53))
         random.shuffle(deck)
         drawn_card = deck.pop()
 
-        self.game_state = GameState((None,) * config.DEPTH, np.zeros(np.prod(GAME_DIMENSIONS)), deck, drawn_card)
+        self.game_state = GameState(0, (None,) * config.DEPTH, np.zeros(np.prod(GAME_DIMENSIONS)), deck, drawn_card)
 
     def print_state(self, probs, action):
         board = self.game_state.s.astype("<U4")
@@ -53,7 +49,8 @@ class Environment:
 
 
 class GameState():
-    def __init__(self, history, s, deck, drawn_card):
+    def __init__(self, turn, history, s, deck, drawn_card):
+        self.turn = turn
         self.history = history[1:] + (self,)
         self.s = s
         self.deck = deck

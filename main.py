@@ -41,9 +41,9 @@ def play(env, games, training=False):
         while env.game_state.outcome is None:
             storage.append({"state": env.game_state})
 
-            probs, action = env.players[env.turn].get_action(env.game_state, env.epsilons[env.turn])
+            probs, action = env.players[env.game_state.turn].get_action(env.game_state, env.epsilons[env.game_state.turn])
             
-            q_values[env.turn].append(probs[action])
+            q_values[env.game_state.turn].append(probs[action])
 
             env.step(probs, action)
 
@@ -98,7 +98,7 @@ def retrain_network(agent):
     for _ in range(config.TRAINING_ITERATIONS):
         minibatch = random.sample(positions, config.BATCH_SIZE[0])
 
-        x = [[] for _ in range(len(agent.env.NN_INPUT_DIMENSIONS))]
+        x = [[] for _ in range(len(environment.NN_INPUT_DIMENSIONS))]
         y = []
 
         for position in minibatch:
