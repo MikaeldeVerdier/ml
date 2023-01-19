@@ -52,7 +52,8 @@ def play(env, games, training=False):
                     storage[-1][var] = [action, env.game_state.outcome or 0.0][i2]
 
         for i, player in enumerate(env.players):
-            player.main_nn.metrics["average_q_value"].append(float(np.mean(q_values[i])))
+            if player.trainable:
+                player.main_nn.metrics["average_q_value"].append(float(np.mean(q_values[i])))
 
         if not game_count % games:
             print(f"Amount of games played is now: {game_count} ({player.get_name()})\n")
@@ -80,7 +81,8 @@ def play(env, games, training=False):
     if not training:
         for i, player in enumerate(env.players):
             results[i] /= games
-            player.main_nn.metrics["outcomes"][player.main_nn.version] = results[i]
+            if player.trainable:
+                player.main_nn.metrics["outcomes"][player.main_nn.version] = results[i]
 
         return results
 
@@ -135,20 +137,20 @@ def log(agent_s, average_s):
 
 def play_test(load, games, starts=1):
     you = User()
-    agents = [Agent(verbose=True, load=load), you]
-    outcomes = play(agents, games, starts=starts, epsilons=[0.05])
+    agents = [Agent(load=load, name=load), you]
+    outcomes = play(Environment(agents, epsilons=[0.05, 0.05], starts=starts), games)
 
     print(f"The results were: {outcomes}")
 
 
 def play_versions(loads, games, starts=0):
-    agents = [Agent(verbose=True, load=load) for load in loads]
-    outcomes = play(agents, games, starts=starts, epsilons=[0.05, 0.05])
+    agents = [Agent(load=load, name=load) for load in loads]
+    outcomes = play(Environment(agents, epsilons=[0.05, 0.05], starts=starts), games)
 
-    log(loads, outcomes)
+    log(agents, outcomes)
 
-    print(f"The results between versions named {loads[0]} and {loads[1]} were: {outcomes}")
-    best = loads[np.argmax(outcomes)].get_name()
+    print(f"The results between versions named {agents[0].get_name()} and {agents[1].get_name()} were: {outcomes}")
+    best = loads[np.argmax(agents)].get_name()
     print(f"The best version was: version {best}")
 
 

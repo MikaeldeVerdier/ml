@@ -6,11 +6,11 @@ from nn import NeuralNetwork, MainNeuralNetwork, TargetNeuralNetwork
 from funcs import string_to_tuple, format_card
 
 class User():
-    def __init__(self):
-        pass
+    def __init__(self, name):
+        self.name = name
 
     def get_name(self):
-        return "You"
+        return self.name or "You"
 
     def get_action(self, state, *args):
         print(f"Drawn card is: {format_card(state.drawn_card)}")
@@ -32,6 +32,7 @@ class User():
 class Agent():
     def __init__(self, load=False, name=None, trainable=False, to_weights=False):
         self.name = name
+        self.trainable = trainable
         self.to_weights = to_weights
 
         if trainable:
@@ -41,7 +42,7 @@ class Agent():
             self.main_nn = NeuralNetwork(load)
 
     def get_name(self):
-        return f"Version {self.main_nn.version}" if not self.name else self.name
+        return self.name or f"Version {self.main_nn.version}"
 
     def get_action(self, state, epsilon):
         probs = self.main_nn.get_preds(state)
