@@ -155,17 +155,17 @@ def play_versions(loads, games, starts=0):
 
 
 def main():
+    # play_versions(["untrained_version", "trained version"], config.GAME_AMOUNT_PLAY_VERSIONS)
+    # play_test("trained_version", config.GAME_AMOUNT_PLAY_TEST)
+    # print(files.add_to_file("positions.json", files.load_file("poss.json"), config.POSITION_AMOUNT)[0])
+
     agent = initiate()
 
-    for _ in range(config.LOOP_ITERATIONS):
+    while agent.main_nn.version <= config.LOOP_ITERATIONS:
         if not agent.main_nn.version % config.EVALUATION_FREQUENCY:
             evaluate_network(agent)
         self_play(agent)
         retrain_network(agent)
-
-    # play_versions(["untrained_version", "trained version"], config.GAME_AMOUNT_PLAY_VERSIONS)
-    # play_test("trained_version", config.GAME_AMOUNT_PLAY_TEST)
-    # print(files.add_to_file("positions.json", files.load_file("poss.json"), config.POSITION_AMOUNT)[0])
 
 
 if __name__ == "__main__":
