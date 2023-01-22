@@ -175,6 +175,7 @@ class MainNeuralNetwork(NeuralNetwork):
                 data = dict(enumerate(data))
             if data:
                 x, data = zip(*data.items())
+                x = list(map(int, x))
 
                 # n = int(np.ceil(len(data) / 50))
                 # y = moving_average(data, n)

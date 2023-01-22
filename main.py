@@ -82,7 +82,7 @@ def play(env, games, training=False):
         for i, player in enumerate(env.players):
             results[i] /= games
             if player.trainable:
-                player.main_nn.metrics["outcomes"][player.main_nn.version] = results[i]
+                player.main_nn.metrics["outcomes"][f"{player.main_nn.version}"] = results[i]
 
         return results
 
