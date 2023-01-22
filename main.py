@@ -117,7 +117,7 @@ def retrain_network(agent):
 
     # data = [np.expand_dims(dat, 0) for dat in positions[-1][0]]
     # real = positions[-1]
-    # p = agent.main_nn.model.predict(data)
+    # p = agent.main_nn.model .predict(data)
 
 
 def evaluate_network(agent):

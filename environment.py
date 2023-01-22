@@ -4,7 +4,7 @@ import config
 from funcs import format_card, score_row
 
 GAME_DIMENSIONS = (3, 3)
-NN_INPUT_DIMENSIONS = [(config.DEPTH,) + GAME_DIMENSIONS + (52,), (config.DEPTH, 52), (config.DEPTH, 52)]
+NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (52 * config.DEPTH,), (52 * config.DEPTH,), (52 * config.DEPTH,)]
 MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
 REPLACE_CARDS = 3
 GAME_LENGTH = np.prod(GAME_DIMENSIONS) + REPLACE_CARDS
@@ -130,19 +130,19 @@ class GameState():
                     for i in range(1, 53):
                         position = np.zeros(len(s))
                         position[s == i] = 1
-                        state.append(np.reshape(position, NN_INPUT_DIMENSIONS[0][1:-1]))
+                        state.append(np.reshape(position, NN_INPUT_DIMENSIONS[0][:-1]))
 
                     state = np.moveaxis(state, 0, -1).tolist()
-                    nn_pass[-1][0].append(state)
+                    nn_pass[-1][0] += state
 
                     deck = np.zeros(52)
                     for card in de: deck[card - 1] = 1
-                    nn_pass[-1][1].append(deck.tolist())
+                    nn_pass[-1][1] += deck.tolist()
 
                     drawn_card = np.zeros(52)
                     if dr[0] != 0:
                         drawn_card[dr[0] - 1] = 1
-                    nn_pass[-1][2].append(drawn_card.tolist())
+                    nn_pass[-1][2] += drawn_card.tolist()
 
                     if depth != config.DEPTH - 1:
                         if self.history[-depth - 2]:
