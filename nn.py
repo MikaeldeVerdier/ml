@@ -34,13 +34,14 @@ except ImportError:
         return caching
 
 class NeuralNetwork:
-    def __init__(self, load, kind=None):
+    def __init__(self, load, kind=None, trainable=False):
         if kind is not None:
             if load:
                 load = kind
             loaded = files.load_file("save.json")
             self.version = loaded[f"{kind}_version"]
-            self.metrics = loaded["metrics"]
+            if trainable:
+                self.metrics = loaded["metrics"]
         else:
             self.version = load
 
@@ -161,7 +162,7 @@ class NeuralNetwork:
 
 class MainNeuralNetwork(NeuralNetwork):
     def __init__(self, load):
-        super().__init__(load, kind="main_nn")
+        super().__init__(load, kind="main_nn", trainable=True)
 
     def train(self, x, y):
         self.get_preds.cache_clear()

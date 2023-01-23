@@ -1,5 +1,13 @@
 import numpy as np
 
+def offset_array(arr, index):
+    return arr[index - 1:] + arr[:index - 1]
+
+
+def increment_turn(turn, increment, length):
+    return (turn + increment) % length
+
+
 def get_card(value):
     suit = (value - 1) // 13
     value = ((value - 1) % 13) + 2

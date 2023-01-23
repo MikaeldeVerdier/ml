@@ -1,7 +1,7 @@
 import numpy as np
 import random
 import config
-from funcs import format_card, score_row
+from funcs import offset_array, increment_turn, format_card, score_row
 
 GAME_DIMENSIONS = (3, 3)
 NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (52 * config.DEPTH,), (52 * config.DEPTH,), (52 * config.DEPTH,)]
@@ -9,23 +9,24 @@ MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
 REPLACE_CARDS = 3
 GAME_LENGTH = np.prod(GAME_DIMENSIONS) + REPLACE_CARDS
 REWARD_FACTOR = 0.1
+REWARD_AVERAGE = True
 
 class Environment:
     def __init__(self, players, epsilons=[None, None], starts=0, verbose=False):
-        self.players = players[1:] + players[:1]
+        self.players = offset_array(players, 2)
         self.epsilons = epsilons
         self.starts = starts
         self.verbose = verbose
 
     def step(self, probs, action):
         s, deck, drawn_card = self.game_state.take_action(action)
-        self.game_state = GameState((self.game_state.turn + 1) % len(self.players), self.game_state.history, s, deck, drawn_card)
+        self.game_state = GameState(increment_turn(self.game_state.turn, 1, len(self.players)), self.game_state.history, s, deck, drawn_card)
 
         if self.verbose:
             self.print_state(probs, action)
 
     def reset(self):
-        self.players = self.players[self.starts - 1:] + self.players[:self.starts - 1]
+        self.players = offset_array(self.players, self.starts)
 
         deck = list(range(1, 53))
         random.shuffle(deck)

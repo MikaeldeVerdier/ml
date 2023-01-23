@@ -26,7 +26,7 @@ def play(env, games, training=False):
         length = 0
         product = []
     else:
-        results = [0 for _ in range(len(env.players))]
+        results = [[] for _ in range(len(env.players))]
 
     og_games = games
     game_count = 0
@@ -48,8 +48,8 @@ def play(env, games, training=False):
             env.step(probs, action)
 
             if training:
-                for i2, var in enumerate(["action", "reward"]):
-                    storage[-1][var] = [action, env.game_state.outcome or 0.0][i2]
+                for key, var in [("action", action), ("reward", env.game_state.outcome or 0.0)]:
+                    storage[-1][key] = var
 
         for i, player in enumerate(env.players):
             if player.trainable:
@@ -60,7 +60,7 @@ def play(env, games, training=False):
 
         if not training:
             formatted_outcome = int(env.game_state.outcome / environment.REWARD_FACTOR)
-            results[i] += formatted_outcome
+            results[env.game_state.turn].append(formatted_outcome)
         else:
             for t, data in enumerate(storage):
                 data["target"] = player.calculate_target(storage, t) if t != len(storage) - 1 else data["reward"]
@@ -80,7 +80,7 @@ def play(env, games, training=False):
 
     if not training:
         for i, player in enumerate(env.players):
-            results[i] /= games
+            results[i] = np.mean(results[i], axis=-1) if environment.REWARD_AVERAGE else len(results[i])
             if player.trainable:
                 player.main_nn.metrics["outcomes"][f"{player.main_nn.version}"] = results[i]
 
@@ -123,7 +123,7 @@ def retrain_network(agent):
 def evaluate_network(agent):
     print("\nEvaluation of agent started!\n")
 
-    outcome = play(Environment([agent], epsilons=[0.05]), config.GAME_AMOUNT_EVALUATION)[0]
+    outcome = play(Environment([agent], epsilons=[0.05]), config.GAME_AMOUNT_EVALUATION)
 
     # log([agent], outcome)
 
