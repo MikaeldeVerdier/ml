@@ -172,7 +172,7 @@ class MainNeuralNetwork(NeuralNetwork):
     def plot_agent(self):
         _, axs = plt.subplots(2, 2, figsize=(20, 20))
 
-        for i, metric, color in zip(enumerate(self.metrics), list(matplotlib.colors.BASE_COLORS.keys())):
+        for i, (metric, color) in zip(enumerate(self.metrics), list(matplotlib.colors.BASE_COLORS.keys())):
             data = self.metrics[metric]
             if type(data) is list:
                 data = dict(enumerate(data))
