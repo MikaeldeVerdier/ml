@@ -14,7 +14,7 @@ DENSE_POLICY_HEAD = [512, 512, 512, 512, 512, 512, 256]
 USE_BIAS = True
 
 # Self-play
-GAME_AMOUNT_SELF_PLAY = 70
+GAME_AMOUNT_SELF_PLAY = 25
 POSITION_AMOUNT = 30000
 DEPTH = 1
 EPSILON = [1, 0.1, LOOP_ITERATIONS * 0.9]  # Exploration rate in the form of: [initial, final, duration]
