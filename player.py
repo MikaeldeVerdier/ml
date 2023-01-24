@@ -2,6 +2,8 @@ import numpy as np
 import environment
 import config
 import files
+from copy import copy
+from shutil import copytree
 from nn import NeuralNetwork, MainNeuralNetwork, TargetNeuralNetwork
 from funcs import string_to_tuple, format_card
 
@@ -64,8 +66,10 @@ class Agent():
         return data[t]["reward"] + config.GAMMA * np.max(self.target_nn.get_preds(next_state))
 
     def copy_network(self):
-        self.target_nn.load_dir("main_nn")
-        self.target_nn.save_model("target_nn", self.to_weights)
+        # self.target_nn.load_dir("main_nn")
+        # self.target_nn.save_model("target_nn", self.to_weights)
+        self.target_nn = copy(self.main_nn)
+        copytree(files.get_path("training/main_nn", "training/target_nn"))
 
         files.edit_key("save.json", ["target_nn_version"], [self.main_nn.version])
 
