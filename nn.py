@@ -34,7 +34,7 @@ except ImportError:
         return caching
 
 class NeuralNetwork:
-    def __init__(self, load, trainable=False):
+    def __init__(self, load):
         self.version = load
 
         if load:
@@ -154,10 +154,9 @@ class NeuralNetwork:
 
 class MainNeuralNetwork(NeuralNetwork):
     def __init__(self, load):
-        if load:
-            self.load = "main_nn"
+        self.load = "main_nn" if load is True else load
 
-        super().__init__(self.load, trainable=True)
+        super().__init__(self.load)
 
         loaded = files.load_file("save.json")
         self.version = loaded["target_nn_version"]
@@ -213,8 +212,7 @@ class MainNeuralNetwork(NeuralNetwork):
 
 class TargetNeuralNetwork(NeuralNetwork):
     def __init__(self, load):
-        if load:
-            self.load = "target_nn"
+        self.load = "target_nn" if load is True else load
 
         super().__init__(self.load)
 
