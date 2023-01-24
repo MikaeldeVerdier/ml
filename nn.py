@@ -34,16 +34,8 @@ except ImportError:
         return caching
 
 class NeuralNetwork:
-    def __init__(self, load, kind=None, trainable=False):
-        if kind is not None:
-            if load:
-                load = kind
-            loaded = files.load_file("save.json")
-            self.version = loaded[f"{kind}_version"]
-            if trainable:
-                self.metrics = loaded["metrics"]
-        else:
-            self.version = load
+    def __init__(self, load, trainable=False):
+        self.version = load
 
         if load:
             if self.load_dir(load):
@@ -162,7 +154,14 @@ class NeuralNetwork:
 
 class MainNeuralNetwork(NeuralNetwork):
     def __init__(self, load):
-        super().__init__(load, kind="main_nn", trainable=True)
+        if load:
+            self.load = "main_nn"
+
+        super().__init__(self.load, trainable=True)
+
+        loaded = files.load_file("save.json")
+        self.version = loaded["target_nn_version"]
+        self.metrics = loaded["metrics"]
 
     def train(self, x, y):
         self.get_preds.cache_clear()
@@ -172,9 +171,9 @@ class MainNeuralNetwork(NeuralNetwork):
             [self.metrics[metric].append(fit.history[metric][i]) for i in range(config.EPOCHS)]
 
     def plot_agent(self):
-        _, axs = plt.subplots(4, 2, figsize=(40, 20))
+        _, axs = plt.subplots(2, 2, figsize=(20, 20))
 
-        for i, metric in enumerate(self.metrics):
+        for i, metric, color in zip(enumerate(self.metrics), list(matplotlib.colors.BASE_COLORS.keys())):
             data = self.metrics[metric]
             if type(data) is list:
                 data = dict(enumerate(data))
@@ -185,15 +184,15 @@ class MainNeuralNetwork(NeuralNetwork):
                 # n = int(np.ceil(len(data) / 50))
                 # y = moving_average(data, n)
 
-                ax = (2 * (i // 2), i % 2)
-                color = list(matplotlib.colors.BASE_COLORS.keys())[i]
+                ax = (i // 2, i % 2)
+                # color = list(matplotlib.colors.BASE_COLORS.keys())[i]
                 axs[ax].plot(x, data, color=color, label=f"{metric}\n(last point: {data[-1]:5f})")
                 axs[ax].axhline(data[-1], color="black", linestyle=":")
 
-                deriv = np.diff(data)
-                axs[ax[0] + 1, ax[1]].plot(x[1:], deriv, color=color, label=f"Derivative of {metric}")
+                # deriv = np.diff(data)
+                # axs[ax[0] + 1, ax[1]].plot(x[1:], deriv, color=color, label=f"Derivative of {metric}")
 
-        for ax_index, axis in enumerate(["Loss", "Loss derivative", "Outcome", "Outcome derivative", "Validation loss", "Validation loss derivative", "Average Q-value", "Average Q-value derivative"]):
+        for ax_index, axis in enumerate(["Loss", "Outcome", "Validation loss", "Average Q-value"]):
             ax = axs.T.flatten()[ax_index]
             ax.set_title(axis)
             ax.set_xlabel("Training iteration" if "loss" in axis.lower() else "Version" if "Outcome" in axis else "Game")
@@ -214,4 +213,10 @@ class MainNeuralNetwork(NeuralNetwork):
 
 class TargetNeuralNetwork(NeuralNetwork):
     def __init__(self, load):
-        super().__init__(load, kind="target_nn")
+        if load:
+            self.load = "target_nn"
+
+        super().__init__(self.load)
+
+        loaded = files.load_file("save.json")
+        self.version = loaded["target_nn_version"]
