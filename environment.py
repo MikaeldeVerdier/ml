@@ -12,15 +12,15 @@ REWARD_FACTOR = 0.1
 REWARD_AVERAGE = True
 
 class Environment:
-	def __init__(self, players, epsilons=[None, None], starts=0, verbose=False):
+	def __init__(self, players, epsilons=None, starts=0, verbose=False):
 		self.players = offset_array(players, 2)
-		self.epsilons = epsilons
+		self.epsilons = epsilons or np.full(players.shape, None)
 		self.starts = starts
 		self.verbose = verbose
 
 	def step(self, probs, action):
 		s, deck, drawn_card = self.game_state.take_action(action)
-		self.game_state = GameState(increment_turn(self.game_state.turn, 1, len(self.players)), self.game_state.history, s, deck, drawn_card)
+		self.game_state = GameState(increment_turn(self.game_state.turn, 1, np.array(self.players).shape[-1]), self.game_state.history, s, deck, drawn_card)
 
 		if self.verbose:
 			self.print_state(probs, action)
