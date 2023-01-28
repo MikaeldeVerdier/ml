@@ -1,8 +1,9 @@
 import numpy as np
 import os
 import json
-import config
 from shutil import copyfile
+
+import config
 
 EMPTY_SAVE = json.dumps({
 	"main_nn_version": 0,

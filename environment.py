@@ -1,5 +1,6 @@
 import numpy as np
 import random
+
 import config
 from funcs import offset_array, increment_turn, format_card, score_row
 
@@ -11,10 +12,12 @@ GAME_LENGTH = np.prod(GAME_DIMENSIONS) + REPLACE_CARDS
 REWARD_FACTOR = 0.1
 REWARD_AVERAGE = True
 
+GAME_ADD = lambda left, og_games: np.ceil(left / (GAME_LENGTH * 16) % og_games)
+
 class Environment:
 	def __init__(self, players, epsilons=None, starts=0, verbose=False):
 		self.players = offset_array(players, 2)
-		self.epsilons = epsilons or np.full(players.shape, None)
+		self.epsilons = epsilons or np.full(np.array(players).shape, None)
 		self.starts = starts
 		self.verbose = verbose
 

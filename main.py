@@ -1,9 +1,10 @@
 import numpy as np
 import random
+from datetime import datetime
+
 import environment
 import config
 import files
-from datetime import datetime
 from player import User, Agent
 from environment import Environment
 
@@ -25,8 +26,8 @@ def play(env, games, training=False):
 	if training:
 		length = 0
 		product = []
-	else:
-		results = np.empty(np.array(env.players).shape + (0,)).tolist()
+
+	results = np.empty(np.array(env.players).shape + (0,)).tolist()
 
 	og_games = games
 	game_count = 0
@@ -52,6 +53,9 @@ def play(env, games, training=False):
 					for key, var in [("action", action), ("reward", env.game_state.outcome or 0.0)]:
 						storage[-1][key] = var
 
+			formatted_outcome = int(env.game_state.outcome / environment.REWARD_FACTOR)
+			loop_results[env.game_state.turn].append(formatted_outcome)
+
 			for i, player in enumerate(loop_players):
 				if player.trainable:
 					player.main_nn.metrics["average_q_value"].append(float(np.mean(loop_q_values[i])))
@@ -59,10 +63,7 @@ def play(env, games, training=False):
 			if not game_count % games:
 				print(f"Amount of games played is now: {game_count} ({loop_players[env.game_state.turn].get_name()})\n")
 
-			if not training:
-				formatted_outcome = int(env.game_state.outcome / environment.REWARD_FACTOR)
-				loop_results[env.game_state.turn].append(formatted_outcome)
-			else:
+			if training:
 				for t, data in enumerate(storage):
 					data["target"] = loop_players[env.game_state.turn].calculate_target(storage, t) if t != len(storage) - 1 else data["reward"]
 
@@ -77,7 +78,7 @@ def play(env, games, training=False):
 
 				left = config.POSITION_AMOUNT - length
 				if left and games == game_count:
-					games += np.ceil(left / (environment.GAME_LENGTH * 16) % og_games)
+					games += environment.GAME_ADD(left, og_games)
 
 	if not training:
 		for i, players in enumerate(env.players):
@@ -125,11 +126,21 @@ def retrain_network(agent):
 def evaluate_network(agent):
 	print("\nEvaluation of agent started!\n")
 
-	outcome = play(Environment([[agent, agent]], epsilons=[[0.05, 0.05]]), config.GAME_AMOUNT_EVALUATION)
+	outcome = play(Environment([[agent]], epsilons=[[0.05, 0.05]]), config.GAME_AMOUNT_EVALUATION)
 
 	# log([agent], outcome)
 
 	print(f"The result was: {outcome}")
+
+
+def compete(agents, games, starts):
+	outcomes = play(Environment(agents, epsilons=[[0.05], [0.05]], starts=starts), games)
+
+	log(agents, outcomes)
+
+	print(f"The results between agents named {agents[0].get_name()} and {agents[1].get_name()} were: {outcomes}")
+	best = agents[np.argmax(outcomes)].get_name()
+	print(f"The best version was: version {best}")
 
 
 def log(agent_s, average_s):
@@ -139,21 +150,13 @@ def log(agent_s, average_s):
 
 def play_test(load, games, starts=1):
 	you = User()
-	agents = [Agent(load=load, name=load), you]
-	outcomes = play(Environment(agents, epsilons=[0.05, 0.05], starts=starts), games)
-
-	print(f"The results were: {outcomes}")
+	agents = [[Agent(load=load, name=load)], [you]]
+	compete(agents, games, starts)
 
 
 def play_versions(loads, games, starts=0):
-	agents = [Agent(load=load, name=load) for load in loads]
-	outcomes = play(Environment(agents, epsilons=[0.05, 0.05], starts=starts), games)
-
-	log(agents, outcomes)
-
-	print(f"The results between versions named {agents[0].get_name()} and {agents[1].get_name()} were: {outcomes}")
-	best = loads[np.argmax(agents)].get_name()
-	print(f"The best version was: version {best}")
+	agents = [[Agent(load=load, name=load)] for load in loads]
+	compete(agents, games, starts)
 
 
 def main():

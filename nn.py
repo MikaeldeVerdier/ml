@@ -3,14 +3,15 @@ import tensorflow as tf
 import matplotlib
 import matplotlib.pyplot as plt
 import os
-import environment
-import config
-import files
 from tensorflow.keras import regularizers
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.layers import Input, Dense, Conv2D, Flatten, BatchNormalization, ReLU, Concatenate
 from tensorflow.keras.optimizers import Adam
 from keras.utils.vis_utils import plot_model
+
+import environment
+import config
+import files
 
 try:
 	matplotlib.use("Agg")
@@ -76,19 +77,19 @@ class NeuralNetwork:
 		return hash(self.version)
 
 	def load_dir(self, file, from_weights=False):
-		path = f"{config.SAVE_PATH}training/{file}/checkpoint"
+		path = files.get_path(f"training/{file}/checkpoint")
 		if not from_weights:
 			if not os.path.exists(path):
-				self.model = load_model(f"{config.SAVE_PATH}training/{file}", custom_objects={"mean_squared_error": self.mean_squared_error})
+				self.model = load_model(files.get_path(f"training/{file}"), custom_objects={"mean_squared_error": self.mean_squared_error})
 				return True
 		else:
 			self.model.load_weights(path).expect_partial()
 
 	def save_model(self, name, to_weights):
 		if not to_weights:
-			self.model.save(f"{config.SAVE_PATH}training/{name}")
+			self.model.save(files.get_path(f"training/{name}"))
 		else:
-			self.model.save_weights(f"{config.SAVE_PATH}training/{name}/checkpoint")
+			self.model.save_weights(files.get_path(f"training/{name}/checkpoint"))
 
 	def mean_squared_error(self, y_true, y_pred):
 		logits = tf.reshape(y_pred, (tf.shape(y_true)[0], -1))
@@ -203,7 +204,7 @@ class MainNeuralNetwork(NeuralNetwork):
 			ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 
 		plt.ioff()
-		plt.savefig(f"{config.SAVE_PATH}agent.png", dpi=300)
+		plt.savefig(files.get_path(f"agent.png", dpi=300))
 		plt.close()
 
 	def save_metrics(self):

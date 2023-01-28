@@ -1,30 +1,37 @@
 import os
 import numpy as np
+from copy import copy
+from shutil import rmtree, copytree
+
 import environment
 import config
 import files
-from copy import copy
-from shutil import rmtree, copytree
 from nn import NeuralNetwork, MainNeuralNetwork, TargetNeuralNetwork
 from funcs import string_to_tuple, format_card
 
 class User():
-	def __init__(self, name):
+	def __init__(self, name="You"):
 		self.name = name
 
 	def get_name(self):
-		return self.name or "You"
+		return self.name
 
 	def get_action(self, state, *args):
 		print(f"Drawn card is: {format_card(state.drawn_card)}")
 
 		legal_moves = state.legal_moves
-		moves = [(legal_move % environment.GAME_DIMENSIONS[1] + 1, environment.GAME_DIMENSIONS[1] - legal_move // environment.GAME_DIMENSIONS[1]) for legal_move in legal_moves]
+		if len(environment.GAME_DIMENSIONS) == 2:
+			moves = [(legal_move % environment.GAME_DIMENSIONS[1] + 1, environment.GAME_DIMENSIONS[1] - legal_move // environment.GAME_DIMENSIONS[1]) for legal_move in legal_moves]
+			func = string_to_tuple
+		else:
+			moves = legal_moves
+			func = int
+
 		user_move = None
 		while user_move not in moves:
 			print(f"Legal moves for you are: {moves}")
 			try:
-				user_move = string_to_tuple(input("Make your move: "))
+				user_move = func(input("Make your move: "))
 			except ValueError:
 				print("Please enter a valid move.")
 		
