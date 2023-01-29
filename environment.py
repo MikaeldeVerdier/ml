@@ -10,7 +10,7 @@ MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
 REPLACE_CARDS = 3
 GAME_LENGTH = np.prod(GAME_DIMENSIONS) + REPLACE_CARDS
 REWARD_FACTOR = 0.1
-REWARD_AVERAGE = True
+REWARD_AVERAGE = False
 
 GAME_ADD = lambda left, og_games: np.ceil(left / (GAME_LENGTH * 16) % og_games)
 

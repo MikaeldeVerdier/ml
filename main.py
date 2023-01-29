@@ -80,19 +80,20 @@ def play(env, games, training=False):
 				if left and games == game_count:
 					games += environment.GAME_ADD(left, og_games)
 
-	if not training:
-		for i, players in enumerate(env.players):
-			for i2, player in enumerate(players):
-				results[i][i2] = np.mean(results[i][i2], axis=-1) if environment.REWARD_AVERAGE else len(results[i][i2])
-				if player.trainable:
-					player.main_nn.metrics["outcomes"][f"{player.main_nn.version}"] = results[i][i2]
+	for i, players in enumerate(env.players):
+		for i2, player in enumerate(players):
+			results[i][i2] = np.mean(results[i][i2], axis=-1) if environment.REWARD_AVERAGE else len(np.nonzero(results[i][i2]))
+			if training and player.trainable:
+				player.main_nn.metrics["outcomes"][f"{player.main_nn.version}"] = results[i][i2]
 
-		return results
+	return results
 
 
 def self_play(agent):
 	print("\nSelf-play started!\n")
-	play(Environment([[agent]]), config.GAME_AMOUNT_SELF_PLAY, training=True)
+	outcome = play(Environment([[agent]]), config.GAME_AMOUNT_SELF_PLAY, training=True)
+
+	print(f"The result was: {outcome}")
 
 
 def retrain_network(agent):
