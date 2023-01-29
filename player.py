@@ -34,7 +34,7 @@ class User():
 				user_move = func(input("Make your move: "))
 			except ValueError:
 				print("Please enter a valid move.")
-		
+
 		action = legal_moves[moves.index(user_move)]
 
 		return None, action
@@ -76,6 +76,7 @@ class Agent():
 	def copy_network(self):
 		# self.target_nn.load_dir("main_nn")
 		# self.target_nn.save_model("target_nn", self.to_weights)
+
 		self.target_nn = copy(self.main_nn)
 		if os.path.exists(files.get_path("training/target_nn")):
 			rmtree(files.get_path("training/target_nn"))

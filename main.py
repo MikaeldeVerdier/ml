@@ -149,7 +149,7 @@ def log(agent_s, average_s):
 	files.write("log.txt", message, "a")
 
 
-def play_test(load, games, starts=1):
+def play_test(load, games, starts=0):
 	you = User()
 	agents = [[Agent(load=load, name=load)], [you]]
 	compete(agents, games, starts)
