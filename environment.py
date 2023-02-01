@@ -12,6 +12,7 @@ GAME_LENGTH = np.prod(GAME_DIMENSIONS) + REPLACE_CARDS
 REWARD_FACTOR = 0.1
 REWARD_AVERAGE = False
 
+INVERSE_REWARD_TRANSFORM = lambda outcome: int(outcome / REWARD_FACTOR)
 GAME_ADD = lambda left, og_games: np.ceil(left / (GAME_LENGTH * 16) % og_games)
 
 class Environment:

@@ -53,7 +53,7 @@ def play(env, games, training=False):
 					for key, var in [("action", action), ("reward", env.game_state.outcome or 0.0)]:
 						storage[-1][key] = var
 
-			formatted_outcome = int(env.game_state.outcome / environment.REWARD_FACTOR)
+			formatted_outcome = environment.INVERSE_REWARD_TRANSFORM(env.game_state.outcome)
 			loop_results[env.game_state.turn].append(formatted_outcome)
 
 			for i, player in enumerate(loop_players):
