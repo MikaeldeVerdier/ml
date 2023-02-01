@@ -10,7 +10,7 @@ MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
 REPLACE_CARDS = 3
 GAME_LENGTH = np.prod(GAME_DIMENSIONS) + REPLACE_CARDS
 REWARD_FACTOR = 0.1
-REWARD_AVERAGE = False
+REWARD_AVERAGE = True
 
 INVERSE_REWARD_TRANSFORM = lambda outcome: int(outcome / REWARD_FACTOR)
 GAME_ADD = lambda left, og_games: np.ceil(left / (GAME_LENGTH * 16) % og_games)
@@ -45,7 +45,7 @@ class Environment:
 			if pos != "---":
 				board[i] = format_card(float(pos))
 
-		if probs:
+		if probs is not None:
 			print(f"Action values are: {[probs[-1]]}\n{np.round(probs[:-1], 8).reshape(GAME_DIMENSIONS)}")
 		print(f"Action taken by {self.players[self.turn].get_name()} is: {action}")
 		print(f"Position is:\n{board.reshape(GAME_DIMENSIONS)}")

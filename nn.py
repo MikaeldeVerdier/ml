@@ -204,7 +204,7 @@ class MainNeuralNetwork(NeuralNetwork):
 			ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 
 		plt.ioff()
-		plt.savefig(files.get_path(f"agent.png", dpi=300))
+		plt.savefig(files.get_path(f"agent.png"), dpi=300)
 		plt.close()
 
 	def save_metrics(self):
