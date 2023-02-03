@@ -17,26 +17,37 @@ GAME_ADD = lambda left, og_games: np.ceil(left / (GAME_LENGTH * 16) % og_games)
 
 class Environment:
 	def __init__(self, players, epsilons=None, starts=0, verbose=False):
-		self.players = offset_array(players, 2)
+		self.players = players  # [offset_array(game_players, 2) for game_players in players]  # offset_array(players, 2) axis=-1?
 		self.epsilons = epsilons or np.full(np.array(players).shape, None)
 		self.starts = starts
 		self.verbose = verbose
 
+		self.players_turn = -1
+
 	def step(self, probs, action):
 		s, deck, drawn_card = self.game_state.take_action(action)
-		self.game_state = GameState(increment_turn(self.game_state.turn, 1, np.array(self.players).shape[-1]), self.game_state.history, s, deck, drawn_card)
+		self.game_state = GameState(increment_turn(self.game_state.turn, 1, len(self.current_players)), self.game_state.history, s, deck, drawn_card)
+
+		self.update_player()
 
 		if self.verbose:
 			self.print_state(probs, action)
 
+	def update_player(self):
+		self.player = self.current_players[self.game_state.turn]
+		self.epsilon = self.epsilons[self.players_turn][self.game_state.turn]
+
 	def reset(self):
-		self.players = offset_array(self.players, self.starts)
+		self.players_turn = increment_turn(self.players_turn, 1, len(self.players))
+		self.current_players = self.players[self.players_turn]
 
 		deck = list(range(1, 53))
 		random.shuffle(deck)
 		drawn_card = deck.pop()
 
 		self.game_state = GameState(0, (None,) * config.DEPTH, np.zeros(np.prod(GAME_DIMENSIONS)), deck, drawn_card)
+
+		self.update_player()
 
 	def print_state(self, probs, action):
 		board = self.game_state.s.astype("<U4")
@@ -47,7 +58,7 @@ class Environment:
 
 		if probs is not None:
 			print(f"Action values are: {[probs[-1]]}\n{np.round(probs[:-1], 8).reshape(GAME_DIMENSIONS)}")
-		print(f"Action taken by {self.players[self.turn].get_name()} is: {action}")
+		print(f"Action taken by {self.players[self.players_turn][self.game_state.turn].get_name()} is: {action}")
 		print(f"Position is:\n{board.reshape(GAME_DIMENSIONS)}")
 		print(f"Drawn card is: {format_card(self.game_state.drawn_card)}")
 		print(f"Amount of cards left is now: {len(self.game_state.deck)}")

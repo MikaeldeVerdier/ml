@@ -36,50 +36,49 @@ def play(env, games, training=False):
 
 		env.reset()
 
-		q_values = np.empty(np.array(env.players).shape + (0,)).tolist()
+		q_values = np.empty(np.array(env.current_players).shape + (0,)).tolist()
 		storage = []
 
-		for loop_players, loop_results, loop_q_values, loop_epsilons in zip(env.players, results, q_values, env.epsilons):
-			while env.game_state.outcome is None:
-				storage.append({"state": env.game_state})
+		while env.game_state.outcome is None:
+			storage.append({"state": env.game_state})
 
-				probs, action = loop_players[env.game_state.turn].get_action(env.game_state, loop_epsilons[env.game_state.turn])
-				
-				loop_q_values[env.game_state.turn].append(probs[action])
+			probs, action = env.player.get_action(env.game_state, env.epsilon)
+			
+			q_values[env.game_state.turn].append(probs[action])
 
-				env.step(probs, action)
-
-				if training:
-					for key, var in [("action", action), ("reward", env.game_state.outcome or 0.0)]:
-						storage[-1][key] = var
-
-			formatted_outcome = environment.INVERSE_REWARD_TRANSFORM(env.game_state.outcome)
-			loop_results[env.game_state.turn].append(formatted_outcome)
-
-			for i, player in enumerate(loop_players):
-				if player.trainable:
-					player.main_nn.metrics["average_q_value"].append(float(np.mean(loop_q_values[i])))
-
-			if not game_count % games:
-				print(f"Amount of games played is now: {game_count} ({loop_players[env.game_state.turn].get_name()})\n")
+			env.step(probs, action)
 
 			if training:
-				for t, data in enumerate(storage):
-					data["target"] = loop_players[env.game_state.turn].calculate_target(storage, t) if t != len(storage) - 1 else data["reward"]
+				for key, var in [("action", action), ("reward", env.game_state.outcome or 0.0)]:
+					storage[-1][key] = var
 
-					states = np.array(data["state"].generate_nn_pass(modify=True), dtype=object).tolist()
-					# for flip in states: product.append(np.array([flip, data["action"], data["target"]], dtype=object))
-					product.extend([np.array([state, data["action"], data["target"]], dtype=object) for state in states])
+		formatted_outcome = environment.INVERSE_REWARD_TRANSFORM(env.game_state.outcome)
+		results[env.players_turn][env.game_state.turn].append(formatted_outcome)
 
-				if not game_count % games:
-					length = files.add_to_file(files.get_path("positions.npy"), np.array(product, dtype=object), config.POSITION_AMOUNT)
-					product = []
+		for i, player in enumerate(env.current_players):
+			if player.trainable:
+				player.main_nn.metrics["average_q_value"].append(float(np.mean(q_values[env.players_turn][i])))
 
-					print(f"Position length is now: {length}")
+		if not game_count % games:
+			print(f"Amount of games played is now: {game_count} ({env.player.get_name()})\n")
 
-				left = config.POSITION_AMOUNT - length
-				if left and games == game_count:
-					games += environment.GAME_ADD(left, og_games)
+		if training:
+			for t, data in enumerate(storage):
+				data["target"] = env.player.calculate_target(storage, t) if t != len(storage) - 1 else data["reward"]
+
+				states = np.array(data["state"].generate_nn_pass(modify=True), dtype=object).tolist()
+				# for flip in states: product.append(np.array([flip, data["action"], data["target"]], dtype=object))
+				product.extend([np.array([state, data["action"], data["target"]], dtype=object) for state in states])
+
+			if not game_count % games:
+				length = files.add_to_file(files.get_path("positions.npy"), np.array(product, dtype=object), config.POSITION_AMOUNT)
+				product = []
+
+				print(f"Position length is now: {length}")
+
+			left = config.POSITION_AMOUNT - length
+			if left and games == game_count:
+				games += environment.GAME_ADD(left, og_games)
 
 	for i, players in enumerate(env.players):
 		for i2, player in enumerate(players):
@@ -128,7 +127,9 @@ def retrain_network(agent):
 def evaluate_network(agent):
 	print("\nEvaluation of agent started!\n")
 
-	outcome = play(Environment([[agent]], epsilons=[[0.05, 0.05]]), config.GAME_AMOUNT_EVALUATION)
+	from copy import copy
+
+	outcome = play(Environment([[agent]], epsilons=[[0.05]]), config.GAME_AMOUNT_EVALUATION)
 
 	# log([agent], outcome)
 
