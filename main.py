@@ -39,7 +39,7 @@ def play(env, games, training=False):
 		q_values = np.empty(np.array(env.current_players).shape + (0,)).tolist()
 		storage = []
 
-		while env.game_state.outcome is None:
+		while env.game_state.outcome == (None,) * len(env.current_players):
 			storage.append({"state": env.game_state})
 
 			probs, action = env.player.get_action(env.game_state, env.epsilon)
@@ -49,15 +49,13 @@ def play(env, games, training=False):
 			env.step(probs, action)
 
 			if training:
-				for key, var in [("action", action), ("reward", env.game_state.outcome or 0.0)]:
+				for key, var in [("action", action), ("reward", env.game_state.outcome[env.game_state.turn] or 0.0)]:
 					storage[-1][key] = var
 
-		formatted_outcome = environment.INVERSE_REWARD_TRANSFORM(env.game_state.outcome)
-		results[env.players_turn][env.game_state.turn].append(formatted_outcome)
-
-		for i, player in enumerate(env.current_players):
+		for (i, player), outcome in zip(enumerate(env.current_players), env.game_state.outcome):
+			results[env.players_turn][i].append(environment.INVERSE_REWARD_TRANSFORM(outcome))
 			if player.trainable:
-				player.main_nn.metrics["average_q_value"].append(float(np.mean(q_values[env.players_turn][i])))
+				player.main_nn.metrics["average_q_value"].append(float(np.mean(q_values[i])))
 
 		if not game_count % games:
 			print(f"Amount of games played is now: {game_count} ({env.player.get_name()})\n")
@@ -126,8 +124,6 @@ def retrain_network(agent):
 
 def evaluate_network(agent):
 	print("\nEvaluation of agent started!\n")
-
-	from copy import copy
 
 	outcome = play(Environment([[agent]], epsilons=[[0.05]]), config.GAME_AMOUNT_EVALUATION)
 

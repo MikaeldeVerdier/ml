@@ -14,7 +14,7 @@ def get_card(value):
 	return suit, value
 
 
-def score_row(cards):
+"""def score_row(cards):  # 5x5
 	values = sorted([get_card(card)[1] for card in cards])
 	
 	histo_dict = {(1, 4): 20, (2, 3): 15, (1, 1, 3): 8, (1, 2, 2): 4, (1, 1, 1, 2): 2}
@@ -36,6 +36,32 @@ def score_row(cards):
 
 		if values[-2] == 13:
 			return 3 * score - 10
+	
+	return score"""
+
+
+def score_row(cards):  # 3x3
+	values = sorted([get_card(card)[1] for card in cards])
+	
+	histo_dict = {(3): 10, (1, 2): 2}
+
+	histo = tuple(sorted([values.count(value) for value in set(values)]))
+
+	if histo in histo_dict:
+		return histo_dict[histo]
+
+	färgrad = len(set(get_card(card)[0] for card in cards)) == 1
+	stege = values[-1] - values[0] == 2 or values == [2, 3, 14]
+	
+	score = 0
+
+	if färgrad:
+		score += 5
+	if stege:
+		score += 8
+
+		if values[-2] == 13:
+			return 2 * score - 6
 	
 	return score
 

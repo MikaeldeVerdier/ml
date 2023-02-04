@@ -24,6 +24,8 @@ class Environment:
 
 		self.players_turn = -1
 
+		self.deck = list(range(1, 53))
+
 	def step(self, probs, action):
 		s, deck, drawn_card = self.game_state.take_action(action)
 		self.game_state = GameState(increment_turn(self.game_state.turn, 1, len(self.current_players)), self.game_state.history, s, deck, drawn_card)
@@ -41,8 +43,10 @@ class Environment:
 		self.players_turn = increment_turn(self.players_turn, 1, len(self.players))
 		self.current_players = self.players[self.players_turn]
 
-		deck = list(range(1, 53))
-		random.shuffle(deck)
+		if self.players_turn == 0:
+			random.shuffle(self.deck)
+
+		deck = self.deck.copy()
 		drawn_card = deck.pop()
 
 		self.game_state = GameState(0, (None,) * config.DEPTH, np.zeros(np.prod(GAME_DIMENSIONS)), deck, drawn_card)
@@ -107,6 +111,9 @@ class GameState():
 		return legal_moves
 
 	def check_game_over(self):
+		# Takes a game_state object (self) and outputs a tuple of all individual outcomes for the different players in order
+		# If length of output does not match length of players, an error will be raised when registering results
+
 		if len(self.deck) == 51 - GAME_LENGTH:
 			score = 0
 			board = self.s.reshape(GAME_DIMENSIONS)
@@ -114,7 +121,9 @@ class GameState():
 				for row in rowcol:
 					score += score_row(row)
 			
-			return score * REWARD_FACTOR
+			return (score * REWARD_FACTOR,)
+
+		return (None,)
 
 	def generate_nn_pass(self, modify=False):
 		game_state = self.history[-1]

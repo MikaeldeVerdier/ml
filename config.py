@@ -1,5 +1,5 @@
 # Main loop
-LOOP_ITERATIONS = 5001
+LOOP_ITERATIONS = 3001
 
 # Network architecture
 CONVOLUTIONAL_LAYERS_POSITION = [(32, (3, 3)), (64, (3, 3)), (128, (3, 3)), (256, (3, 3)), (512, (3, 3)), (512, (3, 3)), (512, (3, 3)), (512, (3, 3)), (512, (3, 3)), (512, (3, 3)), (512, (3, 3)), (512, (3, 3)), (512, (3, 3)), (512, (3, 3)), (512, (3, 3)), (512, (3, 3)), (512, (3, 3)), (512, (3, 3)), (512, (3, 3)), (512, (3, 3)), (512, (3, 3))]
@@ -26,10 +26,10 @@ BATCH_SIZE = (256, 32)
 EPOCHS = 1
 GAMMA = 0.9  # Discounting factor for future rewards when calculating targets
 VERSION_OFFSET = 50
-SAVING_FREQUENCY = 500
+SAVING_FREQUENCY = 250
 VALIDATION_SPLIT = 0.2
 REG_CONST = 1e-4
-LEARNING_RATE = 1e-6
+LEARNING_RATE = 1e-4
 
 # Evaluating network
 GAME_AMOUNT_EVALUATION = 100
