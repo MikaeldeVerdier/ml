@@ -190,16 +190,16 @@ class MainNeuralNetwork(NeuralNetwork):
 				axs[ax].plot(x, data, color=color, label=f"{metric}\n(last point: {data[-1]:5f})")
 				axs[ax].axhline(data[-1], color="black", linestyle=":")
 
-				ax.set_title(metric)
+				axs[ax].set_title(metric)
 				xlabel_dict = {"loss": "Training iteration", "val_loss": "Training iteration", "outcomes": "Version", "average_q_value": "Game"}
-				ax.set_xlabel(xlabel_dict[metric])
-				ax.set_ylabel(metric)
+				axs[ax].set_xlabel(xlabel_dict[metric])
+				axs[ax].set_ylabel(metric)
 
-				ax.set_xscale("linear")
-				box = ax.get_position()
-				ax.set_position([box.x0, box.y0, box.width * 0.9, box.height])
-				ax.yaxis.set_tick_params(labelbottom=True)
-				ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
+				axs[ax].set_xscale("linear")
+				box = axs[ax].get_position()
+				axs[ax].set_position([box.x0, box.y0, box.width * 0.9, box.height])
+				axs[ax].yaxis.set_tick_params(labelbottom=True)
+				axs[ax].legend(loc="center left", bbox_to_anchor=(1, 0.5))
 
 				# deriv = np.diff(data)
 				# axs[ax[0] + 1, ax[1]].plot(x[1:], deriv, color=color, label=f"Derivative of {metric}")
