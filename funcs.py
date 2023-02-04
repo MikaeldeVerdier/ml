@@ -41,7 +41,8 @@ def get_card(value):
 
 
 def score_row(cards):  # 3x3
-	values = sorted([get_card(card)[1] for card in cards])
+	suits, values = tuple(zip(*[get_card(card) for card in cards]))
+	values = sorted(values)
 	
 	histo_dict = {(3): 10, (1, 2): 2}
 
@@ -50,7 +51,7 @@ def score_row(cards):  # 3x3
 	if histo in histo_dict:
 		return histo_dict[histo]
 
-	färgrad = len(set(get_card(card)[0] for card in cards)) == 1
+	färgrad = len(set(suits)) == 1
 	stege = values[-1] - values[0] == 2 or values == [2, 3, 14]
 	
 	score = 0

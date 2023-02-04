@@ -30,10 +30,10 @@ class Environment:
 		s, deck, drawn_card = self.game_state.take_action(action)
 		self.game_state = GameState(increment_turn(self.game_state.turn, 1, len(self.current_players)), self.game_state.history, s, deck, drawn_card)
 
-		self.update_player()
-
 		if self.verbose:
 			self.print_state(probs, action)
+
+		self.update_player()
 
 	def update_player(self):
 		self.player = self.current_players[self.game_state.turn]
@@ -55,17 +55,20 @@ class Environment:
 
 	def print_state(self, probs, action):
 		board = self.game_state.s.astype("<U4")
-		board[board == "0.0"] = "---"
-		for i, pos in enumerate(board):
-			if pos != "---":
-				board[i] = format_card(float(pos))
+
+		board = np.array([format_card(float(pos)) if pos != "0.0" else "---" for pos in board])
 
 		if probs is not None:
 			print(f"Action values are: {[probs[-1]]}\n{np.round(probs[:-1], 8).reshape(GAME_DIMENSIONS)}")
-		print(f"Action taken by {self.players[self.players_turn][self.game_state.turn].get_name()} is: {action}")
+		
+		print(f"Action taken by {self.player.get_name()} is: {action}")
 		print(f"Position is:\n{board.reshape(GAME_DIMENSIONS)}")
-		print(f"Drawn card is: {format_card(self.game_state.drawn_card)}")
-		print(f"Amount of cards left is now: {len(self.game_state.deck)}")
+
+		if self.game_state.outcome == (None,) * len(self.current_players):
+			print(f"Drawn card is: {format_card(self.game_state.drawn_card)}")
+			print(f"Amount of cards left is now: {len(self.game_state.deck)}")
+		else:
+			print(f"Game over! The outcomes were: {self.game_state.outcome}")
 
 
 class GameState():
