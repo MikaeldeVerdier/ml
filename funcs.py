@@ -44,7 +44,7 @@ def score_row(cards):  # 3x3
 	suits, values = tuple(zip(*[get_card(card) for card in cards]))
 	values = sorted(values)
 	
-	histo_dict = {(3): 10, (1, 2): 2}
+	histo_dict = {(3,): 10, (1, 2): 2}
 
 	histo = tuple(sorted([values.count(value) for value in set(values)]))
 

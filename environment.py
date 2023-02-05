@@ -7,7 +7,7 @@ from funcs import offset_array, increment_turn, format_card, score_row
 GAME_DIMENSIONS = (3, 3)
 NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (52 * config.DEPTH,), (52 * config.DEPTH,), (52 * config.DEPTH,)]
 MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
-REPLACE_CARDS = 3
+REPLACE_CARDS = 5
 GAME_LENGTH = np.prod(GAME_DIMENSIONS) + REPLACE_CARDS
 REWARD_FACTOR = 0.1
 REWARD_AVERAGE = True
