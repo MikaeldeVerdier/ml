@@ -87,7 +87,7 @@ class Agent():
 	def change_version(self):
 		self.main_nn.version += 1
 
-		if not (self.main_nn.version - 1) % config.SAVING_FREQUENCY:
+		if not self.main_nn.version % config.SAVING_FREQUENCY:
 			self.main_nn.save_model("main_nn", self.to_weights)
 			self.main_nn.save_metrics()
 			self.main_nn.plot_agent()
