@@ -9,7 +9,7 @@ NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (52 * config.DEPTH,), (52 * config.DEPT
 MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
 REPLACE_CARDS = 5
 GAME_LENGTH = np.prod(GAME_DIMENSIONS) + REPLACE_CARDS
-REWARD_FACTOR = 0.1
+REWARD_FACTOR = 0.5
 REWARD_AVERAGE = True
 
 INVERSE_REWARD_TRANSFORM = lambda outcome: int(outcome / REWARD_FACTOR)
@@ -17,7 +17,7 @@ GAME_ADD = lambda left, og_games: np.ceil(left / (GAME_LENGTH * 16) % og_games)
 
 class Environment:
 	def __init__(self, players, epsilons=None, starts=0, verbose=False):
-		self.players = players  # [offset_array(game_players, 2) for game_players in players]  # offset_array(players, 2) axis=-1?
+		self.players = [offset_array(game_players, len(game_players)) for game_players in players]  # offset_array(players, 2) axis=-1?
 		self.epsilons = epsilons or np.full(np.array(players).shape, None)
 		self.starts = starts
 		self.verbose = verbose
@@ -41,6 +41,7 @@ class Environment:
 
 	def reset(self):
 		self.players_turn = increment_turn(self.players_turn, 1, len(self.players))
+		self.players[self.players_turn] = offset_array(self.players[self.players_turn], 0)
 		self.current_players = self.players[self.players_turn]
 
 		if self.players_turn == 0:

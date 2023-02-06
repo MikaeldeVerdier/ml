@@ -67,6 +67,33 @@ def score_row(cards):  # 3x3
 	return score
 
 
+"""def score_row(cards):  # 2x2
+	suits, values = tuple(zip(*[get_card(card) for card in cards]))
+	values = sorted(values)
+	
+	histo_dict = {(2,): 10}
+
+	histo = tuple(sorted([values.count(value) for value in set(values)]))
+
+	if histo in histo_dict:
+		return histo_dict[histo]
+
+	färgrad = len(set(suits)) == 1
+	stege = values[-1] - values[0] == 1 or values == [2, 14]
+	
+	score = 0
+
+	if färgrad:
+		score += 5
+	if stege:
+		score += 6
+
+		if values[-2] == 13:
+			return 5 * score - 15
+	
+	return score"""
+
+
 def format_card(card):
 	suit_dict = {0: "sp", 1: "hj", 2: "ru", 3: "kl"}
 	suit, value = get_card(card)
