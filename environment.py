@@ -2,7 +2,7 @@ import numpy as np
 import random
 
 import config
-from funcs import offset_array, increment_turn, format_card, score_row
+from funcs import offset_array, increment_turn, get_card, format_card
 
 GAME_DIMENSIONS = (2, 2)
 NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (52 * config.DEPTH,), (52 * config.DEPTH,), (52 * config.DEPTH,)]
@@ -120,12 +120,35 @@ class GameState():
 
 	def get_scores(self):
 		if self.done:
-			score = 0
+			sum_score = 0
+			
 			board = self.s.reshape(GAME_DIMENSIONS)
 			for rowcol in [board, board.T]:
 				for row in rowcol:
-					score += score_row(row)
-			
+					suits, values = tuple(zip(*[get_card(card) for card in row]))
+					values = sorted(values)
+					
+					histo_dict = {(2,): 10}
+
+					histo = tuple(sorted([values.count(value) for value in set(values)]))
+
+					if histo in histo_dict:
+						sum_score += histo_dict[histo]
+
+					färgrad = len(set(suits)) == 1
+					stege = values[-1] - values[0] == len(row) - 1 or values == list(range(1, len(row))) + [14]
+					
+					score = 0
+
+					if färgrad:
+						score += 5
+					if stege:
+						score += 7
+
+						if values[-2] == 13:
+							op_dict = {5: 10, 7: 15}
+							sum_score += op_dict[score]
+				
 			return (score * REWARD_FACTOR,)
 
 		return (0,)
