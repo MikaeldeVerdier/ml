@@ -54,6 +54,7 @@ def play(env, games, training=False):
 
 		for (i, player), score in zip(enumerate(env.current_players), env.game_state.scores):
 			results[env.players_turn][i].append(environment.INVERSE_REWARD_TRANSFORM(score))
+
 			if player.trainable:
 				player.main_nn.metrics["average_q_value"].append(float(np.mean(q_values[i])))
 
@@ -81,6 +82,7 @@ def play(env, games, training=False):
 	for i, players in enumerate(env.players):
 		for i2, player in enumerate(players):
 			results[i][i2] = np.mean(results[i][i2], axis=-1) if environment.REWARD_AVERAGE else len(np.nonzero(results[i][i2]))
+			
 			if training and player.trainable:
 				player.main_nn.metrics["outcomes"][f"{player.main_nn.version}"] = results[i][i2]
 

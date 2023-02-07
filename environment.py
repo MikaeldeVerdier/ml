@@ -121,7 +121,7 @@ class GameState():
 	def get_scores(self):
 		if self.done:
 			sum_score = 0
-			
+
 			board = self.s.reshape(GAME_DIMENSIONS)
 			for rowcol in [board, board.T]:
 				for row in rowcol:
@@ -137,16 +137,18 @@ class GameState():
 
 					färgrad = len(set(suits)) == 1
 					stege = values[-1] - values[0] == len(row) - 1 or values == list(range(1, len(row))) + [14]
-					
+
 					score = 0
 
+					scores = [5, 7, 15, 20]
+
 					if färgrad:
-						score += 5
+						score += scores[0]
 					if stege:
-						score += 7
+						score += scores[1]
 
 						if values[-2] == 13:
-							op_dict = {5: 10, 7: 15}
+							op_dict = {scores[1]: scores[2], scores[0] + scores[1]: scores[3]}
 							sum_score += op_dict[score]
 				
 			return (score * REWARD_FACTOR,)
