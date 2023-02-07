@@ -39,7 +39,7 @@ def play(env, games, training=False):
 		q_values = np.empty(np.array(env.current_players).shape + (0,)).tolist()
 		storage = []
 
-		while env.game_state.outcome == (None,) * len(env.current_players):
+		while not env.game_state.done:
 			storage.append({"state": env.game_state})
 
 			probs, action = env.player.get_action(env.game_state, env.epsilon)
@@ -49,11 +49,11 @@ def play(env, games, training=False):
 			env.step(probs, action)
 
 			if training:
-				for key, var in [("action", action), ("reward", env.game_state.outcome[env.game_state.turn] or 0.0)]:
+				for key, var in [("action", action), ("reward", env.game_state.scores[env.game_state.turn])]:
 					storage[-1][key] = var
 
-		for (i, player), outcome in zip(enumerate(env.current_players), env.game_state.outcome):
-			results[env.players_turn][i].append(environment.INVERSE_REWARD_TRANSFORM(outcome))
+		for (i, player), score in zip(enumerate(env.current_players), env.game_state.scores):
+			results[env.players_turn][i].append(environment.INVERSE_REWARD_TRANSFORM(score))
 			if player.trainable:
 				player.main_nn.metrics["average_q_value"].append(float(np.mean(q_values[i])))
 

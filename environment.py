@@ -4,7 +4,7 @@ import random
 import config
 from funcs import offset_array, increment_turn, format_card, score_row
 
-GAME_DIMENSIONS = (3, 3)
+GAME_DIMENSIONS = (2, 2)
 NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (52 * config.DEPTH,), (52 * config.DEPTH,), (52 * config.DEPTH,)]
 MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
 REPLACE_CARDS = 5
@@ -82,7 +82,8 @@ class GameState():
 
 		self.replace_card = not len(np.where(self.s == 0)[0])
 		self.legal_moves = self.get_legal_moves()
-		self.outcome = self.check_game_over()
+		self.done = self.check_game_over()
+		self.scores = self.get_scores()
 
 	def __hash__(self):
 		return hash(self.history[:-1] + tuple(self.s) + tuple(self.deck) + (self.drawn_card,))
@@ -115,10 +116,10 @@ class GameState():
 		return legal_moves
 
 	def check_game_over(self):
-		# Takes a game_state object (self) and outputs a tuple of all individual outcomes for the different players in order
-		# If length of output does not match length of players, an error will be raised when registering results
+		return len(self.deck) == 51 - GAME_LENGTH
 
-		if len(self.deck) == 51 - GAME_LENGTH:
+	def get_scores(self):
+		if self.done:
 			score = 0
 			board = self.s.reshape(GAME_DIMENSIONS)
 			for rowcol in [board, board.T]:
@@ -127,7 +128,7 @@ class GameState():
 			
 			return (score * REWARD_FACTOR,)
 
-		return (None,)
+		return (0,)
 
 	def generate_nn_pass(self, modify=False):
 		game_state = self.history[-1]
