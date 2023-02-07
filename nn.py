@@ -59,7 +59,8 @@ class NeuralNetwork:
 		ph = self.policy_head(x)
 
 		self.model = Model(inputs=[position_input, deck_input, drawn_card_input], outputs=ph)
-		self.model.compile(loss=self.mean_squared_error, optimizer=Adam(learning_rate=config.LEARNING_RATE))
+		self.optimizer = Adam(learning_rate=config.LEARNING_RATE(0))
+		self.model.compile(loss=self.mean_squared_error, optimizer=self.optimizer)
 		
 		if load:
 			self.load_dir(load, from_weights=True)

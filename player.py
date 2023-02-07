@@ -63,7 +63,7 @@ class Agent():
 
 	def choose_action(self, state, pi, epsilon):
 		if epsilon is None:
-			epsilon = max(config.EPSILON[0] - config.EPSILON_STEP_SIZE * self.main_nn.version, config.EPSILON[1])
+			epsilon = config.EPSILON(self.main_nn.version)
 
 		action = np.random.choice(state.legal_moves) if np.random.rand() <= epsilon else np.argmax(pi)
 
@@ -86,6 +86,7 @@ class Agent():
 
 	def change_version(self):
 		self.main_nn.version += 1
+		self.main_nn.optimizer.learning_rate.assign(config.LEARNING_RATE(self.main_nn.version))
 
 		if not self.main_nn.version % config.SAVING_FREQUENCY:
 			self.main_nn.save_model("main_nn", self.to_weights)

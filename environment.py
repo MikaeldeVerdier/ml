@@ -2,7 +2,7 @@ import numpy as np
 import random
 
 import config
-from funcs import offset_array, increment_turn, get_card, format_card
+from funcs import increment_turn, get_card, format_card
 
 GAME_DIMENSIONS = (2, 2)
 NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (52 * config.DEPTH,), (52 * config.DEPTH,), (52 * config.DEPTH,)]
@@ -17,9 +17,9 @@ GAME_ADD = lambda left, og_games: np.ceil(left / (GAME_LENGTH * 16) % og_games)
 
 class Environment:
 	def __init__(self, players, epsilons=None, starts=0, verbose=False):
-		self.players = [offset_array(game_players, len(game_players)) for game_players in players]  # offset_array(players, 2) axis=-1?
+		self.players = players  # [offset_array(game_players, len(game_players)) for game_players in players]  # offset_array(players, 2) axis=-1?
 		self.epsilons = epsilons or np.full(np.array(players).shape, None)
-		self.starts = starts
+		self.starts = starts - 1
 		self.verbose = verbose
 
 		self.players_turn = -1
@@ -41,8 +41,9 @@ class Environment:
 
 	def reset(self):
 		self.players_turn = increment_turn(self.players_turn, 1, len(self.players))
-		self.players[self.players_turn] = offset_array(self.players[self.players_turn], 0)
 		self.current_players = self.players[self.players_turn]
+
+		self.starts = increment_turn(self.starts, 1, len(self.players))
 
 		if self.players_turn == 0:
 			random.shuffle(self.deck)
@@ -50,7 +51,7 @@ class Environment:
 		deck = self.deck.copy()
 		drawn_card = deck.pop()
 
-		self.game_state = GameState(0, (None,) * config.DEPTH, np.zeros(np.prod(GAME_DIMENSIONS)), deck, drawn_card)
+		self.game_state = GameState(self.starts, (None,) * config.DEPTH, np.zeros(np.prod(GAME_DIMENSIONS)), deck, drawn_card)
 
 		self.update_player()
 
