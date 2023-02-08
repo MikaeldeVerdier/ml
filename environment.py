@@ -9,7 +9,7 @@ NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (52 * config.DEPTH,), (52 * config.DEPT
 MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
 REPLACE_CARDS = 5
 GAME_LENGTH = np.prod(GAME_DIMENSIONS) + REPLACE_CARDS
-REWARD_FACTOR = 0.2
+REWARD_FACTOR = 0.05
 REWARD_AVERAGE = True
 
 INVERSE_REWARD_TRANSFORM = lambda outcome: int(outcome / REWARD_FACTOR)
@@ -66,11 +66,11 @@ class Environment:
 		print(f"Action taken by {self.player.get_name()} is: {action}")
 		print(f"Position is:\n{board.reshape(GAME_DIMENSIONS)}")
 
-		if self.game_state.outcome == (None,) * len(self.current_players):
+		if not self.game_state.done:
 			print(f"Drawn card is: {format_card(self.game_state.drawn_card)}")
 			print(f"Amount of cards left is now: {len(self.game_state.deck)}")
 		else:
-			print(f"Game over! The outcomes were: {self.game_state.outcome}")
+			print(f"Game over! The outcomes were: {self.game_state.scores}")
 
 
 class GameState():
@@ -139,21 +139,13 @@ class GameState():
 					färgrad = len(set(suits)) == 1
 					stege = values[-1] - values[0] == len(row) - 1 or values == list(range(1, len(row))) + [14]
 
-					score = 0
-
-					scores = [5, 7, 15, 20]  # [{färgrad}, {stege}, {op-stege}, {royal straight flush}]
-
 					if färgrad:
-						score += scores[0]
+						sum_score += 5
 					if stege:
-						score += scores[1]
+						sum_score += 7
 
 						if values[-2] == 13:
-							op_dict = {scores[1]: scores[2], scores[0] + scores[1]: scores[3]}
-							sum_score += op_dict[score]
-							continue
-
-					sum_score += score
+							sum_score += 20 if färgrad else 15
 				
 			return (sum_score * REWARD_FACTOR,)
 
