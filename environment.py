@@ -151,6 +151,9 @@ class GameState():
 						if values[-2] == 13:
 							op_dict = {scores[1]: scores[2], scores[0] + scores[1]: scores[3]}
 							sum_score += op_dict[score]
+							continue
+
+					sum_score += score
 				
 			return (sum_score * REWARD_FACTOR,)
 
