@@ -141,7 +141,7 @@ class GameState():
 
 					score = 0
 
-					scores = [5, 7, 15, 20]
+					scores = [5, 7, 15, 20]  # [{färgrad}, {stege}, {op-stege}, {royal straight flush}]
 
 					if färgrad:
 						score += scores[0]
@@ -152,7 +152,7 @@ class GameState():
 							op_dict = {scores[1]: scores[2], scores[0] + scores[1]: scores[3]}
 							sum_score += op_dict[score]
 				
-			return (score * REWARD_FACTOR,)
+			return (sum_score * REWARD_FACTOR,)
 
 		return (0,)
 
