@@ -169,7 +169,7 @@ class MainNeuralNetwork(NeuralNetwork):
 
 		fit = self.model.fit(x, y, batch_size=config.BATCH_SIZE[1], epochs=config.EPOCHS, verbose=1, validation_split=config.VALIDATION_SPLIT)
 		for metric in fit.history:
-			self.metrics[metric].extend(list(map(float, fit.history[metric])))
+			self.metrics[metric] += list(map(float, fit.history[metric]))
 			# [self.metrics[metric].append(fit.history[metric][i]) for i in range(config.EPOCHS)]
 
 	def plot_agent(self):

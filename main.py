@@ -67,7 +67,7 @@ def play(env, games, training=False):
 
 				states = np.array(data["state"].generate_nn_pass(modify=True), dtype=object).tolist()
 				# for flip in states: product.append(np.array([flip, data["action"], data["target"]], dtype=object))
-				product.extend([np.array([state, data["action"], data["target"]], dtype=object) for state in states])
+				product += [np.array([state, data["action"], data["target"]], dtype=object) for state in states]
 
 			if not game_count % games:
 				length = files.add_to_file(files.get_path("positions.npy"), np.array(product, dtype=object), config.POSITION_AMOUNT)

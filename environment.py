@@ -128,7 +128,7 @@ class GameState():
 				for row in rowcol:
 					suits, values = tuple(zip(*[get_card(card) for card in row]))
 					values = sorted(values)
-					
+
 					histo_dict = {(2,): 10}
 
 					histo = tuple(sorted([values.count(value) for value in set(values)]))
@@ -164,7 +164,7 @@ class GameState():
 		nn_pass = []
 		for flip in flips:
 			s = game_state.s if flip is None else np.flip(game_state.s.reshape(GAME_DIMENSIONS), flip).flatten()
-			
+
 			for suit_change in suit_changes:
 				nn_pass.append([[], [], []])
 				for depth in range(config.DEPTH):
