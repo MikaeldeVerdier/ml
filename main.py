@@ -43,7 +43,7 @@ def play(env, games, training=False):
 			storage.append({"state": env.game_state})
 
 			probs, action = env.player.get_action(env.game_state, env.epsilon)
-			
+
 			q_values[env.game_state.turn].append(probs[action])
 
 			env.step(probs, action)
@@ -112,8 +112,10 @@ def retrain_network(agent):
 			for i, dim in enumerate(position[0]):
 				x[i].append(np.array(dim))
 
-		for i, var in enumerate(x):
-			x[i] = np.array(var)
+		# for i, var in enumerate(x):
+		# 	x[i] = np.array(var)
+
+		x = [np.array(var) for var in x]
 		y = np.array(y)
 
 		agent.main_nn.train(x, y)
