@@ -44,7 +44,8 @@ def play(env, games, training=False):
 
 			probs, action = env.player.get_action(env.game_state, env.epsilon)
 
-			q_values[env.game_state.turn].append(probs[action])
+			if env.player.trainable:
+				q_values[env.game_state.turn].append(probs[action])
 
 			env.step(probs, action)
 
@@ -136,8 +137,8 @@ def evaluate_network(agent):
 	print(f"The result was: {outcome}")
 
 
-def compete(agents, games, starts):
-	outcomes = play(Environment(agents, epsilons=[[0.05], [0.05]], starts=starts), games)
+def compete(agents, games, starts, verbose=False):
+	outcomes = play(Environment(agents, epsilons=[[0.05], [0.05]], starts=starts, verbose=verbose), games)
 
 	log(agents, outcomes)
 
@@ -154,7 +155,7 @@ def log(agent_s, average_s):
 def play_test(load, games, starts=0):
 	you = User()
 	agents = [[Agent(load=load, name=load)], [you]]
-	compete(agents, games, starts)
+	compete(agents, games, starts, verbose=True)
 
 
 def play_versions(loads, games, starts=0):

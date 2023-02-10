@@ -13,6 +13,8 @@ class User():
 	def __init__(self, name="You"):
 		self.name = name
 
+		self.trainable = False
+
 	def get_name(self):
 		return self.name
 
