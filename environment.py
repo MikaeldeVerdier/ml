@@ -43,7 +43,7 @@ class Environment:
 		self.players_turn = increment_turn(self.players_turn, 1, len(self.players))
 		self.current_players = self.players[self.players_turn]
 
-		self.starts = increment_turn(self.starts, 1, len(self.players))
+		self.starts = increment_turn(self.starts, 1, len(self.current_players))
 
 		if self.players_turn == 0:
 			random.shuffle(self.deck)
