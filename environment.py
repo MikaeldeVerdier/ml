@@ -133,8 +133,12 @@ class GameState():
 
 					histo = tuple(sorted([values.count(value) for value in set(values)]))
 
-					if histo in histo_dict:
-						sum_score += histo_dict[histo]
+					done = []
+					for key, value in list(histo_dict.items()):
+						key_count = list(zip(*[(histo.count(val), val in done) for val in key]))
+						if min(key_count[0]) and not any(key_count[1]):
+							done += list(key)
+							sum_score += min(key_count[0]) * value
 
 					färgrad = len(set(suits)) == 1
 					stege = values[-1] - values[0] == len(row) - 1 or values == list(range(1, len(row))) + [14]
