@@ -136,9 +136,11 @@ class GameState():
 					maxes = {num: tupl.count(num) for tupl in histo_dict.keys() for num in tupl}
 					for key, value in list(histo_dict.items()):
 						key_count = list(zip(*[(histo.count(val) // key.count(val), maxes[val]) for val in key]))
+
 						if min(key_count[0]) and min(key_count[1]) > 0:
-							for val in list(set(key)):
+							for val in set(key):
 								maxes[val] -= min(key_count[0])
+
 							sum_score += min(key_count[0]) * value
 
 					färgrad = len(set(suits)) == 1
@@ -151,7 +153,7 @@ class GameState():
 							sum_score += 20 if färgrad else 15
 						else:
 							sum_score += 7
-				
+	
 			return (sum_score * REWARD_FACTOR,)
 
 		return (0,)
