@@ -129,15 +129,16 @@ class GameState():
 					suits, values = tuple(zip(*[get_card(card) for card in row]))
 					values = sorted(values)
 
-					histo_dict = {(2,): 10}
+					histo_dict = {(2,): 1}
 
 					histo = tuple(sorted([values.count(value) for value in set(values)]))
 
-					done = []
+					maxes = {num: tupl.count(num) for tupl in histo_dict.keys() for num in tupl}
 					for key, value in list(histo_dict.items()):
-						key_count = list(zip(*[(histo.count(val), val in done) for val in key]))
-						if min(key_count[0]) and not any(key_count[1]):
-							done += list(key)
+						key_count = list(zip(*[(histo.count(val), maxes[val]) for val in key]))
+						if min(key_count[0]) and all(key_count[1]):
+							for val in key:
+								maxes[val] -= min(key_count[0])
 							sum_score += min(key_count[0]) * value
 
 					färgrad = len(set(suits)) == 1

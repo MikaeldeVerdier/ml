@@ -58,7 +58,6 @@ def play(env, games, training=False):
 
 			if player.trainable:
 				player.main_nn.metrics["average_q_value"].append(float(np.mean(q_values[i])))
-
 		if not game_count % games:
 			print(f"Amount of games played is now: {game_count} ({env.player.get_name()})\n")
 
@@ -130,7 +129,7 @@ def retrain_network(agent):
 def evaluate_network(agent):
 	print("\nEvaluation of agent started!\n")
 
-	outcome = play(Environment([[agent]], epsilons=[[0.05]], verbose=True), config.GAME_AMOUNT_EVALUATION)
+	outcome = play(Environment([[agent]], epsilons=[[0.05]]), config.GAME_AMOUNT_EVALUATION)
 
 	# log([agent], outcome)
 
