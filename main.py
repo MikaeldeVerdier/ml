@@ -138,11 +138,11 @@ def evaluate_network(agent):
 
 
 def compete(agents, games, starts, verbose=False):
-	outcomes = play(Environment(agents, epsilons=[[0.05], [0.05]], starts=starts, verbose=verbose), games)
+	outcomes = play(Environment(np.array(agents).reshape(-1, 1), epsilons=[[0.05], [0.05]], starts=starts, verbose=verbose), games)
 
 	log(agents, outcomes)
 
-	print(f"The results between agents named {agents[0].get_name()} and {agents[1].get_name()} were: {outcomes}")
+	print(f"The results between agents named {' and '.join([agent.get_name() for agent in agents])} were: {outcomes}")
 	best = agents[np.argmax(outcomes)].get_name()
 	print(f"The best version was: version {best}")
 
@@ -154,17 +154,17 @@ def log(agent_s, average_s):
 
 def play_test(load, games, starts=0):
 	you = User()
-	agents = [[Agent(load=load, name=load)], [you]]
+	agents = [[Agent(load=load, name=load), you]]
 	compete(agents, games, starts, verbose=True)
 
 
 def play_versions(loads, games, starts=0):
-	agents = [[Agent(load=load, name=load)] for load in loads]
+	agents = [Agent(load=load, name=load) for load in loads]
 	compete(agents, games, starts)
 
 
 def main():
-	# play_versions([None, "trained version"], config.GAME_AMOUNT_PLAY_VERSIONS)
+	play_versions([None, None], config.GAME_AMOUNT_PLAY_VERSIONS)
 	# play_test("trained_version", config.GAME_AMOUNT_PLAY_TEST)
 	# print(files.add_to_file("positions.json", files.load_file("poss.json"), config.POSITION_AMOUNT)[0])
 
