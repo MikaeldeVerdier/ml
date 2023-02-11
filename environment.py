@@ -135,9 +135,9 @@ class GameState():
 
 					maxes = {num: tupl.count(num) for tupl in histo_dict.keys() for num in tupl}
 					for key, value in list(histo_dict.items()):
-						key_count = list(zip(*[(histo.count(val), maxes[val]) for val in key]))
-						if min(key_count[0]) and all(key_count[1]):
-							for val in key:
+						key_count = list(zip(*[(histo.count(val) // key.count(val), maxes[val]) for val in key]))
+						if min(key_count[0]) and min(key_count[1]) > 0:
+							for val in list(set(key)):
 								maxes[val] -= min(key_count[0])
 							sum_score += min(key_count[0]) * value
 
@@ -147,10 +147,10 @@ class GameState():
 					if färgrad:
 						sum_score += 5
 					if stege:
-						sum_score += 7
-
 						if values[-2] == 13:
 							sum_score += 20 if färgrad else 15
+						else:
+							sum_score += 7
 				
 			return (sum_score * REWARD_FACTOR,)
 
