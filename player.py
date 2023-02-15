@@ -88,7 +88,7 @@ class Agent():
 
 	def change_version(self):
 		self.main_nn.version += 1
-		self.main_nn.optimizer.learning_rate.assign(config.LEARNING_RATE(self.main_nn.version))
+		self.main_nn.model.optimizer.learning_rate.assign(config.LEARNING_RATE(self.main_nn.version))
 
 		if not self.main_nn.version % config.SAVING_FREQUENCY:
 			self.main_nn.save_model("main_nn", self.to_weights)
