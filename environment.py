@@ -2,14 +2,17 @@ import numpy as np
 import random
 
 import config
-from funcs import increment_turn, get_card, format_card
+from funcs import increment_turn, get_card, print_state
 
-GAME_DIMENSIONS = (2, 2)
-NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (52 * config.DEPTH,), (52 * config.DEPTH,), (52 * config.DEPTH,)]
+DECK_LENGTH = 52
+SUIT_AMOUNT = 4
+
+GAME_DIMENSIONS = (5, 5)
+NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (DECK_LENGTH * config.DEPTH,), (DECK_LENGTH * config.DEPTH,), (DECK_LENGTH * config.DEPTH,)]
 MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
-REPLACE_CARDS = 5
+REPLACE_CARDS = 3
 GAME_LENGTH = np.prod(GAME_DIMENSIONS) + REPLACE_CARDS
-REWARD_FACTOR = 0.05
+REWARD_FACTOR = 0.02
 REWARD_AVERAGE = True
 
 INVERSE_REWARD_TRANSFORM = lambda outcome: int(outcome / REWARD_FACTOR)
@@ -24,14 +27,14 @@ class Environment:
 
 		self.players_turn = -1
 
-		self.deck = list(range(1, 53))
+		self.deck = list(range(1, DECK_LENGTH + 1))
 
 	def step(self, probs, action):
 		s, deck, drawn_card = self.game_state.take_action(action)
 		self.game_state = GameState(increment_turn(self.game_state.turn, 1, len(self.current_players)), self.game_state.history, s, deck, drawn_card)
 
 		if self.verbose:
-			self.print_state(probs, action)
+			print_state(self, probs, action)
 
 		self.update_player()
 
@@ -54,23 +57,6 @@ class Environment:
 		self.game_state = GameState(self.starts, (None,) * config.DEPTH, np.zeros(np.prod(GAME_DIMENSIONS)), deck, drawn_card)
 
 		self.update_player()
-
-	def print_state(self, probs, action):
-		board = self.game_state.s.astype("<U4")
-
-		board = np.array([format_card(float(pos)) if pos != "0.0" else "---" for pos in board])
-
-		if probs is not None:
-			print(f"Action values are: {[probs[-1]]}\n{np.round(probs[:-1], 8).reshape(GAME_DIMENSIONS)}")
-		
-		print(f"Action taken by {self.player.get_name()} is: {action}")
-		print(f"Position is:\n{board.reshape(GAME_DIMENSIONS)}")
-
-		if not self.game_state.done:
-			print(f"Drawn card is: {format_card(self.game_state.drawn_card)}")
-			print(f"Amount of cards left is now: {len(self.game_state.deck)}")
-		else:
-			print(f"Game over! The outcomes were: {self.game_state.scores}")
 
 
 class GameState():
@@ -117,7 +103,7 @@ class GameState():
 		return legal_moves
 
 	def check_game_over(self):
-		return len(self.deck) == 51 - GAME_LENGTH
+		return len(self.deck) == DECK_LENGTH - GAME_LENGTH - 1
 
 	def get_scores(self):
 		if self.done:
@@ -129,7 +115,7 @@ class GameState():
 					suits, values = tuple(zip(*[get_card(card) for card in row]))
 					values = sorted(values)
 
-					histo_dict = {(2,): 1}
+					histo_dict = {(4,): 20, (3, 2): 15, (3,): 8, (2,): 2}
 
 					histo = tuple(sorted([values.count(value) for value in set(values)]))
 
@@ -144,15 +130,15 @@ class GameState():
 							sum_score += min(key_count[0]) * value
 
 					färgrad = len(set(suits)) == 1
-					stege = values[-1] - values[0] == len(row) - 1 or values == list(range(1, len(row))) + [14]
+					stege = values[-1] - values[0] == len(row) - 1 or values == list(range(1, len(row))) + [DECK_LENGTH / SUIT_AMOUNT + 1]
 
 					if färgrad:
-						sum_score += 5
+						sum_score += 10
 					if stege:
-						if values[-2] == 13:
-							sum_score += 20 if färgrad else 15
+						if values[-2] == DECK_LENGTH / SUIT_AMOUNT:
+							sum_score += 50 if färgrad else 20
 						else:
-							sum_score += 7
+							sum_score += 10
 	
 			return (sum_score * REWARD_FACTOR,)
 
@@ -163,7 +149,7 @@ class GameState():
 
 		if modify:
 			flips = [None, 0, 1, (0, 1)]
-			suit_changes = [0, 13, 26, 39]
+			suit_changes = [i * DECK_LENGTH / SUIT_AMOUNT for i in range(SUIT_AMOUNT)]
 		else:
 			flips = [None]
 			suit_changes = [0]
@@ -180,12 +166,10 @@ class GameState():
 					for var in [s, de, dr]:
 						for i, card in enumerate(var):
 							if card != 0:
-								var[i] += suit_change
-							if var[i] > 52:
-								var[i] -= 52
+								var[i] = (var[i] + suit_change - 1) % DECK_LENGTH + 1
 
 					state = []
-					for i in range(1, 53):
+					for i in range(1, DECK_LENGTH + 1):
 						position = np.zeros(len(s))
 						position[s == i] = 1
 						state.append(np.reshape(position, NN_INPUT_DIMENSIONS[0][:-1]))
@@ -193,11 +177,11 @@ class GameState():
 					state = np.moveaxis(state, 0, -1).tolist()
 					nn_pass[-1][0] += state
 
-					deck = np.zeros(52)
+					deck = np.zeros(DECK_LENGTH)
 					for card in de: deck[card - 1] = 1
 					nn_pass[-1][1] += deck.tolist()
 
-					drawn_card = np.zeros(52)
+					drawn_card = np.zeros(DECK_LENGTH)
 					if dr[0] != 0:
 						drawn_card[dr[0] - 1] = 1
 					nn_pass[-1][2] += drawn_card.tolist()
