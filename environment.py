@@ -168,7 +168,6 @@ class GameState():
 							if card != 0:
 								var[i] = (var[i] + suit_change - 1) % DECK_LENGTH + 1
 
-					state = []
 					for i in range(1, DECK_LENGTH + 1):
 						position = np.zeros(len(s))
 						position[s == i] = 1
@@ -178,12 +177,11 @@ class GameState():
 					nn_pass[-1][0] += state
 
 					deck = np.zeros(DECK_LENGTH)
-					for card in de: deck[card - 1] = 1
+					deck[np.array(de) - 1] = 1
 					nn_pass[-1][1] += deck.tolist()
 
 					drawn_card = np.zeros(DECK_LENGTH)
-					if dr[0] != 0:
-						drawn_card[dr[0] - 1] = 1
+					drawn_card[dr[0] - 1] = (dr[0] != 0)
 					nn_pass[-1][2] += drawn_card.tolist()
 
 					if depth != config.DEPTH - 1:
