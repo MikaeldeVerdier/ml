@@ -166,8 +166,9 @@ class GameState():
 					for var in [s, de, dr]:
 						for i, card in enumerate(var):
 							if card != 0:
-								var[i] = (var[i] + suit_change - 1) % DECK_LENGTH + 1
+								var[i] = int((var[i] + suit_change - 1) % DECK_LENGTH + 1)
 
+					state = []
 					for i in range(1, DECK_LENGTH + 1):
 						position = np.zeros(len(s))
 						position[s == i] = 1
@@ -177,7 +178,7 @@ class GameState():
 					nn_pass[-1][0] += state
 
 					deck = np.zeros(DECK_LENGTH)
-					deck[np.array(de) - 1] = 1
+					deck[np.array(de, dtype=np.int32) - 1] = 1
 					nn_pass[-1][1] += deck.tolist()
 
 					drawn_card = np.zeros(DECK_LENGTH)
