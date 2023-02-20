@@ -80,9 +80,6 @@ class Agent():
 		# self.target_nn.save_model("target_nn", self.to_weights)
 
 		self.target_nn = copy(self.main_nn)
-		if os.path.exists(files.get_path("training/target_nn")):
-			rmtree(files.get_path("training/target_nn"))
-		copytree(files.get_path("training/main_nn"), files.get_path("training/target_nn"))
 
 		files.edit_key("save.json", ["target_nn_version"], [self.main_nn.version])
 
@@ -94,6 +91,10 @@ class Agent():
 			self.main_nn.save_model("main_nn", self.to_weights)
 			self.main_nn.save_metrics()
 			self.main_nn.plot_agent()
+
+			if os.path.exists(files.get_path("training/target_nn")):
+				rmtree(files.get_path("training/target_nn"))
+			copytree(files.get_path("training/main_nn"), files.get_path("training/target_nn"))
 
 		if not (self.main_nn.version - 1) % config.VERSION_OFFSET:
 			self.copy_network()
