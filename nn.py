@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import os
 from tensorflow.keras import regularizers
 from tensorflow.keras.models import Model, load_model
-from tensorflow.keras.layers import Input, Dense, Conv2D, Flatten, BatchNormalization, ReLU, Concatenate
+from tensorflow.keras.layers import Input, Dense, Conv2D, MaxPooling2D, Flatten, BatchNormalization, ReLU, Concatenate
 from tensorflow.keras.optimizers import Adam
 from keras.utils.vis_utils import plot_model
 
@@ -105,6 +105,7 @@ class NeuralNetwork:
 
 	def position_cnn(self, x):
 		for filter_amount, kernel_size in config.CONVOLUTIONAL_LAYERS_POSITION: x = self.convolutional_layer_2D(x, filter_amount, kernel_size)
+		for pool_size in config.POOL_LAYERS_POSITION: x = MaxPooling2D(pool_size=pool_size, data_format="channels_last")(x)
 		x = Flatten()(x)
 		for neuron_amount in config.DENSE_POSITION: x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
 		
@@ -122,7 +123,7 @@ class NeuralNetwork:
 
 	@staticmethod
 	def convolutional_layer_2D(x, filters, kernel_size):
-		x = Conv2D(filters=filters, kernel_size=kernel_size, data_format="channels_last", padding="same", use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
+		x = Conv2D(filters=filters, kernel_size=kernel_size, padding="same", data_format="channels_last", use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
 		x = BatchNormalization()(x)
 		x = ReLU()(x)
 		

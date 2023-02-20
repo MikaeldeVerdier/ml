@@ -138,7 +138,7 @@ def evaluate_network(agent):
 
 
 def compete(agents, games, starts, verbose=False):
-	outcomes = play(Environment(np.array(agents).reshape(-1, 1), epsilons=[[0.05], [0.05]], starts=starts, verbose=verbose), games)
+	outcomes = play(Environment(np.array(agents).reshape(-1, 1), epsilons=[[0.05]] * len(agents), starts=starts, verbose=verbose), games)
 
 	log(agents, outcomes)
 
