@@ -13,6 +13,15 @@ def get_card(value):
 	return suit, value
 
 
+def can_move(card1, card2):
+	card1 = get_card(card1)
+	card2 = get_card(card2)
+	for i, value in enumerate(card1):
+		if value == card2[i]:
+			return True
+	return False
+
+
 def format_card(card):
 	suit_dict = {0: "sp", 1: "hj", 2: "ru", 3: "kl"}
 	suit, value = get_card(card)
@@ -35,13 +44,12 @@ def print_state(state, probs, action):
 	board = np.array([format_card(float(pos)) if pos != "0.0" else "---" for pos in board])
 
 	if probs is not None:
-		print(f"Action values are: {[probs[-1]]}\n{np.round(probs[:-1], 8).reshape(environment.GAME_DIMENSIONS)}")
+		print(f"Action values are: {[probs[0]]}\n{np.round(probs[1:], 6)}")
 
 	print(f"Action taken by {state.player.get_name()} is: {action}")
 	print(f"Position is:\n{board.reshape(environment.GAME_DIMENSIONS)}")
 
 	if not state.game_state.done:
-		print(f"Drawn card is: {format_card(state.game_state.drawn_card)}")
 		print(f"Amount of cards left is now: {len(state.game_state.deck)}")
 	else:
 		print(f"Game over! The outcomes were: {state.game_state.scores}")

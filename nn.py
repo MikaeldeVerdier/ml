@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import os
 from tensorflow.keras import regularizers
 from tensorflow.keras.models import Model, load_model
-from tensorflow.keras.layers import Input, Dense, Conv2D, MaxPooling2D, Flatten, BatchNormalization, ReLU, Concatenate
+from tensorflow.keras.layers import Input, Flatten, Dense, Concatenate
 from tensorflow.keras.optimizers import Adam
 from keras.utils.vis_utils import plot_model
 
@@ -44,21 +44,18 @@ class NeuralNetwork:
 				return
 
 		position_input = Input(shape=environment.NN_INPUT_DIMENSIONS[0], name="position_input")
-		position = self.position_cnn(position_input)
+		position = self.position_mlp(position_input)
 
 		deck_input = Input(shape=environment.NN_INPUT_DIMENSIONS[1], name="deck_input")
-		deck = self.deck_cnn(deck_input)
+		deck = self.deck_mlp(deck_input)
 
-		drawn_card_input = Input(shape=environment.NN_INPUT_DIMENSIONS[2], name="drawn_card_input")
-		drawn_card = self.drawn_card_cnn(drawn_card_input)
-
-		x = Concatenate()([position, deck, drawn_card])
+		x = Concatenate()([position, deck])
 
 		x = self.shared_mlp(x)
 
 		ph = self.policy_head(x)
 
-		self.model = Model(inputs=[position_input, deck_input, drawn_card_input], outputs=ph)
+		self.model = Model(inputs=[position_input, deck_input], outputs=ph)
 		self.model.compile(loss=self.mean_squared_error, optimizer=Adam(learning_rate=config.LEARNING_RATE(0)))
 		
 		if load:
@@ -103,30 +100,15 @@ class NeuralNetwork:
 
 		return loss
 
-	def position_cnn(self, x):
-		for filter_amount in config.CONVOLUTIONAL_LAYERS_POSITION: x = self.convolutional_layer_2D(x, filter_amount, config.CONVOLUTIOANL_SHAPE_POSITION)
+	def position_mlp(self, x):
 		x = Flatten()(x)
 		for neuron_amount in config.DENSE_POSITION: x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
 		
 		return x
 
-	def deck_cnn(self, x):
+	def deck_mlp(self, x):
 		for neuron_amount in config.DENSE_DECK: x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
 		
-		return x
-
-	def drawn_card_cnn(self, x):
-		for neuron_amount in config.DENSE_DRAWN_CARD: x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
-		
-		return x
-
-	@staticmethod
-	def convolutional_layer_2D(x, filters, kernel_size):
-		x = Conv2D(filters=filters, kernel_size=kernel_size, padding="same", data_format="channels_last", use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
-		x = BatchNormalization()(x)
-		x = ReLU()(x)
-		# x = MaxPooling2D(pool_size=config.POOL_SHAPE_POSITION, data_format="channels_last")(x)
-
 		return x
 
 	@staticmethod

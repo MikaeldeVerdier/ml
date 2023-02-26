@@ -19,8 +19,6 @@ class User():
 		return self.name
 
 	def get_action(self, state, *args):
-		print(f"Drawn card is: {format_card(state.drawn_card)}")
-
 		legal_moves = state.legal_moves
 		if len(environment.GAME_DIMENSIONS) == 2:
 			moves = [(legal_move % environment.GAME_DIMENSIONS[1] + 1, environment.GAME_DIMENSIONS[1] - legal_move // environment.GAME_DIMENSIONS[1]) for legal_move in legal_moves]

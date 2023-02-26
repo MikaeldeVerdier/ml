@@ -2,16 +2,14 @@ import numpy as np
 import random
 
 import config
-from funcs import increment_turn, get_card, print_state
+from funcs import increment_turn, can_move, print_state
 
 DECK_LENGTH = 52
 SUIT_AMOUNT = 4
 
-GAME_DIMENSIONS = (5, 5)
-NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (DECK_LENGTH * config.DEPTH,), (DECK_LENGTH * config.DEPTH,), (DECK_LENGTH * config.DEPTH,)]
-MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
-REPLACE_CARDS = 3
-GAME_LENGTH = np.prod(GAME_DIMENSIONS) + REPLACE_CARDS
+GAME_DIMENSIONS = (DECK_LENGTH,)
+NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (DECK_LENGTH * config.DEPTH,), (DECK_LENGTH * config.DEPTH,)]
+MOVE_AMOUNT = DECK_LENGTH * 2 + 1
 REWARD_FACTOR = 0.02
 REWARD_AVERAGE = True
 
@@ -29,8 +27,8 @@ class Environment:
 		self.deck = list(range(1, DECK_LENGTH + 1))
 
 	def step(self, probs, action):
-		s, deck, drawn_card = self.game_state.take_action(action)
-		self.game_state = GameState(increment_turn(self.game_state.turn, 1, len(self.current_players)), self.game_state.history, s, deck, drawn_card)
+		s, deck = self.game_state.take_action(action)
+		self.game_state = GameState(increment_turn(self.game_state.turn, 1, len(self.current_players)), self.game_state.history, s, deck)
 
 		if self.verbose:
 			print_state(self, probs, action)
@@ -51,20 +49,18 @@ class Environment:
 			random.shuffle(self.deck)
 
 		deck = self.deck.copy()
-		drawn_card = deck.pop()
 
-		self.game_state = GameState(self.starts, (None,) * config.DEPTH, np.zeros(np.prod(GAME_DIMENSIONS)), deck, drawn_card)
+		self.game_state = GameState(self.starts, (None,) * config.DEPTH, np.zeros(np.prod(GAME_DIMENSIONS)), deck)
 
 		self.update_player()
 
 
 class GameState():
-	def __init__(self, turn, history, s, deck, drawn_card):
+	def __init__(self, turn, history, s, deck):
 		self.turn = turn
 		self.history = history[1:] + (self,)
 		self.s = s
 		self.deck = deck
-		self.drawn_card = drawn_card
 
 		self.replace_card = not len(np.where(self.s == 0)[0])
 		self.legal_moves = self.get_legal_moves()
@@ -72,124 +68,82 @@ class GameState():
 		self.scores = self.get_scores()
 
 	def __hash__(self):
-		return hash(self.history[:-1] + tuple(self.s) + tuple(self.deck) + (self.drawn_card,))
+		return hash(self.history[:-1] + tuple(self.s) + tuple(self.deck))
 
 	def take_action(self, action):
-		board = self.s.copy()
-		deck = self.deck.copy()
+		if action == 0:
+			board = self.s.copy()
+			deck = self.deck.copy()
+			card = deck.pop()
 
-		if action != np.prod(GAME_DIMENSIONS):
-			board[action] = self.drawn_card
+			index = np.where(board == 0)[0][0]
+			board[index] = card
+		else:
+			board = self.s.copy()
 
-		return (board, deck, deck.pop())
+			index = int(np.ceil(action / 2)) - 1
+			kind = 3 - 2 * (action % 2)
+			board[index - kind] = board[index]
+			board = np.delete(board, index)
+			board = np.append(board, 0)
+
+			deck = self.deck.copy()
+
+		return board, deck
 
 	def get_legal_moves(self):
-		if not len(np.where(self.s != 0)[0]): return list(range(np.prod(GAME_DIMENSIONS)))
-
-		if self.replace_card: return list(range(MOVE_AMOUNT))
-
 		legal_moves = []
+		checks = [1]
+		for i, pos in enumerate(self.s[1:], 1):
+			if pos == 0: break
+			if i == 3: checks += [3]
+			for check in checks:
+				if can_move(pos, self.s[i - check]): legal_moves.append(int(2 * i + 0.5 + 0.5 * check))
 
-		for index in np.where(self.s != 0)[0]:
-			for multiplier in [-1, 0, 1]:
-				for add_on in [-1, 0, 1]:
-					if not multiplier and not add_on:
-						continue
-					check_index = index + GAME_DIMENSIONS[1] * multiplier + add_on
-					if check_index not in legal_moves and 0 <= check_index < np.prod(GAME_DIMENSIONS) and not self.s[check_index] and check_index // GAME_DIMENSIONS[1] - index // GAME_DIMENSIONS[1] == multiplier:
-						legal_moves.append(check_index)
-
-		return legal_moves
+		return legal_moves if len(legal_moves) or not len(self.deck) else [0]
 
 	def check_game_over(self):
-		return len(self.deck) == DECK_LENGTH - GAME_LENGTH - 1
+		return not len(self.deck) and not len(self.legal_moves)
 
 	def get_scores(self):
-		if self.done:
-			sum_score = 0
-
-			board = self.s.reshape(GAME_DIMENSIONS)
-			for rowcol in [board, board.T]:
-				for row in rowcol:
-					suits, values = tuple(zip(*[get_card(card) for card in row]))
-					values = sorted(values)
-
-					histo_dict = {(4,): 20, (3, 2): 15, (3,): 8, (2,): 2}
-
-					histo = tuple(sorted([values.count(value) for value in set(values)]))
-
-					maxes = {num: comb.count(num) for comb in histo_dict.keys() for num in comb}
-					for key, value in list(histo_dict.items()):
-						key_count = list(zip(*[(histo.count(val) // key.count(val), maxes[val]) for val in key]))
-
-						if min(key_count[0]) and min(key_count[1]) > 0:
-							for val in set(key):
-								maxes[val] -= min(key_count[0])
-
-							sum_score += min(key_count[0]) * value
-
-					färgrad = len(set(suits)) == 1
-					stege = values[-1] - values[0] == len(row) - 1 or values == list(range(1, len(row))) + [DECK_LENGTH / SUIT_AMOUNT + 1]
-
-					if färgrad:
-						sum_score += 10
-					if stege:
-						if values[-2] == DECK_LENGTH / SUIT_AMOUNT:
-							sum_score += 50 if färgrad else 20
-						else:
-							sum_score += 10
-	
-			return (sum_score * REWARD_FACTOR,)
-
-		return (0,)
+		return ((DECK_LENGTH - np.where(self.s == 0)[0][0]) * REWARD_FACTOR,) if self.done else (0,)			
 
 	def generate_nn_pass(self, modify=False):
 		game_state = self.history[-1]
 
-		if modify:
-			flips = [None, 0, 1, (0, 1)]
-			suit_changes = [i * DECK_LENGTH / SUIT_AMOUNT for i in range(SUIT_AMOUNT)]
-		else:
-			flips = [None]
-			suit_changes = [0]
+		suit_changes = [0] if not modify else [0, 13, 26, 39]
 
 		nn_pass = []
-		for flip in flips:
-			s = game_state.s if flip is None else np.flip(game_state.s.reshape(GAME_DIMENSIONS), flip).flatten()
+		for suit_change in suit_changes:
+			nn_pass.append([[], []])
+			for depth in range(config.DEPTH):
+				s = game_state.s.copy()
+				de = game_state.deck
+				for var in [s, de]:
+					for i, card in enumerate(var):
+						if card != 0:
+							var[i] = int((var[i] + suit_change - 1) % DECK_LENGTH + 1)
 
-			for suit_change in suit_changes:
-				nn_pass.append([[], [], []])
-				for depth in range(config.DEPTH):
-					de = game_state.deck
-					dr = [game_state.drawn_card]
-					for var in [s, de, dr]:
-						for i, card in enumerate(var):
-							if card != 0:
-								var[i] = int((var[i] + suit_change - 1) % DECK_LENGTH + 1)
+				state = []
+				for i in range(1, DECK_LENGTH + 1):
+					position = np.zeros(len(s))
+					position[s == i] = 1
+					state.append(np.reshape(position, NN_INPUT_DIMENSIONS[0][:-1]))
 
-					state = []
-					for i in range(1, DECK_LENGTH + 1):
-						position = np.zeros(len(s))
-						position[s == i] = 1
-						state.append(np.reshape(position, NN_INPUT_DIMENSIONS[0][:-1]))
+				state = np.moveaxis(state, 0, -1).tolist()
+				nn_pass[-1][0] += state
 
-					state = np.moveaxis(state, 0, -1).tolist()
-					nn_pass[-1][0] += state
+				deck = np.zeros(DECK_LENGTH)
+				deck[np.array(de, dtype=np.int32) - 1] = 1
+				nn_pass[-1][1] += deck.tolist()
 
-					deck = np.zeros(DECK_LENGTH)
-					deck[np.array(de, dtype=np.int32) - 1] = 1
-					nn_pass[-1][1] += deck.tolist()
+				if depth != config.DEPTH -1:
+					if self.history[-depth - 2]:
+						game_state = self.history[-depth - 2]
+					else:
+						for _ in range(config.DEPTH - depth - 1):
+							for i, func in enumerate([np.zeros, np.ones]):
+								nn_pass[-1][i].append(func(NN_INPUT_DIMENSIONS[i][:-1]))
+						break
 
-					drawn_card = np.zeros(DECK_LENGTH)
-					drawn_card[dr[0] - 1] = (dr[0] != 0)
-					nn_pass[-1][2] += drawn_card.tolist()
-
-					if depth != config.DEPTH - 1:
-						if self.history[-depth - 2]:
-							game_state = self.history[-depth - 2]
-						else:
-							for _ in range(config.DEPTH - depth - 1):
-								for i, func in enumerate([np.zeros, np.ones, np.zeros]):
-									nn_pass[-1][i].append(func(NN_INPUT_DIMENSIONS[i][:-1]))
-							break
 		return nn_pass
