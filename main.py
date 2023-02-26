@@ -78,7 +78,7 @@ def play(env, games, training=False):
 
 			left = config.POSITION_AMOUNT - length
 			if left and games == game_count:
-				games += environment.GAME_ADD(left, og_games)
+				games += og_games
 
 	for i, players in enumerate(env.players):
 		for i2, player in enumerate(players):

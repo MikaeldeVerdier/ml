@@ -104,8 +104,7 @@ class NeuralNetwork:
 		return loss
 
 	def position_cnn(self, x):
-		for filter_amount, kernel_size in config.CONVOLUTIONAL_LAYERS_POSITION: x = self.convolutional_layer_2D(x, filter_amount, kernel_size)
-		for pool_size in config.POOL_LAYERS_POSITION: x = MaxPooling2D(pool_size=pool_size, data_format="channels_last")(x)
+		for filter_amount in config.CONVOLUTIONAL_LAYERS_POSITION: x = self.convolutional_layer_2D(x, filter_amount, config.CONVOLUTIOANL_SHAPE_POSITION)
 		x = Flatten()(x)
 		for neuron_amount in config.DENSE_POSITION: x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
 		
@@ -126,7 +125,8 @@ class NeuralNetwork:
 		x = Conv2D(filters=filters, kernel_size=kernel_size, padding="same", data_format="channels_last", use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
 		x = BatchNormalization()(x)
 		x = ReLU()(x)
-		
+		x = MaxPooling2D(pool_size=config.POOL_SHAPE_POSITION, data_format="channels_last")(x)
+
 		return x
 
 	@staticmethod

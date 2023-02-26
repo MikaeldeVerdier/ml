@@ -16,7 +16,6 @@ REWARD_FACTOR = 0.02
 REWARD_AVERAGE = True
 
 INVERSE_REWARD_TRANSFORM = lambda outcome: int(outcome / REWARD_FACTOR)
-GAME_ADD = lambda left, og_games: np.ceil(left / (GAME_LENGTH * 16) % og_games)
 
 class Environment:
 	def __init__(self, players, epsilons=None, starts=0, verbose=False):
