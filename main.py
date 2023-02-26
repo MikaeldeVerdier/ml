@@ -92,9 +92,9 @@ def play(env, games, training=False):
 
 def self_play(agent):
 	print("\nSelf-play started!\n")
-	outcome = play(Environment([[agent]]), config.GAME_AMOUNT_SELF_PLAY, training=True)
+	outcomes = play(Environment([[agent]]), config.GAME_AMOUNT_SELF_PLAY, training=True)
 
-	print(f"The result was: {outcome}")
+	print(f"The result were: {outcomes}")
 
 
 def retrain_network(agent):
@@ -130,11 +130,11 @@ def retrain_network(agent):
 def evaluate_network(agent):
 	print("\nEvaluation of agent started!\n")
 
-	outcome = play(Environment([[agent]], epsilons=[[0.05]]), config.GAME_AMOUNT_EVALUATION)
+	outcomes = play(Environment([[agent]], epsilons=[[0.05]]), config.GAME_AMOUNT_EVALUATION)
 
 	# log([agent], outcome)
 
-	print(f"The result was: {outcome}")
+	print(f"The result were: {outcomes}")
 
 
 def compete(agents, games, starts, verbose=False):
