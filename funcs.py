@@ -9,6 +9,7 @@ def increment_turn(turn, increment, length):
 def get_card(value):
 	suit = (value - 1) // (environment.DECK_LENGTH / environment.SUIT_AMOUNT)
 	value = ((value - 1) % (environment.DECK_LENGTH / environment.SUIT_AMOUNT)) + 2
+
 	return suit, value
 
 
@@ -35,7 +36,7 @@ def print_state(state, probs, action):
 
 	if probs is not None:
 		print(f"Action values are: {[probs[-1]]}\n{np.round(probs[:-1], 8).reshape(environment.GAME_DIMENSIONS)}")
-	
+
 	print(f"Action taken by {state.player.get_name()} is: {action}")
 	print(f"Position is:\n{board.reshape(environment.GAME_DIMENSIONS)}")
 

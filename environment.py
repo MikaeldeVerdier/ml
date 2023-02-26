@@ -118,7 +118,7 @@ class GameState():
 
 					histo = tuple(sorted([values.count(value) for value in set(values)]))
 
-					maxes = {num: tupl.count(num) for tupl in histo_dict.keys() for num in tupl}
+					maxes = {num: comb.count(num) for comb in histo_dict.keys() for num in comb}
 					for key, value in list(histo_dict.items()):
 						key_count = list(zip(*[(histo.count(val) // key.count(val), maxes[val]) for val in key]))
 
