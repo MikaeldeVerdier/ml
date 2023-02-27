@@ -19,7 +19,7 @@ INVERSE_REWARD_TRANSFORM = lambda outcome: int(outcome / REWARD_FACTOR)
 
 class Environment:
 	def __init__(self, players, epsilons=None, starts=0, verbose=False):
-		self.players = players  # [offset_array(game_players, len(game_players)) for game_players in players]  # offset_array(players, 2) axis=-1?
+		self.players = players
 		self.epsilons = epsilons or np.full(np.array(players).shape, None)
 		self.starts = starts - 1
 		self.verbose = verbose

@@ -170,7 +170,6 @@ class MainNeuralNetwork(NeuralNetwork):
 		fit = self.model.fit(x, y, batch_size=config.BATCH_SIZE[1], epochs=config.EPOCHS, verbose=1, validation_split=config.VALIDATION_SPLIT)
 		for metric in fit.history:
 			self.metrics[metric] += list(map(float, fit.history[metric]))
-			# [self.metrics[metric].append(fit.history[metric][i]) for i in range(config.EPOCHS)]
 
 	def plot_agent(self):
 		_, axs = plt.subplots(2, 2, figsize=(40, 15))
@@ -204,17 +203,6 @@ class MainNeuralNetwork(NeuralNetwork):
 
 				# deriv = np.diff(data)
 				# axs[ax[0] + 1, ax[1]].plot(x[1:], deriv, color=color, label=f"Derivative of {metric}")
-
-		# for ax_index, axis in enumerate(["Loss", "Outcome", "Validation loss", "Average Q-value"]):
-		# 	ax = axs.T.flatten()[ax_index]
-		# 	ax.set_title(axis)
-		# 	ax.set_xlabel("Training iteration" if "loss" in axis.lower() else "Version" if "Outcome" in axis else "Game")
-		# 	ax.set_ylabel(axis)
-		# 	ax.set_xscale("linear")
-		# 	box = ax.get_position()
-		# 	ax.set_position([box.x0, box.y0, box.width * 0.9, box.height])
-		# 	ax.yaxis.set_tick_params(labelbottom=True)
-		# 	ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 
 		plt.ioff()
 		plt.savefig(files.get_path(f"agent.png"), dpi=300)

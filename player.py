@@ -23,7 +23,7 @@ class User():
 
 		legal_moves = state.legal_moves
 		if len(environment.GAME_DIMENSIONS) == 2:
-			moves = [(legal_move % environment.GAME_DIMENSIONS[1] + 1, environment.GAME_DIMENSIONS[1] - legal_move // environment.GAME_DIMENSIONS[1]) for legal_move in legal_moves]
+			moves = [(legal_move % environment.GAME_DIMENSIONS[1] + 1, environment.GAME_DIMENSIONS[1] - legal_move // environment.GAME_DIMENSIONS[1]) if legal_move != 0 else 0 for legal_move in legal_moves]
 			func = string_to_tuple
 		else:
 			moves = legal_moves

@@ -67,7 +67,6 @@ def play(env, games, training=False):
 				data["target"] = env.player.calculate_target(storage, t) if t != len(storage) - 1 else data["reward"]
 
 				states = np.array(data["state"].generate_nn_pass(modify=True), dtype=object).tolist()
-				# for flip in states: product.append(np.array([flip, data["action"], data["target"]], dtype=object))
 				product += [np.array([state, data["action"], data["target"]], dtype=object) for state in states]
 
 			if not game_count % games:
@@ -113,9 +112,6 @@ def retrain_network(agent):
 			for i, dim in enumerate(position[0]):
 				x[i].append(np.array(dim))
 
-		# for i, var in enumerate(x):
-		# 	x[i] = np.array(var)
-
 		x = [np.array(var) for var in x]
 		y = np.array(y)
 
@@ -124,7 +120,7 @@ def retrain_network(agent):
 
 	# data = [np.expand_dims(dat, 0) for dat in positions[-1][0]]
 	# real = positions[-1]
-	# p = agent.main_nn.model .predict(data)
+	# p = agent.main_nn.model.predict(data)
 
 
 def evaluate_network(agent):
