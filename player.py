@@ -7,7 +7,7 @@ import environment
 import config
 import files
 from nn import NeuralNetwork, MainNeuralNetwork, TargetNeuralNetwork
-from funcs import string_to_tuple, format_card
+from funcs import string_to_tuple
 
 class User():
 	def __init__(self, name="You"):

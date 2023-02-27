@@ -130,7 +130,7 @@ def retrain_network(agent):
 def evaluate_network(agent):
 	print("\nEvaluation of agent started!\n")
 
-	outcomes = play(Environment([[agent]], epsilons=[[0.05]], verbose=True), config.GAME_AMOUNT_EVALUATION)
+	outcomes = play(Environment([[agent]], epsilons=[[0.05]]), config.GAME_AMOUNT_EVALUATION)
 
 	# log([agent], outcome)
 

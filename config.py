@@ -1,5 +1,5 @@
 # Main loop
-LOOP_ITERATIONS = 3001
+LOOP_ITERATIONS = 1501
 
 # Network architecture
 DENSE_POSITION = [1024, 1024, 1024, 2048, 2048, 2048, 4096, 4096, 4096]
@@ -29,7 +29,7 @@ REG_CONST = 1e-4  # L2 Regularization Hyperparameter
 LEARNING_RATE = lambda version: max(1e-6, 1e-4 + version * (1e-6 - 1e-4) / (LOOP_ITERATIONS * 0.9))
 
 # Evaluating network
-GAME_AMOUNT_EVALUATION = 100
+GAME_AMOUNT_EVALUATION = 25
 EVALUATION_FREQUENCY = 10  # Reciprocal of frequency of evaluating model
 
 # Play versions
