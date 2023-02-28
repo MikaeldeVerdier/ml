@@ -32,7 +32,7 @@ def inverse_format_card(card):
 def print_state(state, probs, action):
 	board = state.game_state.s.astype("<U4")
 
-	board = np.array([format_card(float(pos)) if pos != "0.0" else "---" for pos in board])
+	board = np.array([format_card(float(cell)) if cell != "0.0" else "---" for cell in board])
 
 	if probs is not None:
 		print(f"Action values are: {[probs[-1]]}\n{np.round(probs[:-1], 8).reshape(environment.GAME_DIMENSIONS)}")
