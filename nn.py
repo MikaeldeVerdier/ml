@@ -54,8 +54,6 @@ class NeuralNetwork:
 
 		x = Concatenate()([position, deck, drawn_card])
 
-		x = self.shared_mlp(x)
-
 		ph = self.policy_head(x)
 
 		self.model = Model(inputs=[position_input, deck_input, drawn_card_input], outputs=ph)
@@ -102,42 +100,37 @@ class NeuralNetwork:
 		loss = tf.reduce_mean(tf.math.square(targets - preds))
 
 		return loss
-
-	def position_cnn(self, x):
-		for filter_amount in config.CONVOLUTIONAL_LAYERS_POSITION:
-			x = self.convolutional_layer_2D(x, filter_amount, config.CONVOLUTIOANL_SHAPE_POSITION)
-		x = Flatten()(x)
-		for neuron_amount in config.DENSE_POSITION:
-			x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
-		
-		return x
-
-	def deck_mlp(self, x):
-		for neuron_amount in config.DENSE_DECK:
-			x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
-		
-		return x
-
-	def drawn_card_mlp(self, x):
-		for neuron_amount in config.DENSE_DRAWN_CARD:
-			x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
-		
-		return x
-
+	
 	@staticmethod
 	def convolutional_layer_2D(x, filters, kernel_size):
 		x = Conv2D(filters=filters, kernel_size=kernel_size, padding="same", data_format="channels_last", use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
 		x = BatchNormalization()(x)
 		x = ReLU()(x)
-		# x = MaxPooling2D(pool_size=config.POOL_SHAPE_POSITION, data_format="channels_last")(x)
+
+		return x
+
+	def position_cnn(self, x):
+		for filter_amount in config.CONVOLUTIONAL_LAYERS_POSITION:
+			x = self.convolutional_layer_2D(x, filter_amount, config.CONVOLUTIOANL_SHAPE_POSITION)
+
+		x = Flatten()(x)
+		for neuron_amount in config.DENSE_POSITION:
+			x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
 
 		return x
 
 	@staticmethod
-	def shared_mlp(x):
-		for neuron_amount in config.DENSE_SHARED:
+	def deck_mlp(x):
+		for neuron_amount in config.DENSE_DECK:
 			x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
-		
+
+		return x
+
+	@staticmethod
+	def drawn_card_mlp(x):
+		for neuron_amount in config.DENSE_DRAWN_CARD:
+			x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
+
 		return x
 
 	@staticmethod
@@ -145,7 +138,7 @@ class NeuralNetwork:
 		for neuron_amount in config.DENSE_POLICY_HEAD:
 			x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
 		x = Dense(environment.MOVE_AMOUNT, use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST), name="policy_head")(x)
-		
+
 		return x
 
 	@cache
