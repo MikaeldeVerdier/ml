@@ -63,14 +63,15 @@ def play(env, games, training=False):
 			print(f"Amount of games played is now: {game_count} ({env.player.get_name()})\n")
 
 		if training:
-			for t, data in enumerate(storage):
-				data["target"] = env.player.calculate_target(storage, t) if t != len(storage) - 1 else data["reward"]
+			for t, data in sorted(enumerate(storage), reverse=True):
+				if t >= len(storage) + config.data_choser(env.player.main_nn.version, len(storage)):
+					data["target"] = env.player.calculate_target(storage, t) if t != len(storage) - 1 else data["reward"]
 
-				states = np.array(data["state"].generate_nn_pass(modify=True), dtype=object).tolist()
-				product += [np.array([state, data["action"], data["target"]], dtype=object) for state in states]
+					states = np.array(data["state"].generate_nn_pass(modify=True), dtype=object).tolist()
+					product += [np.array([state, data["action"], data["target"]], dtype=object) for state in states]
 
 			if not game_count % games:
-				length = files.add_to_file(files.get_path("positions.npy"), np.array(product, dtype=object), config.POSITION_AMOUNT)
+				length = files.add_to_file(files.get_path("positions.npy"), np.array(product[::-1], dtype=object), config.POSITION_AMOUNT)
 				product = []
 
 				print(f"Position length is now: {length}")
