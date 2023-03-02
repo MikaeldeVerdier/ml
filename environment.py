@@ -135,7 +135,7 @@ class GameState():
 						sum_score += 10
 					if stege:
 						if values[-2] == DECK_LENGTH / SUIT_AMOUNT:
-							sum_score += 50 if färgrad else 20
+							sum_score += 40 if färgrad else 20
 						else:
 							sum_score += 10
 	
@@ -167,13 +167,7 @@ class GameState():
 							if card != 0:
 								var[i] = int((var[i] + suit_change - 1) % DECK_LENGTH + 1)
 
-					state = []
-					for i in range(1, DECK_LENGTH + 1):
-						position = np.zeros(len(s))
-						position[s == i] = 1
-						state.append(np.reshape(position, NN_INPUT_DIMENSIONS[0][:-1]))
-
-					state = np.moveaxis(state, 0, -1).tolist()
+					state = np.moveaxis([np.reshape((s == i).astype(int), NN_INPUT_DIMENSIONS[0][:-1]) for i in range(1, DECK_LENGTH + 1)], 0, -1).tolist()
 					nn_pass[-1][0] += state
 
 					deck = np.zeros(DECK_LENGTH)

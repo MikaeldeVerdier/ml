@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import os
 from tensorflow.keras import regularizers
 from tensorflow.keras.models import Model, load_model
-from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, Flatten, Dense, BatchNormalization, ReLU, Concatenate
+from tensorflow.keras.layers import Input, Conv2D, Flatten, Dense, BatchNormalization, ReLU, Concatenate
 from tensorflow.keras.optimizers import Adam
 from keras.utils.vis_utils import plot_model
 
@@ -89,7 +89,8 @@ class NeuralNetwork:
 		else:
 			self.model.save_weights(files.get_path(f"training/{name}/checkpoint"))
 
-	def mean_squared_error(self, y_true, y_pred):
+	@staticmethod
+	def mean_squared_error(y_true, y_pred):
 		logits = tf.reshape(y_pred, (tf.shape(y_true)[0], -1))
 
 		actions = tf.cast(tf.gather(y_true, tf.constant([0]), axis=1), tf.int32)
