@@ -15,7 +15,7 @@ DENSE_POLICY_HEAD = [512, 512, 256, 128, 64, 32, 32]
 USE_BIAS = True
 
 # Self-play
-GAME_AMOUNT_SELF_PLAY = 20
+GAME_AMOUNT_SELF_PLAY = 200
 POSITION_AMOUNT = 30000  # Replay buffer size
 data_choser = lambda version, length: -1  # lambda version, length: round(-1 - version * 2 * (length - 1) / LOOP_ITERATIONS)  # How early data used in training
 DEPTH = 1  # Amount of previous states included in nn input
