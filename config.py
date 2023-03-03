@@ -18,7 +18,7 @@ USE_BIAS = True
 GAME_AMOUNT_SELF_PLAY = 20
 POSITION_AMOUNT = 30000  # Replay buffer size
 DEPTH = 1  # Amount of previous states included in nn input
-EPSILON = lambda version: max(0.1, 1 - version / LOOP_ITERATIONS)  # Probability of choosing a random move, if not specified
+epsilon = lambda version: max(0.1, 1 - version / LOOP_ITERATIONS)  # Probability of choosing a random move, if not specified
 
 # Retraining network
 TRAINING_ITERATIONS = 10
@@ -29,7 +29,7 @@ VERSION_OFFSET = 50  # Reciprocal of frequency of target nn copying main nn
 SAVING_FREQUENCY = 250  # Reciprocal of frequency of saving progress
 VALIDATION_SPLIT = 0.2  # Share of data used as validation
 REG_CONST = 1e-4  # L2 Regularization Hyperparameter
-LEARNING_RATE = lambda version: max(1e-6, 1e-4 - version * (1e-4 - 1e-6) / (LOOP_ITERATIONS * 0.9))
+learning_rate = lambda version: max(1e-6, 1e-4 - version * (1e-4 - 1e-6) / (LOOP_ITERATIONS * 0.9))
 
 # Evaluating network
 GAME_AMOUNT_EVALUATION = 100
