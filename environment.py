@@ -7,12 +7,12 @@ from funcs import increment_turn, get_card, print_state
 DECK_LENGTH = 52
 SUIT_AMOUNT = 4
 
-GAME_DIMENSIONS = (5, 5)
+GAME_DIMENSIONS = (3, 3)
 NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (DECK_LENGTH * config.DEPTH,), (DECK_LENGTH * config.DEPTH,), (DECK_LENGTH * config.DEPTH,)]
 MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
-REPLACE_CARDS = 3
+REPLACE_CARDS = 1
 GAME_LENGTH = np.prod(GAME_DIMENSIONS) + REPLACE_CARDS
-REWARD_FACTOR = 0.02
+REWARD_FACTOR = 0.5
 REWARD_AVERAGE = True
 
 INVERSE_REWARD_TRANSFORM = lambda outcome: int(outcome / REWARD_FACTOR)
@@ -114,7 +114,7 @@ class GameState():
 					suits, values = tuple(zip(*[get_card(card) for card in row]))
 					values = sorted(values)
 
-					histo_dict = {(4,): 20, (3, 2): 15, (3,): 8, (2,): 2}
+					histo_dict = {(2,): 1}
 
 					histo = tuple(sorted([values.count(value) for value in set(values)]))
 
@@ -127,17 +127,6 @@ class GameState():
 								maxes[val] -= min(key_count[0])
 
 							sum_score += min(key_count[0]) * value
-
-					färgrad = len(set(suits)) == 1
-					stege = values[-1] - values[0] == len(row) - 1 or values == list(range(1, len(row))) + [DECK_LENGTH / SUIT_AMOUNT + 1]
-
-					if färgrad:
-						sum_score += 10
-					if stege:
-						if values[-2] == DECK_LENGTH / SUIT_AMOUNT:
-							sum_score += 50 if färgrad else 20
-						else:
-							sum_score += 10
 	
 			return (sum_score * REWARD_FACTOR,)
 
