@@ -17,7 +17,7 @@ USE_BIAS = True
 # Self-play
 game_amount_self_play = lambda version: max(20, 200 - 0.06 * version)
 POSITION_AMOUNT = 30000  # Replay buffer size
-data_choser = lambda version, length: round(-version * 2 * length / LOOP_ITERATIONS)  # How early data used in training
+data_choser = lambda version, length: round(-1 -version * 2 * (length - 1) / LOOP_ITERATIONS)  # How early data used in training
 DEPTH = 1  # Amount of previous states included in nn input
 epsilon = lambda version: max(0.1, 1 - version / LOOP_ITERATIONS)  # Probability of choosing a random move, if not specified
 
