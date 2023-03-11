@@ -78,7 +78,7 @@ def play(env, games, training=False):
 
 				print(f"Positions generated is now: {length_generated}")
 
-			if (length_generated < config.POSITION_REQUIREMENT or length != config.BUFFER_SIZE) and games == game_count:
+			if (length_generated < config.BUFFER_REQUIREMENT or length != config.BUFFER_SIZE) and games == game_count:
 				games += og_games
 
 	for i, players in enumerate(env.players):
