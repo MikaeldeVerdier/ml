@@ -25,6 +25,7 @@ def initiate():
 def play(env, games, training=False):
 	if training:
 		length = 0
+		length_generated = 0
 		product = []
 
 	results = np.empty(np.array(env.players).shape + (0,)).tolist()
@@ -71,13 +72,13 @@ def play(env, games, training=False):
 					product += [np.array([state, data["action"], data["target"]], dtype=object) for state in states]
 
 			if not game_count % games:
-				length = files.add_to_file(files.get_path("positions.npy"), np.array(product[::-1], dtype=object), config.POSITION_AMOUNT)
+				length = files.add_to_file(files.get_path("positions.npy"), np.array(product[::-1], dtype=object), config.BUFFER_SIZE)
+				length_generated += len(product)
 				product = []
 
-				print(f"Position length is now: {length}")
+				print(f"Positions generated is now: {length_generated}")
 
-			left = config.POSITION_AMOUNT - length
-			if left and games == game_count:
+			if (length_generated < config.POSITION_REQUIREMENT or length != config.BUFFER_SIZE) and games == game_count:
 				games += og_games
 
 	for i, players in enumerate(env.players):
@@ -92,7 +93,7 @@ def play(env, games, training=False):
 
 def self_play(agent):
 	print("\nSelf-play started!\n")
-	outcomes = play(Environment([[agent]]), config.game_amount_self_play(agent.main_nn.version), training=True)
+	outcomes = play(Environment([[agent]]), config.GAME_AMOUNT_SELF_PLAY, training=True)
 
 	print(f"The result were: {outcomes}")
 
