@@ -1,17 +1,17 @@
 # Main loop
-LOOP_ITERATIONS = 10001
+LOOP_ITERATIONS = 2501
 
 # Network architecture
-CONVOLUTIONAL_LAYERS_POSITION = (64, 128, 256, 256, 256)
+CONVOLUTIONAL_LAYERS_POSITION = ()
 CONVOLUTIOANL_SHAPE_POSITION = (3, 3)
 # POOL_SHAPE_POSITION = (2, 2)
-DENSE_POSITION = [2048, 1024, 512]
+DENSE_POSITION = [256, 128, 128, 128]
 
-DENSE_DECK = [32, 32, 64]
+DENSE_DECK = [32, 32]
 
-DENSE_DRAWN_CARD = [32, 32, 64]
+DENSE_DRAWN_CARD = [32, 32]
 
-DENSE_POLICY_HEAD = [512, 512, 256, 128, 64, 32, 32]
+DENSE_POLICY_HEAD = [128, 128, 128, 64, 32, 32]
 USE_BIAS = True
 
 # Self-play
@@ -28,7 +28,7 @@ BATCH_SIZE = (256, 32)  # Index 0: amount of positions sampled. Index 1: actual 
 EPOCHS = 1
 GAMMA = 0.99  # Discounting factor for future rewards when calculating targets
 VERSION_OFFSET = 50  # Reciprocal of frequency of target nn copying main nn
-SAVING_FREQUENCY = 250  # Reciprocal of frequency of saving progress
+SAVING_FREQUENCY = 50  # Reciprocal of frequency of saving progress
 VALIDATION_SPLIT = 0.2
 REG_CONST = 1e-4  # L2 Regularization Hyperparameter
 learning_rate = lambda version: max(1e-6, 1e-4 + version * (1e-6 - 1e-4) / (LOOP_ITERATIONS * 0.9))
