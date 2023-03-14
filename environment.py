@@ -158,7 +158,8 @@ class GameState():
 			s = game_state.s if flip is None else np.flip(game_state.s.reshape(GAME_DIMENSIONS), flip).flatten()
 
 			for suit_change in suit_changes:
-				nn_pass.append([[], [], []])
+				nn_pass.append([[] for _ in range(len(NN_INPUT_DIMENSIONS))])
+
 				for depth in range(config.DEPTH):
 					de = game_state.deck
 					dr = [game_state.drawn_card]

@@ -24,8 +24,7 @@ def initiate():
 
 def play(env, games, training=False):
 	if training:
-		length = 0
-		product = []
+		replay = np.load(files.get_path("positions.npy"), allow_pickle=True).tolist()
 
 	results = np.empty(np.array(env.players).shape + (0,)).tolist()
 
@@ -67,15 +66,14 @@ def play(env, games, training=False):
 				data["target"] = env.player.calculate_target(storage, t) if t != len(storage) - 1 else data["reward"]
 
 				states = np.array(data["state"].generate_nn_pass(modify=True), dtype=object).tolist()
-				product += [np.array([state, data["action"], data["target"]], dtype=object) for state in states]
+				replay = (replay + [np.array([state, data["action"], data["target"]], dtype=object) for state in states])[-config.POSITION_AMOUNT:]
 
 			if not game_count % games:
-				length = files.add_to_file(files.get_path("positions.npy"), np.array(product, dtype=object), config.POSITION_AMOUNT)
-				product = []
+				files.write("positions.npy", np.array(replay, dtype=object))
 
-				print(f"Position length is now: {length}")
+				print(f"Position length is now: {len(replay)}")
 
-			left = config.POSITION_AMOUNT - length
+			left = config.POSITION_AMOUNT - len(replay)
 			if left and games == game_count:
 				games += og_games
 
@@ -162,7 +160,6 @@ def play_versions(loads, games, starts=0):
 def main():
 	# play_versions([None, "trained_version"], config.GAME_AMOUNT_PLAY_VERSIONS)
 	# play_test("trained_version", config.GAME_AMOUNT_PLAY_TEST)
-	# print(files.add_to_file("positions.json", files.load_file("poss.json"), config.POSITION_AMOUNT)[0])
 
 	agent = initiate()
 
