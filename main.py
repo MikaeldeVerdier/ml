@@ -148,7 +148,7 @@ def log(agent_s, average_s):
 
 def play_test(load, games, starts=0):
 	you = User()
-	agents = [[Agent(load=load, name=load), you]]
+	agents = [Agent(load=load, name=load), you]
 	compete(agents, games, starts, verbose=True)
 
 
@@ -159,7 +159,7 @@ def play_versions(loads, games, starts=0):
 
 def main():
 	# play_versions([None, "trained_version"], config.GAME_AMOUNT_PLAY_VERSIONS)
-	# play_test("trained_version", config.GAME_AMOUNT_PLAY_TEST)
+	# play_test(None, config.GAME_AMOUNT_PLAY_TEST)
 
 	agent = initiate()
 

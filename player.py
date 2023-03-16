@@ -1,13 +1,11 @@
 import os
 import numpy as np
 from copy import copy
-from shutil import rmtree, copytree
 
-import environment
 import config
 import files
 from nn import NeuralNetwork, MainNeuralNetwork, TargetNeuralNetwork
-from funcs import string_to_tuple, format_card
+from funcs import order_moves, format_move, get_move
 
 class User():
 	def __init__(self, name="You"):
@@ -18,24 +16,10 @@ class User():
 	def get_name(self):
 		return self.name
 
-	def get_action(self, state, *args):
-		print(f"Drawn card is: {format_card(state.drawn_card)}")
-
-		legal_moves = state.legal_moves
-		if len(environment.GAME_DIMENSIONS) == 2:
-			moves = [(legal_move % environment.GAME_DIMENSIONS[1] + 1, environment.GAME_DIMENSIONS[1] - legal_move // environment.GAME_DIMENSIONS[1]) if legal_move != 0 else 0 for legal_move in legal_moves]
-			func = string_to_tuple
-		else:
-			moves = legal_moves
-			func = int
-
-		user_move = None
-		while user_move not in moves:
-			print(f"Legal moves for you are: {moves}")
-			try:
-				user_move = func(input("Make your move: "))
-			except ValueError:
-				print("Please enter a valid move.")
+	def get_action(self, state, *_):
+		legal_moves = order_moves(state.legal_moves)
+		moves = [format_move(move) for move in legal_moves]
+		user_move = get_move(moves)
 
 		action = legal_moves[moves.index(user_move)]
 
@@ -92,9 +76,7 @@ class Agent():
 			self.main_nn.save_metrics()
 			self.main_nn.plot_agent()
 
-			if os.path.exists(files.get_path("training/target_nn")):
-				rmtree(files.get_path("training/target_nn"))
-			copytree(files.get_path("training/main_nn"), files.get_path("training/target_nn"))
+			files.copy_dir("training/main_nn", "training/training_nn")
 
 		if not (self.main_nn.version - 1) % config.VERSION_OFFSET:
 			self.copy_network()

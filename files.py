@@ -1,7 +1,7 @@
 import numpy as np
 import os
 import json
-from shutil import copyfile
+from shutil import copyfile, rmtree, copytree
 
 import config
 
@@ -62,6 +62,15 @@ def load_file(file):
 	return json.loads(read(file))
 
 
+def copy_file(file, new_path):
+	copyfile(get_path(file), get_path(new_path))
+
+
+def make_backup(file, new_name=None):
+	new_name = new_name if new_name else file
+	copy_file(file, f"backup/{new_name}")
+
+
 def reset_file(file):
 	make_backup(file)
 	if not file.endswith(".npy"):
@@ -78,16 +87,16 @@ def edit_key(file, keys, values):
 	write(file, json.dumps(loaded))
 
 
-def reset_key(file, key):
+def copy_dir(old_dir, new_dir):
+	old_path = get_path(old_dir)
+	new_path = get_path(new_dir)
+
+	if os.path.exists(new_path):
+		rmtree(new_path)
+	copytree(old_path, new_path)
+
+
+"""def reset_key(file, key):
 	loaded = load_file(file)
 	loaded[key] = EMPTY_FILES[file][key]
-	write(file, json.dumps(loaded))
-
-
-def copy_file(file, new_path):
-	copyfile(get_path(file), new_path)
-
-
-def make_backup(file, new_name=None):
-	new_name = new_name if new_name else file
-	copyfile(get_path(file), f"{config.SAVE_PATH}backup/{new_name}")
+	write(file, json.dumps(loaded))"""

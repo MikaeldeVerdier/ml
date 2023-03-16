@@ -2,7 +2,7 @@ import numpy as np
 import random
 
 import config
-from funcs import increment_turn, get_card, print_state
+from funcs import increment_turn, print_state, print_move, get_card
 
 DECK_LENGTH = 52
 SUIT_AMOUNT = 4
@@ -33,7 +33,7 @@ class Environment:
 		self.game_state = GameState(increment_turn(self.game_state.turn, 1, len(self.current_players)), self.game_state.history, s, deck, drawn_card)
 
 		if self.verbose:
-			print_state(self, probs, action)
+			print_move(self, probs, action)
 
 		self.update_player()
 
@@ -56,6 +56,9 @@ class Environment:
 		self.game_state = GameState(self.starts, (None,) * config.DEPTH, np.zeros(np.prod(GAME_DIMENSIONS)), deck, drawn_card)
 
 		self.update_player()
+
+		if self.verbose:
+			print_state(self)
 
 
 class GameState():
