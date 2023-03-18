@@ -58,7 +58,7 @@ class Environment:
 		self.update_player()
 
 		if self.verbose:
-			print_state(self)
+			print_state(self.game_state)
 
 
 class GameState():
@@ -108,43 +108,43 @@ class GameState():
 		return len(self.deck) == DECK_LENGTH - GAME_LENGTH - 1
 
 	def get_scores(self):
-		if self.done:
-			sum_score = 0
+		if not self.done:
+			return (0,)
 
-			board = self.s.reshape(GAME_DIMENSIONS)
-			for rowcol in [board, board.T]:
-				for row in rowcol:
-					suits, values = tuple(zip(*[get_card(card) for card in row]))
-					values = sorted(values)
+		sum_score = 0
 
-					histo_dict = {(4,): 20, (3, 2): 15, (3,): 8, (2,): 2}
+		board = self.s.reshape(GAME_DIMENSIONS)
+		for rowcol in [board, board.T]:
+			for row in rowcol:
+				suits, values = tuple(zip(*[get_card(card) for card in row]))
+				values = sorted(values)
 
-					histo = tuple(sorted([values.count(value) for value in set(values)]))
+				histo_dict = {(4,): 20, (3, 2): 15, (3,): 8, (2,): 2}
 
-					maxes = {num: comb.count(num) for comb in histo_dict.keys() for num in comb}
-					for key, value in list(histo_dict.items()):
-						key_count = list(zip(*[(histo.count(val) // key.count(val), maxes[val]) for val in key]))
+				histo = tuple(sorted([values.count(value) for value in set(values)]))
 
-						if min(key_count[0]) and min(key_count[1]) > 0:
-							for val in set(key):
-								maxes[val] -= min(key_count[0])
+				maxes = {num: comb.count(num) for comb in histo_dict.keys() for num in comb}
+				for key, value in list(histo_dict.items()):
+					key_count = list(zip(*[(histo.count(val) // key.count(val), maxes[val]) for val in key]))
 
-							sum_score += min(key_count[0]) * value
+					if min(key_count[0]) and min(key_count[1]) > 0:
+						for val in set(key):
+							maxes[val] -= min(key_count[0])
 
-					färgrad = len(set(suits)) == 1
-					stege = values[-1] - values[0] == len(row) - 1 or values == list(range(1, len(row))) + [DECK_LENGTH / SUIT_AMOUNT + 1]
+						sum_score += min(key_count[0]) * value
 
-					if färgrad:
+				färgrad = len(set(suits)) == 1
+				stege = values[-1] - values[0] == len(row) - 1 or values == list(range(1, len(row))) + [DECK_LENGTH / SUIT_AMOUNT + 1]
+
+				if färgrad:
+					sum_score += 10
+				if stege:
+					if values[-2] == DECK_LENGTH / SUIT_AMOUNT:
+						sum_score += 40 if färgrad else 20
+					else:
 						sum_score += 10
-					if stege:
-						if values[-2] == DECK_LENGTH / SUIT_AMOUNT:
-							sum_score += 40 if färgrad else 20
-						else:
-							sum_score += 10
-	
-			return (sum_score * REWARD_FACTOR,)
 
-		return (0,)
+		return (sum_score * REWARD_FACTOR,)
 
 	def generate_nn_pass(self, modify=False):
 		game_state = self.history[-1]

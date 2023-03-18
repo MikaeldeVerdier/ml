@@ -21,24 +21,24 @@ def format_card(card):
 
 
 def print_state(state):
-	board = state.game_state.s.astype("<U4")
+	board = state.s.astype("<U4")
 	board = np.array([format_card(float(cell)) if cell != "0.0" else "---" for cell in board])
 
 	print(f"Position is:\n{board.reshape(environment.GAME_DIMENSIONS)}")
 
-	if not state.game_state.done:
-		print(f"Drawn card is: {format_card(state.game_state.drawn_card)}")
-		print(f"Amount of cards left is: {len(state.game_state.deck)}\n")
+	if not state.done:
+		print(f"Drawn card is: {format_card(state.drawn_card)}")
+		print(f"Amount of cards left is: {len(state.deck)}\n")
 	else:
-		print(f"Game over! The outcomes were: {state.game_state.scores}\n")
+		print(f"Game over! The outcomes were: {state.scores}\n")
 
 
-def print_move(state, probs, action):
+def print_move(env, probs, action):
 	if probs is not None:
 		print(f"Action values are: {[probs[-1]]}\n{np.round(probs[:-1], 8).reshape(environment.GAME_DIMENSIONS)}")
 
-	print(f"Action taken by {state.player.get_name()} is: {action}")
-	print_state(state)
+	print(f"Action taken by {env.player.get_name()} is: {action}")
+	print_state(env.game_state)
 
 
 def order_moves(moves):
