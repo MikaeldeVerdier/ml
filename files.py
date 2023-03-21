@@ -30,13 +30,13 @@ EMPTY_FILES = {
 def setup_files():
 	save_folder = (config.SAVE_PATH, os.mkdir)
 	backup_folder = (f"{config.SAVE_PATH}backup/", os.mkdir)
-	save_file = (f"{config.SAVE_PATH}save.json", open, *"x")
-	positions_file = (f"{config.SAVE_PATH}positions.npy", open, *"x")
-	log_file = (f"{config.SAVE_PATH}log.txt", open, *"x")
+	save_file = (f"{config.SAVE_PATH}save.json", open, "x")
+	positions_file = (f"{config.SAVE_PATH}positions.npy", open, "x")
+	log_file = (f"{config.SAVE_PATH}log.txt", open, "x")
 
-	for file, func, *kwargs in [save_folder, backup_folder, save_file, positions_file, log_file]:
+	for file, func, *args in [save_folder, backup_folder, save_file, positions_file, log_file]:
 		if not os.path.exists(file):
-			func(file, *kwargs)
+			func(file, *args)
 
 
 def get_path(file):

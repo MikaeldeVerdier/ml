@@ -1,4 +1,3 @@
-import os
 import numpy as np
 from copy import copy
 
@@ -35,14 +34,13 @@ class Agent():
 			self.target_nn = TargetNeuralNetwork(load)
 			self.main_nn = MainNeuralNetwork(load)
 		else:
-			self.main_nn = NeuralNetwork(load)
+			self.main_nn = NeuralNetwork(load, f"{name}_nn")
 
 	def get_name(self):
 		return self.name or f"Version {self.main_nn.version}"
 
 	def get_action(self, state, epsilon):
 		probs = self.main_nn.get_preds(state)
-
 		action = self.choose_action(state, probs, epsilon)
 
 		return probs, action
@@ -55,15 +53,14 @@ class Agent():
 
 		return action
 
-	def calculate_target(self, data, t):
-		next_state = data[t + 1]["state"]
-		return data[t]["reward"] + config.GAMMA * np.max(self.target_nn.get_preds(next_state))
-
 	def copy_network(self):
-		# self.target_nn.load_dir("main_nn")
-		# self.target_nn.save_model("target_nn", self.to_weights)
+		# self.target_nn.load_dir(self.main_nn.name)
+		# self.target_nn.save_model(self.to_weights)
 
-		self.target_nn = copy(self.main_nn)
+		self.target_nn.model = copy(self.main_nn.model)
+		self.target_nn.version = self.main_nn.version
+
+		# self.target_nn = copy(self.main_nn)  # target_nn becomes a main_nn object
 
 		files.edit_key("save.json", ["target_nn_version"], [self.main_nn.version])
 
@@ -72,11 +69,12 @@ class Agent():
 		self.main_nn.model.optimizer.learning_rate.assign(config.learning_rate(self.main_nn.version))
 
 		if not self.main_nn.version % config.SAVING_FREQUENCY:
-			self.main_nn.save_model("main_nn", self.to_weights)
+			self.main_nn.save_model(self.to_weights)
+			self.target_nn.save_model(self.to_weights)
 			self.main_nn.save_metrics()
 			self.main_nn.plot_agent()
 
-			files.copy_dir("training/main_nn", "training/training_nn")
+			# files.copy_dir(f"training/{self.main_nn.name}", f"training/{self.target_nn.name}")
 
-		if not (self.main_nn.version - 1) % config.VERSION_OFFSET:
+		if not self.main_nn.version % config.VERSION_OFFSET:
 			self.copy_network()

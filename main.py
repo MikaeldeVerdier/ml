@@ -17,7 +17,7 @@ def initiate():
 		files.reset_file("positions.npy")
 		files.reset_file("log.txt")
 
-	agent = Agent(load=load, trainable=True)
+	agent = Agent(load=load, trainable=True, name="Clara Brundin")
 
 	return agent
 
@@ -63,7 +63,7 @@ def play(env, games, training=False):
 
 		if training:
 			for t, data in enumerate(storage):
-				data["target"] = env.player.calculate_target(storage, t) if t != len(storage) - 1 else data["reward"]
+				data["target"] = env.player.target_nn.calculate_target(storage, t) if t != len(storage) - 1 else data["reward"]
 
 				states = np.array(data["state"].generate_nn_pass(modify=True), dtype=object).tolist()
 				replay = (replay + [np.array([state, data["action"], data["target"]], dtype=object) for state in states])[-config.POSITION_AMOUNT:]

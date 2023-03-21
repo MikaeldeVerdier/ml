@@ -35,12 +35,13 @@ except ImportError:
 		return caching
 
 class NeuralNetwork:
-	def __init__(self, load):
+	def __init__(self, load, name):
 		self.version = load
+		self.name = name
 
 		if load:
-			if self.load_dir(load):
-				print(f"NN loaded with version called: {load}")
+			if self.load_dir(name):
+				print(f"NN loaded with version called: {name}")
 				return
 
 		position_input = Input(shape=environment.NN_INPUT_DIMENSIONS[0], name="position_input")
@@ -60,8 +61,8 @@ class NeuralNetwork:
 		self.model.compile(loss=self.mean_squared_error, optimizer=Adam(learning_rate=config.learning_rate(0)))
 		
 		if load:
-			self.load_dir(load, from_weights=True)
-			print(f"Weights loaded from version called: {load}")
+			self.load_dir(name, from_weights=True)
+			print(f"Weights loaded from version called: {name}")
 		else:
 			try:
 				plot_model(self.model, to_file=files.get_path("model.png"), show_shapes=True, show_layer_names=True)
@@ -83,11 +84,11 @@ class NeuralNetwork:
 		else:
 			self.model.load_weights(path).expect_partial()
 
-	def save_model(self, name, to_weights):
+	def save_model(self, to_weights):
 		if not to_weights:
-			self.model.save(files.get_path(f"training/{name}"))
+			self.model.save(files.get_path(f"training/{self.name}"))
 		else:
-			self.model.save_weights(files.get_path(f"training/{name}/checkpoint"))
+			self.model.save_weights(files.get_path(f"training/{self.name}/checkpoint"))
 
 	@staticmethod
 	def mean_squared_error(y_true, y_pred):
@@ -156,10 +157,8 @@ class NeuralNetwork:
 
 
 class MainNeuralNetwork(NeuralNetwork):
-	def __init__(self, load):
-		self.load = "main_nn" if load is True else load
-
-		super().__init__(self.load)
+	def __init__(self, load, name="main_nn"):
+		super().__init__(load, name)
 
 		loaded = files.load_file("save.json")
 		self.version = loaded["target_nn_version"]
@@ -214,10 +213,13 @@ class MainNeuralNetwork(NeuralNetwork):
 
 
 class TargetNeuralNetwork(NeuralNetwork):
-	def __init__(self, load):
-		self.load = "target_nn" if load is True else load
-
-		super().__init__(self.load)
+	def __init__(self, load, name="target_nn"):
+		self.load = load
+		super().__init__(load, name)
 
 		loaded = files.load_file("save.json")
 		self.version = loaded["target_nn_version"]
+
+	def calculate_target(self, data, t):
+		next_state = data[t + 1]["state"]
+		return data[t]["reward"] + config.GAMMA * np.max(self.get_preds(next_state))
