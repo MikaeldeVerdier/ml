@@ -25,6 +25,7 @@ def initiate():
 def play(env, games, training=False):
 	if training:
 		replay = np.load(files.get_path("positions.npy"), allow_pickle=True).tolist()
+		length_generated = 0
 
 	results = np.empty(np.array(env.players).shape + (0,)).tolist()
 
@@ -66,15 +67,15 @@ def play(env, games, training=False):
 				data["target"] = env.player.target_nn.calculate_target(storage, t) if t != len(storage) - 1 else data["reward"]
 
 				states = np.array(data["state"].generate_nn_pass(modify=True), dtype=object).tolist()
-				replay = (replay + [np.array([state, data["action"], data["target"]], dtype=object) for state in states])[-config.POSITION_AMOUNT:]
+				replay = (replay + [np.array([state, data["action"], data["target"]], dtype=object) for state in states])[-config.BUFFER_SIZE:]
+				length_generated += len(states)
 
 			if not game_count % games:
 				files.write("positions.npy", np.array(replay, dtype=object))
 
-				print(f"Position length is now: {len(replay)}")
+				print(f"Positions generated is now: {length_generated}")
 
-			left = config.POSITION_AMOUNT - len(replay)
-			if left and games == game_count:
+			if (length_generated < config.BUFFER_REQUIREMENT or len(replay) != config.BUFFER_SIZE) and games == game_count:
 				games += og_games
 
 	for i, players in enumerate(env.players):
@@ -131,14 +132,19 @@ def evaluate_network(agent):
 	print(f"The result were: {outcomes}")
 
 
-def compete(agents, games, starts, verbose=False):
-	outcomes = play(Environment(np.array(agents).reshape(-1, 1), epsilons=[[0.05]] * len(agents), starts=starts, verbose=verbose), games)
+def compete(agents, games, multiplayer, starts, verbose=False):
+	epsilons = [0.05] * len(agents)
+	if not multiplayer:
+		competing_agents = np.array(agents).reshape(-1, 1)
+		epsilons = np.expand_dims(epsilons, 1).tolist()
+
+	outcomes = play(Environment(competing_agents, epsilons=epsilons, starts=starts, verbose=verbose), games)
 
 	log(agents, outcomes)
 
 	print(f"The results between agents named {' and '.join([agent.get_name() for agent in agents])} were: {outcomes}")
 	best = agents[np.argmax(outcomes)].get_name()
-	print(f"The best version was: version {best}")
+	print(f"The best agent was: {best}")
 
 
 def log(agent_s, average_s):
@@ -146,24 +152,24 @@ def log(agent_s, average_s):
 	files.write("log.txt", message, "a")
 
 
-def play_test(load, games, starts=0):
+def play_test(load, games, multiplayer, starts=0):
 	you = User()
 	agents = [Agent(load=load, name=load), you]
-	compete(agents, games, starts, verbose=True)
+	compete(agents, games, starts, multiplayer, verbose=True)
 
 
-def play_versions(loads, games, starts=0):
+def play_versions(loads, games, multiplayer, starts=0):
 	agents = [Agent(load=load, name=load) for load in loads]
-	compete(agents, games, starts)
+	compete(agents, games, multiplayer, starts)
 
 
 def main():
-	# play_versions([None, "trained_version"], config.GAME_AMOUNT_PLAY_VERSIONS)
-	# play_test(None, config.GAME_AMOUNT_PLAY_TEST)
-
 	agent = initiate()
 
-	while agent.main_nn.version <= config.LOOP_ITERATIONS:
+	# play_versions([None, "trained_version"], config.GAME_AMOUNT_PLAY_VERSIONS, False)
+	# play_test(None, config.GAME_AMOUNT_PLAY_TEST, False)
+
+	while agent.main_nn.version <= config.VERSION_AMOUNT:
 		if not agent.main_nn.version % config.EVALUATION_FREQUENCY:
 			evaluate_network(agent)
 		self_play(agent)

@@ -1,5 +1,5 @@
 # Main loop
-LOOP_ITERATIONS = 5001
+VERSION_AMOUNT = 5001
 
 # Network architecture
 CONVOLUTIONAL_LAYERS_POSITION = (64, 128)
@@ -15,10 +15,11 @@ DENSE_POLICY_HEAD = [512, 512, 512, 256, 128, 64, 32, 32]
 USE_BIAS = True
 
 # Self-play
-GAME_AMOUNT_SELF_PLAY = 20
-POSITION_AMOUNT = 30000  # Replay buffer size
+GAME_AMOUNT_SELF_PLAY = 8
+BUFFER_REQUIREMENT = 3000
+BUFFER_SIZE = 30000  # Replay buffer size
 DEPTH = 1  # Amount of previous states included in nn input
-epsilon = lambda version: max(0.1, 1 - version / LOOP_ITERATIONS)  # Probability of choosing a random move, if not specified
+epsilon = lambda version: max(0.1, 1 - version / VERSION_AMOUNT)  # Probability of choosing a random move, if not specified
 
 # Retraining network
 TRAINING_ITERATIONS = 10
@@ -29,7 +30,7 @@ VERSION_OFFSET = 50  # Reciprocal of frequency of target nn copying main nn
 SAVING_FREQUENCY = 100  # Reciprocal of frequency of saving progress
 VALIDATION_SPLIT = 0.2  # Share of data used as validation
 REG_CONST = 1e-4  # L2 Regularization Hyperparameter
-learning_rate = lambda version: max(1e-6, 1e-4 - version * (1e-4 - 1e-6) / (LOOP_ITERATIONS * 0.9))
+learning_rate = lambda version: max(1e-6, 1e-4 - version * (1e-4 - 1e-6) / (VERSION_AMOUNT * 0.9))
 
 # Evaluating network
 GAME_AMOUNT_EVALUATION = 100
