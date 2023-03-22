@@ -152,21 +152,21 @@ def log(agent_s, average_s):
 	files.write("log.txt", message, "a")
 
 
-def play_test(load, games, multiplayer, starts=0):
+def play_test(load, games, multiplayer, starts=0, verbose=True):
 	you = User()
 	agents = [Agent(load=load, name=load), you]
-	compete(agents, games, starts, multiplayer, verbose=True)
+	compete(agents, games, starts, multiplayer, verbose=verbose)
 
 
-def play_versions(loads, games, multiplayer, starts=0):
+def play_versions(loads, games, multiplayer, starts=0, verbose=False):
 	agents = [Agent(load=load, name=load) for load in loads]
-	compete(agents, games, multiplayer, starts)
+	compete(agents, games, multiplayer, starts, verbose=verbose)
 
 
 def main():
 	agent = initiate()
 
-	# play_versions([None, "trained_version"], config.GAME_AMOUNT_PLAY_VERSIONS, False)
+	# play_versions([None, "trained_model"], config.GAME_AMOUNT_PLAY_VERSIONS, False)
 	# play_test(None, config.GAME_AMOUNT_PLAY_TEST, False)
 
 	while agent.main_nn.version <= config.VERSION_AMOUNT:

@@ -34,7 +34,7 @@ class Agent():
 			self.target_nn = TargetNeuralNetwork(load)
 			self.main_nn = MainNeuralNetwork(load)
 		else:
-			self.main_nn = NeuralNetwork(load, f"{name}_nn")
+			self.main_nn = NeuralNetwork(load, name)
 
 	def get_name(self):
 		return self.name or f"Version {self.main_nn.version}"
