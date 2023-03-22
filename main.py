@@ -17,7 +17,7 @@ def initiate():
 		files.reset_file("positions.npy")
 		files.reset_file("log.txt")
 
-	agent = Agent(load=load, trainable=True, name="Clara Brundin")
+	agent = Agent(load=load, trainable=True)
 
 	return agent
 

@@ -84,11 +84,17 @@ class NeuralNetwork:
 		else:
 			self.model.load_weights(path).expect_partial()
 
-	def save_model(self, to_weights):
-		if not to_weights:
-			self.model.save(files.get_path(f"training/{self.name}"))
+	def save_model(self, to_weights, name=None):
+		if not name:
+			name = self.name
+			path = "training/"
 		else:
-			self.model.save_weights(files.get_path(f"training/{self.name}/checkpoint"))
+			path = "checkpoints/"
+
+		if not to_weights:
+			self.model.save(files.get_path(f"{path}{name}"))
+		else:
+			self.model.save_weights(files.get_path(f"{path}{name}/checkpoint"))
 
 	@staticmethod
 	def mean_squared_error(y_true, y_pred):

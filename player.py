@@ -78,3 +78,6 @@ class Agent():
 
 		if not self.main_nn.version % config.VERSION_OFFSET:
 			self.copy_network()
+
+		if not self.main_nn.version % config.MODEL_CHECKPOINT_FREQUENCY:
+			self.main_nn.save_model(self.to_weights, f"{self.name} v.{self.main_nn.version}")

@@ -28,6 +28,7 @@ EPOCHS = 1  # Amount of times batch is looped over
 GAMMA = 0.99  # Discounting factor for future rewards when calculating targets
 VERSION_OFFSET = 50  # Reciprocal of frequency of target nn copying main nn
 SAVING_FREQUENCY = 100  # Reciprocal of frequency of saving progress
+MODEL_CHECKPOINT_FREQUENCY = 1000  # Reciprocal of frequency of saving checkpoint models
 VALIDATION_SPLIT = 0.2  # Share of data used as validation
 REG_CONST = 1e-4  # L2 Regularization Hyperparameter
 learning_rate = lambda version: max(1e-6, 1e-4 - version * (1e-4 - 1e-6) / (VERSION_AMOUNT * 0.9))
