@@ -36,7 +36,9 @@ def play(env, games, training=False):
 
 		env.reset()
 
-		q_values = np.empty(np.array(env.current_players).shape + (0,)).tolist()
+		if training:
+			q_values = np.empty(np.array(env.current_players).shape + (0,)).tolist()
+
 		storage = []
 
 		while not env.game_state.done:
