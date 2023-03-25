@@ -62,7 +62,7 @@ class Agent():
 
 		# self.target_nn = copy(self.main_nn)  # target_nn becomes a main_nn object
 
-		files.edit_key("save.json", ["target_nn_version"], [self.main_nn.version])
+		files.edit_keys("save.json", ["target_nn_version"], [self.main_nn.version])
 
 	def change_version(self):
 		self.main_nn.version += 1

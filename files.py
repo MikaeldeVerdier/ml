@@ -80,7 +80,7 @@ def reset_file(file):
 		np.save(file_path, EMPTY_FILES[file])
 
 
-def edit_key(file, keys, values):
+def edit_keys(file, keys, values):
 	loaded = load_file(file)
 	for key, value in zip(keys, values):
 		loaded[key] = value

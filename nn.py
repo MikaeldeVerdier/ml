@@ -215,7 +215,7 @@ class MainNeuralNetwork(NeuralNetwork):
 		plt.close()
 
 	def save_metrics(self):
-		files.edit_key("save.json", ["main_nn_version", "metrics"], [self.version, self.metrics])
+		files.edit_keys("save.json", ["main_nn_version", "metrics"], [self.version, self.metrics])
 
 
 class TargetNeuralNetwork(NeuralNetwork):

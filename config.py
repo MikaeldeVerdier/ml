@@ -1,3 +1,5 @@
+from funcs import linear_func
+
 # Main loop
 VERSION_AMOUNT = 5001
 
@@ -19,7 +21,7 @@ GAME_AMOUNT_SELF_PLAY = 8
 BUFFER_REQUIREMENT = 3000
 BUFFER_SIZE = 30000  # Replay buffer size
 DEPTH = 1  # Amount of previous states included in nn input
-epsilon = lambda version: max(0.1, 1 - version / VERSION_AMOUNT)  # Probability of choosing a random move, if not specified
+epsilon = lambda version: linear_func(version, 1, 0.1, VERSION_AMOUNT / 2)  # Probability of choosing a random move, if not specified
 
 # Retraining network
 TRAINING_ITERATIONS = 10
@@ -31,7 +33,7 @@ SAVING_FREQUENCY = 100  # Reciprocal of frequency of saving progress
 MODEL_CHECKPOINT_FREQUENCY = 1000  # Reciprocal of frequency of saving checkpoint models
 VALIDATION_SPLIT = 0.2  # Share of data used as validation
 REG_CONST = 1e-4  # L2 Regularization Hyperparameter
-learning_rate = lambda version: max(1e-6, 1e-4 - version * (1e-4 - 1e-6) / (VERSION_AMOUNT * 0.9))
+learning_rate = lambda version: linear_func(version, 1e-5, 1e-6, VERSION_AMOUNT * 0.9)
 
 # Evaluating network
 GAME_AMOUNT_EVALUATION = 100

@@ -2,6 +2,13 @@ import numpy as np
 
 import environment
 
+def linear_func(x, start, end, duration):
+	b = start
+	m = (start - end) / duration
+
+	return (max if m < 0 else min)(end, m * x + b)
+
+
 def increment_turn(turn, increment, length):
 	return (turn + increment) % length
 
