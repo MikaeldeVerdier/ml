@@ -16,10 +16,10 @@ import files
 try:
 	matplotlib.use("Agg")
 	matplotlib.rcParams["agg.path.chunksize"] = 10000
-	from functools import cache
+	from functools import cache as cache_decorator
 	raise ImportError  # functools cache is really slow for some reason
 except ImportError:
-	def cache(f):
+	def cache_decorator(f):
 		cache = {}
 
 		def caching(*args):
@@ -58,7 +58,7 @@ class NeuralNetwork:
 		ph = self.policy_head(x)
 
 		self.model = Model(inputs=[position_input, deck_input, drawn_card_input], outputs=ph)
-		self.model.compile(loss=self.mean_squared_error, optimizer=Adam(learning_rate=config.learning_rate(0)))
+		self.model.compile(loss=self.mean_squared_error, optimizer=Adam(learning_rate=config.learning_rate.start))
 		
 		if load:
 			self.load_dir(name, from_weights=True)
@@ -149,7 +149,7 @@ class NeuralNetwork:
 
 		return x
 
-	@cache
+	@cache_decorator
 	def get_preds(self, game_state):
 		data = [np.expand_dims(dat, 0) for dat in game_state.generate_nn_pass()[0]]
 		logits = self.model.predict_on_batch(data)[0]
