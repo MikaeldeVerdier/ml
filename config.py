@@ -40,7 +40,7 @@ GAME_AMOUNT_EVALUATION = 100
 EVALUATION_FREQUENCY = 10  # Reciprocal of frequency of evaluating model
 
 # Play versions
-GAME_AMOUNT_PLAY_VERSIONS = 1000
+GAME_AMOUNT_PLAY_VERSIONS = 2
 
 # Play-test
 GAME_AMOUNT_PLAY_TEST = 4

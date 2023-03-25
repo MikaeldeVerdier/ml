@@ -12,10 +12,11 @@ NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (DECK_LENGTH * config.DEPTH,), (DECK_LE
 MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
 REPLACE_CARDS = 3
 GAME_LENGTH = np.prod(GAME_DIMENSIONS) + REPLACE_CARDS
-REWARD_FACTOR = 0.02
-REWARD_AVERAGE = True
 
-INVERSE_REWARD_TRANSFORM = lambda outcome: int(outcome / REWARD_FACTOR)
+REWARD_FACTOR = 0.02
+REWARD_TRANSFORM = lambda outcome: outcome / REWARD_FACTOR
+INVERSE_REWARD_TRANSFORM = lambda transformed_outcome: int(transformed_outcome / REWARD_FACTOR)
+REWARD_AVERAGE = True
 
 class Environment:
 	def __init__(self, players, epsilons=None, starts=0, verbose=False):

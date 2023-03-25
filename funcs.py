@@ -14,13 +14,6 @@ def linear_decorator(start, end, duration):
 	return linear_func
 
 
-def linear_func(x, start, end, duration):
-	b = start
-	m = (start - end) / duration
-
-	return (max if m < 0 else min)(end, m * x + b)
-
-
 def increment_turn(turn, increment, length):
 	return (turn + increment) % length
 
@@ -56,7 +49,7 @@ def print_move(env, probs, action):
 	if probs is not None:
 		print(f"Action values are: {[probs[-1]]}\n{np.round(probs[:-1], 8).reshape(environment.GAME_DIMENSIONS)}")
 
-	print(f"Action taken by {env.player.get_name()} is: {action}")
+	print(f"Action taken by {env.player.full_name} is: {action}")
 	print_state(env.game_state)
 
 

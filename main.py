@@ -62,7 +62,7 @@ def play(env, games, training=False):
 				player.main_nn.metrics["average_q_value"].append(float(np.mean(q_values[i])))
 
 		if not game_count % games:
-			print(f"Amount of games played is now: {game_count} ({env.player.get_name()})\n")
+			print(f"Amount of games played is now: {game_count} ({env.player.full_name})\n")
 
 		if training:
 			for t, data in enumerate(storage):
@@ -142,15 +142,15 @@ def compete(agents, games, multiplayer, starts, verbose=False):
 
 	outcomes = play(Environment(competing_agents, epsilons=epsilons, starts=starts, verbose=verbose), games)
 
-	log(agents, outcomes)
+	log(agents, outcomes, games)
 
-	print(f"The results between agents named {' and '.join([agent.get_name() for agent in agents])} were: {outcomes}")
-	best = agents[np.argmax(outcomes)].get_name()
+	print(f"The results between agents named {' and '.join([agent.full_name for agent in agents])} were: {outcomes}")
+	best = agents[np.argmax(outcomes)].full_name
 	print(f"The best agent was: {best}")
 
 
-def log(agent_s, average_s):
-	message = f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}: {' vs '.join([agent.get_name() for agent in agent_s])}:\nAverage results were {average_s}\n"
+def log(agent_s, average_s, games):
+	message = f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}: {' vs '.join([agent.full_name for agent in agent_s])} ({games} games):\nAverage results were {average_s}\n"
 	files.write("log.txt", message, "a")
 
 

@@ -12,7 +12,8 @@ class User():
 
 		self.trainable = False
 
-	def get_name(self):
+	@property
+	def full_name(self):
 		return self.name
 
 	def get_action(self, state, *_):
@@ -36,7 +37,8 @@ class Agent():
 		else:
 			self.main_nn = NeuralNetwork(load, name)
 
-	def get_name(self):
+	@property
+	def full_name(self):
 		return self.name or f"Version {self.main_nn.version}"
 
 	def get_action(self, state, epsilon):
