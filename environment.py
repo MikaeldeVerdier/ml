@@ -6,6 +6,7 @@ from funcs import increment_turn, print_state, print_move, get_card
 
 DECK_LENGTH = 52
 SUIT_AMOUNT = 4
+SUIT_LENGTH = DECK_LENGTH / SUIT_AMOUNT
 
 GAME_DIMENSIONS = (5, 5)
 NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (DECK_LENGTH * config.DEPTH,), (DECK_LENGTH * config.DEPTH,), (DECK_LENGTH * config.DEPTH,)]
@@ -14,9 +15,14 @@ REPLACE_CARDS = 3
 GAME_LENGTH = np.prod(GAME_DIMENSIONS) + REPLACE_CARDS
 
 REWARD_FACTOR = 0.02
-REWARD_TRANSFORM = lambda outcome: outcome / REWARD_FACTOR
-INVERSE_REWARD_TRANSFORM = lambda transformed_outcome: int(transformed_outcome / REWARD_FACTOR)
 REWARD_AVERAGE = True
+
+def reward_transform(outcome):
+	return outcome / REWARD_FACTOR
+
+def inverse_reward_transform(transformed_outcome):
+	return int(reward_transform(transformed_outcome))
+
 
 class Environment:
 	def __init__(self, players, epsilons=None, starts=0, verbose=False):
@@ -135,24 +141,24 @@ class GameState():
 						sum_score += min(key_count[0]) * value
 
 				färgrad = len(set(suits)) == 1
-				stege = values[-1] - values[0] == len(row) - 1 or values == list(range(1, len(row))) + [DECK_LENGTH / SUIT_AMOUNT + 1]
+				stege = values[-1] - values[0] == len(row) - 1 or values == list(range(1, len(row))) + [SUIT_LENGTH + 1]
 
 				if färgrad:
 					sum_score += 10
 				if stege:
-					if values[-2] == DECK_LENGTH / SUIT_AMOUNT:
+					if values[-2] == SUIT_LENGTH:
 						sum_score += 40 if färgrad else 20
 					else:
 						sum_score += 10
 
-		return (sum_score * REWARD_FACTOR,)
+		return (reward_transform(sum_score),)
 
 	def generate_nn_pass(self, modify=False):
 		game_state = self.history[-1]
 
 		if modify:
 			flips = [None, 0, 1, (0, 1)]
-			suit_changes = [i * DECK_LENGTH / SUIT_AMOUNT for i in range(SUIT_AMOUNT)]
+			suit_changes = [i * SUIT_LENGTH for i in range(SUIT_AMOUNT)]
 		else:
 			flips = [None]
 			suit_changes = [0]

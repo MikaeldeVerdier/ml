@@ -56,7 +56,7 @@ def play(env, games, training=False):
 					storage[-1][key] = var
 
 		for (i, player), score in zip(enumerate(env.current_players), env.game_state.scores):
-			results[env.players_turn][i].append(environment.INVERSE_REWARD_TRANSFORM(score))
+			results[env.players_turn][i].append(environment.inverse_reward_transform(score))
 
 			if player.trainable:
 				player.main_nn.metrics["average_q_value"].append(float(np.mean(q_values[i])))

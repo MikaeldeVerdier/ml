@@ -25,6 +25,7 @@ class User():
 
 		return None, action
 
+
 class Agent():
 	def __init__(self, load=False, name=None, trainable=False, to_weights=False):
 		self.name = name

@@ -18,6 +18,7 @@ try:
 	matplotlib.rcParams["agg.path.chunksize"] = 10000
 	from functools import cache as cache_decorator
 	raise ImportError  # functools cache is really slow for some reason
+
 except ImportError:
 	def cache_decorator(f):
 		cache = {}
@@ -33,6 +34,7 @@ except ImportError:
 		caching.cache_clear = cache.clear
 
 		return caching
+
 
 class NeuralNetwork:
 	def __init__(self, load, name):

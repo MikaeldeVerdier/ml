@@ -2,16 +2,16 @@ import numpy as np
 
 import environment
 
-def linear_decorator(start, end, duration):
-	def linear_func(x):
+def linear_wrapper_func(start, end, duration):
+	def linear_inner_func(x):
 		b = start
 		m = (start - end) / duration
 
 		return (max if m < 0 else min)(end, m * x + b)
-	
-	linear_func.start = start
-	
-	return linear_func
+
+	linear_inner_func.start = start
+
+	return linear_inner_func
 
 
 def increment_turn(turn, increment, length):
