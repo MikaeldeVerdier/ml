@@ -18,10 +18,10 @@ REWARD_FACTOR = 0.02
 REWARD_AVERAGE = True
 
 def reward_transform(outcome):
-	return outcome / REWARD_FACTOR
+	return outcome * REWARD_FACTOR
 
 def inverse_reward_transform(transformed_outcome):
-	return int(reward_transform(transformed_outcome))
+	return int(transformed_outcome / REWARD_FACTOR)
 
 
 class Environment:
