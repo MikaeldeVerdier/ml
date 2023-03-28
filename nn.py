@@ -16,6 +16,7 @@ import files
 try:
 	matplotlib.use("Agg")
 	matplotlib.rcParams["agg.path.chunksize"] = 10000
+
 	from functools import cache as cache_decorator
 	raise ImportError  # functools cache is really slow for some reason
 
@@ -82,6 +83,7 @@ class NeuralNetwork:
 		if not from_weights:
 			if not os.path.exists(path):
 				self.model = load_model(files.get_path(f"training/{file}"), custom_objects={"mean_squared_error": self.mean_squared_error})
+
 				return True
 		else:
 			self.model.load_weights(path).expect_partial()

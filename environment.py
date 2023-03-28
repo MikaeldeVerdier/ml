@@ -20,6 +20,7 @@ REWARD_AVERAGE = True
 def reward_transform(outcome):
 	return outcome * REWARD_FACTOR
 
+
 def inverse_reward_transform(transformed_outcome):
 	return int(transformed_outcome / REWARD_FACTOR)
 
@@ -197,4 +198,5 @@ class GameState():
 								for i, func in enumerate([np.zeros, np.ones, np.zeros]):
 									nn_pass[-1][i].append(func(NN_INPUT_DIMENSIONS[i][:-1]))
 							break
+
 		return nn_pass

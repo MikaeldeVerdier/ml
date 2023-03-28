@@ -55,6 +55,12 @@ class Agent():
 		action = np.random.choice(state.legal_moves) if np.random.rand() <= epsilon else np.argmax(pi)
 
 		return action
+	
+	def save_progress(self):
+		self.main_nn.save_model(self.to_weights)
+		self.target_nn.save_model(self.to_weights)
+		self.main_nn.save_metrics()
+		self.main_nn.plot_agent()
 
 	def copy_network(self):
 		# self.target_nn.load_dir(self.main_nn.name)
@@ -67,20 +73,18 @@ class Agent():
 
 		files.edit_keys("save.json", ["target_nn_version"], [self.main_nn.version])
 
+	def save_checkpoint(self):
+		self.main_nn.save_model(self.to_weights, f"{self.name} v.{self.main_nn.version}")
+
 	def change_version(self):
 		self.main_nn.version += 1
 		self.main_nn.model.optimizer.learning_rate.assign(config.learning_rate(self.main_nn.version))
 
 		if not self.main_nn.version % config.SAVING_FREQUENCY:
-			self.main_nn.save_model(self.to_weights)
-			self.target_nn.save_model(self.to_weights)
-			self.main_nn.save_metrics()
-			self.main_nn.plot_agent()
-
-			# files.copy_dir(f"training/{self.main_nn.name}", f"training/{self.target_nn.name}")
+			self.save_progress()
 
 		if not self.main_nn.version % config.VERSION_OFFSET:
 			self.copy_network()
 
 		if not self.main_nn.version % config.MODEL_CHECKPOINT_FREQUENCY:
-			self.main_nn.save_model(self.to_weights, f"{self.name} v.{self.main_nn.version}")
+			self.save_checkpoint()

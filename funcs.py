@@ -61,6 +61,7 @@ def format_move(move):
 	if move != np.prod(environment.GAME_DIMENSIONS):
 		dim1 = move % environment.GAME_DIMENSIONS[0] + 1
 		dim2 = environment.GAME_DIMENSIONS[1] - move // environment.GAME_DIMENSIONS[1]
+
 		return (dim1, dim2)
 	else:
 		return (0,)
