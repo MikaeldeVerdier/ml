@@ -32,7 +32,8 @@ def play(env, games, training=False):
 	og_games = games
 	game_count = 0
 	while game_count < games:
-		game_count += 1
+		if env.players_turn == 0:
+			game_count += 1
 
 		env.reset()
 
