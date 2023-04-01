@@ -24,7 +24,7 @@ def initiate():
 
 def play(env, games, training=False):
 	if training:
-		replay = np.load(files.get_path("positions.npy"), allow_pickle=True).tolist()
+		buffer = np.load(files.get_path("positions.npy"), allow_pickle=True).tolist()
 		length_generated = 0
 
 	results = np.empty(np.shape(env.players) + (0,)).tolist()
@@ -32,10 +32,10 @@ def play(env, games, training=False):
 	og_games = games
 	game_count = 0
 	while game_count < games:
+		env.reset()
+
 		if env.players_turn == 0:
 			game_count += 1
-
-		env.reset()
 
 		if env.player.trainable:
 			q_values = np.empty(np.shape(env.current_players) + (0,)).tolist()
@@ -53,7 +53,7 @@ def play(env, games, training=False):
 			env.step(probs, action)
 
 			if training:
-				for key, var in [("action", action), ("reward", env.game_state.scores[env.game_state.turn])]:
+				for key, var in [("action", action), ("reward", env.game_state.scores[env.game_state.turn]), ("next_state", env.game_state)]:
 					storage[-1][key] = var
 
 		for (i, player), score in zip(enumerate(env.current_players), env.game_state.scores):
@@ -63,28 +63,28 @@ def play(env, games, training=False):
 				player.main_nn.metrics["average_q_value"].append(float(np.mean(q_values[i])))
 
 		if not game_count % games:
-			print(f"Amount of games played is now: {game_count} ({env.player.full_name})\n")
+			print(f"Amount of games played is now: {game_count} ({env.player.full_name})")
 
 		if training:
-			for t, data in enumerate(storage):
-				data["target"] = env.player.target_nn.calculate_target(storage, t) if t != len(storage) - 1 else data["reward"]
+			for data in storage:
+				data["target"] = env.player.target_nn.calculate_target(data)
 
-				states = np.array(data["state"].generate_nn_pass(modify=True), dtype=object).tolist()
-				replay = (replay + [np.array([state, data["action"], data["target"]], dtype=object) for state in states])[-config.BUFFER_SIZE:]
-				length_generated += len(states)
+				generated_states = data["state"].generate_nn_pass(modify=True)
+				buffer = (buffer + [[state, data["action"], data["target"]] for state in generated_states])[-config.BUFFER_SIZE:]
+				length_generated += len(generated_states)
 
 			if not game_count % games:
-				files.write("positions.npy", np.array(replay, dtype=object))
+				files.write("positions.npy", np.array(buffer, dtype=object))
 
-				print(f"Positions generated is now: {length_generated}")
+				print(f"New positions generated is now: {length_generated}\n")
 
-			if (length_generated < config.BUFFER_REQUIREMENT or len(replay) != config.BUFFER_SIZE) and games == game_count:
+			if (length_generated < config.BUFFER_REQUIREMENT or len(buffer) != config.BUFFER_SIZE) and games == game_count:
 				games += og_games
 
 	for i, players in enumerate(env.players):
 		for i2, player in enumerate(players):
-			results[i][i2] = np.mean(results[i][i2], axis=-1) if environment.REWARD_AVERAGE else len(np.nonzero(results[i][i2]))
-			
+			results[i][i2] = environment.results_transform(results[i][i2])
+
 			if not training and player.trainable:
 				player.main_nn.metrics["outcomes"][f"{player.main_nn.version}"] = results[i][i2]
 
@@ -95,7 +95,7 @@ def self_play(agent):
 	print("\nSelf-play started!\n")
 	outcomes = play(Environment([[agent]]), config.GAME_AMOUNT_SELF_PLAY, training=True)
 
-	print(f"The result were: {outcomes}")
+	print(f"The results were: {outcomes}")
 
 
 def retrain_network(agent):
@@ -132,7 +132,7 @@ def evaluate_network(agent):
 
 	# log([agent], outcome)
 
-	print(f"The result were: {outcomes}")
+	print(f"\nThe results were: {outcomes}")
 
 
 def compete(agents, games, multiplayer, starts, verbose=False):
@@ -145,7 +145,7 @@ def compete(agents, games, multiplayer, starts, verbose=False):
 
 	log(agents, outcomes, games)
 
-	print(f"The results between agents named {' and '.join([agent.full_name for agent in agents])} were: {outcomes}")
+	print(f"\nThe results between agents named {' and '.join([agent.full_name for agent in agents])} were: {outcomes}")
 	best = agents[np.argmax(outcomes)].full_name
 	print(f"The best agent was: {best}")
 

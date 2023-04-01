@@ -54,7 +54,7 @@ def print_move(env, probs, action):
 
 
 def order_moves(moves):
-	return np.array(moves).reshape(environment.GAME_DIMENSIONS)[::-1].reshape(np.prod(environment.GAME_DIMENSIONS))
+	return sorted(moves, key=lambda x: (x[0], x[1]) if x else (0, 0))
 
 
 def format_move(move):
@@ -64,7 +64,7 @@ def format_move(move):
 
 		return (dim1, dim2)
 	else:
-		return (0,)
+		return 0
 
 
 def get_move(moves):

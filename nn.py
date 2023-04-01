@@ -181,6 +181,9 @@ class MainNeuralNetwork(NeuralNetwork):
 		for metric in fit.history:
 			self.metrics[metric] += list(map(float, fit.history[metric]))
 
+	def save_metrics(self):
+		files.edit_keys("save.json", ["main_nn_version", "metrics"], [self.version, self.metrics])
+
 	def plot_agent(self):
 		_, axs = plt.subplots(2, 2, figsize=(40, 15))
 
@@ -218,9 +221,6 @@ class MainNeuralNetwork(NeuralNetwork):
 		plt.savefig(files.get_path(f"agent.png"), dpi=300)
 		plt.close()
 
-	def save_metrics(self):
-		files.edit_keys("save.json", ["main_nn_version", "metrics"], [self.version, self.metrics])
-
 
 class TargetNeuralNetwork(NeuralNetwork):
 	def __init__(self, load, name="target_nn"):
@@ -230,6 +230,7 @@ class TargetNeuralNetwork(NeuralNetwork):
 		loaded = files.load_file("save.json")
 		self.version = loaded["target_nn_version"]
 
-	def calculate_target(self, data, t):
-		next_state = data[t + 1]["state"]
-		return data[t]["reward"] + config.GAMMA * np.max(self.get_preds(next_state))
+	def calculate_target(self, data):
+		v_next = np.max(self.get_preds(data["next_state"])) if not data["next_state"].done else 0
+
+		return data["reward"] + config.GAMMA * v_next

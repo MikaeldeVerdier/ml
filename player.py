@@ -17,11 +17,11 @@ class User():
 		return self.name
 
 	def get_action(self, state, *_):
-		legal_moves = order_moves(state.legal_moves)
-		moves = [format_move(move) for move in legal_moves]
+		formatted_moves = [format_move(move) for move in state.legal_moves]
+		moves = order_moves(formatted_moves)
 		user_move = get_move(moves)
 
-		action = legal_moves[moves.index(user_move)]
+		action = state.legal_moves[formatted_moves.index(user_move)]
 
 		return None, action
 

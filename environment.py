@@ -11,7 +11,6 @@ SUIT_LENGTH = DECK_LENGTH / SUIT_AMOUNT
 GAME_DIMENSIONS = (5, 5)
 NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (DECK_LENGTH * config.DEPTH,), (DECK_LENGTH * config.DEPTH,), (DECK_LENGTH * config.DEPTH,)]
 MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
-REWARD_AVERAGE = True
 
 REPLACE_CARDS = 3
 REWARD_FACTOR = 0.02
@@ -24,10 +23,16 @@ def inverse_reward_transform(transformed_outcome):
 	return int(transformed_outcome / REWARD_FACTOR)
 
 
+def results_transform(results):
+	return np.mean(results, axis=-1)
+
+	# return np.count_nonzero(results)
+
+
 class Environment:
 	def __init__(self, players, epsilons=None, starts=0, verbose=False):
 		self.players = players
-		self.epsilons = epsilons or np.full(np.array(players).shape, None)
+		self.epsilons = epsilons or np.full(np.shape(players), None)
 		self.starts = starts - 1
 		self.verbose = verbose
 
