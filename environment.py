@@ -11,11 +11,10 @@ SUIT_LENGTH = DECK_LENGTH / SUIT_AMOUNT
 GAME_DIMENSIONS = (5, 5)
 NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (DECK_LENGTH * config.DEPTH,), (DECK_LENGTH * config.DEPTH,), (DECK_LENGTH * config.DEPTH,)]
 MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
-REPLACE_CARDS = 3
-GAME_LENGTH = np.prod(GAME_DIMENSIONS) + REPLACE_CARDS
-
-REWARD_FACTOR = 0.02
 REWARD_AVERAGE = True
+
+REPLACE_CARDS = 3
+REWARD_FACTOR = 0.02
 
 def reward_transform(outcome):
 	return outcome * REWARD_FACTOR
@@ -95,9 +94,11 @@ class GameState():
 		return (board, deck, deck.pop())
 
 	def get_legal_moves(self):
-		if not len(np.where(self.s != 0)[0]): return list(range(np.prod(GAME_DIMENSIONS)))
+		if not len(np.where(self.s != 0)[0]):
+			return list(range(np.prod(GAME_DIMENSIONS)))
 
-		if self.replace_card: return list(range(MOVE_AMOUNT))
+		if self.replace_card:
+			return list(range(MOVE_AMOUNT))
 
 		legal_moves = []
 
@@ -106,14 +107,17 @@ class GameState():
 				for add_on in [-1, 0, 1]:
 					if not multiplier and not add_on:
 						continue
+
 					check_index = index + GAME_DIMENSIONS[1] * multiplier + add_on
-					if check_index not in legal_moves and 0 <= check_index < np.prod(GAME_DIMENSIONS) and not self.s[check_index] and check_index // GAME_DIMENSIONS[1] - index // GAME_DIMENSIONS[1] == multiplier:
+
+					row_diff = check_index // GAME_DIMENSIONS[1] - index // GAME_DIMENSIONS[1]
+					if check_index not in legal_moves and 0 <= check_index < np.prod(GAME_DIMENSIONS) and not self.s[check_index] and row_diff == multiplier:
 						legal_moves.append(check_index)
 
 		return legal_moves
 
 	def check_game_over(self):
-		return len(self.deck) == DECK_LENGTH - GAME_LENGTH - 1
+		return len(self.deck) == DECK_LENGTH - np.prod(GAME_DIMENSIONS) - REPLACE_CARDS - 1
 
 	def get_scores(self):
 		if not self.done:
@@ -198,5 +202,10 @@ class GameState():
 								for i, func in enumerate([np.zeros, np.ones, np.zeros]):
 									nn_pass[-1][i].append(func(NN_INPUT_DIMENSIONS[i][:-1]))
 							break
+
+							"""for i, func in enumerate([np.zeros, np.ones, np.zeros]):
+								a = func(np.shape(nn_pass[-1][i])).tolist() * (config.DEPTH - depth - 1)
+								nn_pass[-1][i] += a
+							break"""
 
 		return nn_pass

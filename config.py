@@ -21,7 +21,7 @@ GAME_AMOUNT_SELF_PLAY = 8
 BUFFER_REQUIREMENT = 3000
 BUFFER_SIZE = 30000  # Replay buffer size
 DEPTH = 1  # Amount of previous states included in nn input
-epsilon = linear_wrapper_func(1, 0.1, VERSION_AMOUNT / 2)  # Probability of choosing a random move, if not specified
+epsilon = linear_wrapper_func(1, 0.1, VERSION_AMOUNT * 0.5)  # Linearly annealing function for probability of choosing random action, if not specified (like in training)
 
 # Retraining network
 TRAINING_ITERATIONS = 10

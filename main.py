@@ -27,7 +27,7 @@ def play(env, games, training=False):
 		replay = np.load(files.get_path("positions.npy"), allow_pickle=True).tolist()
 		length_generated = 0
 
-	results = np.empty(np.array(env.players).shape + (0,)).tolist()
+	results = np.empty(np.shape(env.players) + (0,)).tolist()
 
 	og_games = games
 	game_count = 0
@@ -38,7 +38,7 @@ def play(env, games, training=False):
 		env.reset()
 
 		if env.player.trainable:
-			q_values = np.empty(np.array(env.current_players).shape + (0,)).tolist()
+			q_values = np.empty(np.shape(env.current_players) + (0,)).tolist()
 
 		storage = []
 
