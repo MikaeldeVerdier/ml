@@ -19,10 +19,9 @@ def increment_turn(turn, increment, length):
 
 
 def get_card(value):
-	suit = (value - 1) // (environment.DECK_LENGTH / environment.SUIT_AMOUNT)
-	value = ((value - 1) % (environment.DECK_LENGTH / environment.SUIT_AMOUNT)) + 2
+	suit, value = divmod(value - 1, environment.SUIT_LENGTH)
 
-	return suit, value
+	return suit, value + 2
 
 
 def format_card(card):

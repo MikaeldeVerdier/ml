@@ -198,7 +198,7 @@ class MainNeuralNetwork(NeuralNetwork):
 				# n = int(np.ceil(len(data) / 50))
 				# y = moving_average(data, n)
 
-				ax = (i // 2, i % 2)
+				ax = divmod(i, 2)
 				# color = list(matplotlib.colors.BASE_COLORS.keys())[i]
 				axs[ax].plot(x, data, color=color, label=f"{metric}\n(last point: {data[-1]:5f})")
 				axs[ax].axhline(data[-1], color="black", linestyle=":")
