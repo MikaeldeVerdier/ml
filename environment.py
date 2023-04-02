@@ -151,14 +151,14 @@ class GameState():
 
 						sum_score += min(key_count[0]) * value
 
-				färgrad = len(set(suits)) == 1
-				stege = values[-1] - values[0] == len(row) - 1 or values == list(range(1, len(row))) + [SUIT_LENGTH + 1]
+				is_flush = len(set(suits)) == 1
+				is_straight = values[-1] - values[0] == len(row) - 1 or values == list(range(1, len(row))) + [SUIT_LENGTH + 1]
 
-				if färgrad:
+				if is_flush:
 					sum_score += 10
-				if stege:
+				if is_straight:
 					if values[-2] == SUIT_LENGTH:
-						sum_score += 40 if färgrad else 20
+						sum_score += 40 if is_flush else 20
 					else:
 						sum_score += 10
 

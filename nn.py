@@ -173,7 +173,7 @@ class MainNeuralNetwork(NeuralNetwork):
 		super().__init__(load, name)
 
 		loaded = files.load_file("save.json")
-		self.version = loaded["target_nn_version"]
+		self.version = loaded["main_nn_version"]
 		self.metrics = loaded["metrics"]
 
 	def train(self, x, y):
@@ -182,9 +182,6 @@ class MainNeuralNetwork(NeuralNetwork):
 		fit = self.model.fit(x, y, batch_size=config.BATCH_SIZE[1], epochs=config.EPOCHS, verbose=1, validation_split=config.VALIDATION_SPLIT)
 		for metric in fit.history:
 			self.metrics[metric] += list(map(float, fit.history[metric]))
-
-	def save_metrics(self):
-		files.edit_keys("save.json", ["main_nn_version", "metrics"], [self.version, self.metrics])
 
 	def plot_agent(self):
 		_, axs = plt.subplots(2, 2, figsize=(40, 15))

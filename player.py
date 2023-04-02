@@ -56,10 +56,13 @@ class Agent():
 
 		return action
 	
+	def save_metrics(self):
+		files.edit_keys("save.json", ["main_nn_version", "target_nn_version", "metrics"], [self.main_nn.version, self.target_nn.version, self.main_nn.metrics])
+	
 	def save_progress(self):
 		self.main_nn.save_model(self.to_weights)
 		self.target_nn.save_model(self.to_weights)
-		self.main_nn.save_metrics()
+		self.save_metrics()
 		self.main_nn.plot_agent()
 
 	def copy_network(self):
@@ -70,8 +73,6 @@ class Agent():
 		self.target_nn.version = self.main_nn.version
 
 		# self.target_nn = copy(self.main_nn)  # target_nn becomes a main_nn object
-
-		files.edit_keys("save.json", ["target_nn_version"], [self.main_nn.version])
 
 	def save_checkpoint(self):
 		self.main_nn.save_model(self.to_weights, f"{self.name} v.{self.main_nn.version}")
