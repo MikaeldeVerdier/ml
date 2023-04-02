@@ -9,7 +9,7 @@ SUIT_AMOUNT = 4
 SUIT_LENGTH = DECK_LENGTH / SUIT_AMOUNT
 
 GAME_DIMENSIONS = (5, 5)
-NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (DECK_LENGTH * config.DEPTH,), (DECK_LENGTH * config.DEPTH,), (DECK_LENGTH * config.DEPTH,)]
+NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (config.DEPTH, DECK_LENGTH), (config.DEPTH, DECK_LENGTH), (config.DEPTH, DECK_LENGTH)]
 MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
 
 REPLACE_CARDS = 3
@@ -42,14 +42,15 @@ class Environment:
 
 	def step(self, probs, action):
 		s, deck, drawn_card = self.game_state.take_action(action)
-		self.game_state = GameState(increment_turn(self.game_state.turn, 1, len(self.current_players)), self.game_state.history, s, deck, drawn_card)
+		new_turn = increment_turn(self.game_state.turn, 1, len(self.current_players))
+		self.game_state = GameState(new_turn, self.game_state.history, s, deck, drawn_card)
 
 		if self.verbose:
 			print_move(self, probs, action)
 
-		self.update_player()
+		self.update_turn()
 
-	def update_player(self):
+	def update_turn(self):
 		self.player = self.current_players[self.game_state.turn]
 		self.epsilon = self.epsilons[self.players_turn][self.game_state.turn]
 
@@ -67,7 +68,7 @@ class Environment:
 
 		self.game_state = GameState(self.starts, (None,) * config.DEPTH, np.zeros(np.prod(GAME_DIMENSIONS)), deck, drawn_card)
 
-		self.update_player()
+		self.update_turn()
 
 		if self.verbose:
 			print_state(self.game_state)
@@ -188,29 +189,31 @@ class GameState():
 							if card != 0:
 								var[i] = int((var[i] + suit_change - 1) % DECK_LENGTH + 1)
 
-					state = np.moveaxis([np.reshape((s == i).astype(int), NN_INPUT_DIMENSIONS[0][:-1]) for i in range(1, DECK_LENGTH + 1)], 0, -1).tolist()
-					nn_pass[-1][0] += state
+					state = np.moveaxis([np.reshape((s == i).astype(int), NN_INPUT_DIMENSIONS[0][:-2]) for i in range(1, DECK_LENGTH + 1)], 0, -1).tolist()
+					nn_pass[-1][0].append(state)
 
 					deck = np.zeros(DECK_LENGTH)
 					deck[np.array(de, dtype=np.int32) - 1] = 1
-					nn_pass[-1][1] += deck.tolist()
+					nn_pass[-1][1].append(deck.tolist())
 
 					drawn_card = np.zeros(DECK_LENGTH)
 					drawn_card[dr[0] - 1] = (dr[0] != 0)
-					nn_pass[-1][2] += drawn_card.tolist()
+					nn_pass[-1][2].append(drawn_card.tolist())
 
 					if depth != config.DEPTH - 1:
 						if self.history[-depth - 2]:
 							game_state = self.history[-depth - 2]
 						else:
-							for _ in range(config.DEPTH - depth - 1):
-								for i, func in enumerate([np.zeros, np.ones, np.zeros]):
-									nn_pass[-1][i].append(func(NN_INPUT_DIMENSIONS[i][:-1]))
+							# for _ in range(config.DEPTH - depth - 1):
+							# 	for i, func in enumerate([np.zeros, np.ones, np.zeros]):
+							# 		nn_pass[-1][i].append(func(NN_INPUT_DIMENSIONS[i][:-1]))
+							# break
+							for i, func in enumerate([np.zeros, np.ones, np.zeros]):
+								empty_dim = [func(np.shape(nn_pass[-1][i][-1])).tolist()]
+								nn_pass[-1][i] += empty_dim * (config.DEPTH - depth - 1)
+							
 							break
 
-							"""for i, func in enumerate([np.zeros, np.ones, np.zeros]):
-								a = func(np.shape(nn_pass[-1][i])).tolist() * (config.DEPTH - depth - 1)
-								nn_pass[-1][i] += a
-							break"""
+				nn_pass[-1] = [np.moveaxis(dim, 0, -2).tolist() for dim in nn_pass[-1]]
 
 		return nn_pass
