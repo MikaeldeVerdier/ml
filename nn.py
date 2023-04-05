@@ -4,7 +4,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import os
 from tensorflow.keras import regularizers
-from tensorflow.keras.models import Model, load_model
+from tensorflow.keras.models import Model, load_model, clone_model
 from tensorflow.keras.layers import Input, Conv3D, Flatten, Dense, BatchNormalization, ReLU, Concatenate
 from tensorflow.keras.optimizers import Adam
 from keras.utils.vis_utils import plot_model
@@ -12,30 +12,17 @@ from keras.utils.vis_utils import plot_model
 import environment
 import config
 import files
+from funcs import cache_dec
 
 try:
 	matplotlib.use("Agg")
 	matplotlib.rcParams["agg.path.chunksize"] = 10000
 
-	from functools import cache as cache_decorator
+	from functools import cache as cache_dec
 	raise ImportError  # functools cache is really slow for some reason
 
 except ImportError:
-	def cache_decorator(f):
-		cache = {}
-
-		def caching(*args):
-			cache_ref = hash(args)
-			if cache_ref in cache:
-				return cache[cache_ref]
-			v = f(*args)
-			cache[cache_ref] = v
-			return v
-
-		caching.cache_clear = cache.clear
-
-		return caching
-
+	from funcs import cache_dec
 
 class NeuralNetwork:
 	def __init__(self, load, name):
@@ -155,7 +142,7 @@ class NeuralNetwork:
 
 		return x
 
-	@cache_decorator
+	@cache_dec
 	def get_preds(self, game_state):
 		data = [np.expand_dims(dat, 0) for dat in game_state.generate_nn_pass()[0]]
 		logits = self.model.predict_on_batch(data)[0]
@@ -233,3 +220,6 @@ class TargetNeuralNetwork(NeuralNetwork):
 		v_next = np.max(self.get_preds(data["next_state"])) if not data["next_state"].done else 0
 
 		return data["reward"] + config.GAMMA * v_next
+	
+	def copy_model(self, model):
+		self.model = clone_model(model)

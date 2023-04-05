@@ -2,7 +2,7 @@ import numpy as np
 import random
 
 import config
-from funcs import increment_turn, print_state, print_move, get_card
+from funcs import increment_turn, print_state, print_move, calculate_legal_moves, score_row, format_state, cache_dec
 
 DECK_LENGTH = 52
 SUIT_AMOUNT = 4
@@ -106,19 +106,7 @@ class GameState():
 		if self.replace_card:
 			return list(range(MOVE_AMOUNT))
 
-		legal_moves = []
-
-		for index in np.where(self.s != 0)[0]:
-			for multiplier in [-1, 0, 1]:
-				for add_on in [-1, 0, 1]:
-					if not multiplier and not add_on:
-						continue
-
-					check_index = index + GAME_DIMENSIONS[1] * multiplier + add_on
-
-					row_diff = check_index // GAME_DIMENSIONS[1] - index // GAME_DIMENSIONS[1]
-					if check_index not in legal_moves and 0 <= check_index < np.prod(GAME_DIMENSIONS) and not self.s[check_index] and row_diff == multiplier:
-						legal_moves.append(check_index)
+		legal_moves = calculate_legal_moves(tuple(self.s))
 
 		return legal_moves
 
@@ -134,33 +122,7 @@ class GameState():
 		board = self.s.reshape(GAME_DIMENSIONS)
 		for rowcol in [board, board.T]:
 			for row in rowcol:
-				suits, values = tuple(zip(*[get_card(card) for card in row]))
-				values = sorted(values)
-
-				histo_dict = {(4,): 20, (3, 2): 15, (3,): 8, (2,): 2}
-
-				histo = tuple(sorted([values.count(value) for value in set(values)]))
-
-				maxes = {num: comb.count(num) for comb in histo_dict.keys() for num in comb}
-				for key, value in list(histo_dict.items()):
-					key_count = list(zip(*[(histo.count(val) // key.count(val), maxes[val]) for val in key]))
-
-					if min(key_count[0]) and min(key_count[1]) > 0:
-						for val in set(key):
-							maxes[val] -= min(key_count[0])
-
-						sum_score += min(key_count[0]) * value
-
-				is_flush = len(set(suits)) == 1
-				is_straight = values[-1] - values[0] == len(row) - 1 or values == list(range(1, len(row))) + [SUIT_LENGTH + 1]
-
-				if is_flush:
-					sum_score += 10
-				if is_straight:
-					if values[-2] == SUIT_LENGTH:
-						sum_score += 40 if is_flush else 20
-					else:
-						sum_score += 10
+				sum_score += score_row(tuple(row))
 
 		return (reward_transform(sum_score),)
 
@@ -189,7 +151,7 @@ class GameState():
 							if card != 0:
 								var[i] = int((var[i] + suit_change - 1) % DECK_LENGTH + 1)
 
-					state = np.moveaxis([np.reshape((s == i).astype(int), NN_INPUT_DIMENSIONS[0][:-2]) for i in range(1, DECK_LENGTH + 1)], 0, -1).tolist()
+					state = format_state(tuple(s))
 					nn_pass[-1][0].append(state)
 
 					deck = np.zeros(DECK_LENGTH)
@@ -204,13 +166,9 @@ class GameState():
 						if self.history[-depth - 2]:
 							game_state = self.history[-depth - 2]
 						else:
-							# for _ in range(config.DEPTH - depth - 1):
-							# 	for i, func in enumerate([np.zeros, np.ones, np.zeros]):
-							# 		nn_pass[-1][i].append(func(NN_INPUT_DIMENSIONS[i][:-1]))
-							# break
 							for i, func in enumerate([np.zeros, np.ones, np.zeros]):
-								empty_dim = [func(np.shape(nn_pass[-1][i][-1])).tolist()]
-								nn_pass[-1][i] += empty_dim * (config.DEPTH - depth - 1)
+								empty_dim = cache_dec(func)(np.shape(nn_pass[-1][i][-1])).tolist()
+								nn_pass[-1][i] += [empty_dim] * (config.DEPTH - depth - 1)
 							
 							break
 

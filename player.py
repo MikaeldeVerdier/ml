@@ -1,5 +1,4 @@
 import numpy as np
-from copy import copy
 
 import config
 import files
@@ -69,8 +68,7 @@ class Agent():
 		# self.target_nn.load_dir(self.main_nn.name)
 		# self.target_nn.save_model(self.to_weights)
 
-		self.target_nn.model = copy(self.main_nn.model)
-		self.target_nn.version = self.main_nn.version
+		self.target_nn.copy_model(self.main_nn.model)
 
 		# self.target_nn = copy(self.main_nn)  # target_nn becomes a main_nn object
 

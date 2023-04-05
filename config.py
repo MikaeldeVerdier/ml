@@ -1,7 +1,7 @@
 from funcs import linear_wrapper_func
 
 # Main loop
-VERSION_AMOUNT = 5001
+VERSION_AMOUNT = 10000
 
 # Network architecture
 CONVOLUTIONAL_LAYERS_POSITION = (64, 128, 128)
@@ -33,7 +33,7 @@ SAVING_FREQUENCY = 100  # Reciprocal of frequency of saving progress
 MODEL_CHECKPOINT_FREQUENCY = 1000  # Reciprocal of frequency of saving checkpoint models
 VALIDATION_SPLIT = 0.2  # Share of data used as validation
 REG_CONST = 1e-4  # L2 Regularization Hyperparameter
-learning_rate = linear_wrapper_func(1e-5, 1e-6, VERSION_AMOUNT * 0.9)
+learning_rate = linear_wrapper_func(1e-4, 1e-6, VERSION_AMOUNT * 0.9, use_cache=False)
 
 # Evaluating network
 GAME_AMOUNT_EVALUATION = 100
