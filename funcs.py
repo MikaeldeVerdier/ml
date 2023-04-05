@@ -21,7 +21,7 @@ def cache_dec(f):
 def linear_wrapper_func(start, end, duration, use_cache=True):
 	def linear_inner_func(x):
 		b = start
-		m = (start - end) / duration
+		m = (end - start) / duration
 
 		return (max if m < 0 else min)(end, m * x + b)
 	
