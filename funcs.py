@@ -60,6 +60,7 @@ def calculate_legal_moves(board):
 @cache_dec
 def score_row(row):
 	sum_score = 0
+
 	suits, values = tuple(zip(*[get_card(card) for card in row]))
 	values = sorted(values)
 

@@ -15,12 +15,12 @@ MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
 REPLACE_CARDS = 3
 REWARD_FACTOR = 0.02
 
-def reward_transform(outcome):
-	return outcome * REWARD_FACTOR
+def reward_transform(reward):
+	return reward * REWARD_FACTOR
 
 
-def inverse_reward_transform(transformed_outcome):
-	return int(transformed_outcome / REWARD_FACTOR)
+def inverse_reward_transform(transformed_reward):
+	return int(transformed_reward / REWARD_FACTOR)
 
 
 def results_transform(results):
