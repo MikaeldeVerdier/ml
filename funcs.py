@@ -2,23 +2,32 @@ import numpy as np
 
 import environment
 
-def cache_dec(f):
-	cache = {}
+def cache(max_length=5000):
+	def cache_dec(f):
+		cache = {}
 
-	def caching(*args):
-		cache_ref = hash(args)
-		if cache_ref in cache:
-			return cache[cache_ref]
-		v = f(*args)
-		cache[cache_ref] = v
-		return v
+		def caching(*args):
+			cache_ref = hash(args)
 
-	caching.cache_clear = cache.clear
+			if cache_ref in cache:
+				return cache[cache_ref]
 
-	return caching
+			v = f(*args)
+			cache[cache_ref] = v
+
+			if len(cache) >= max_length:
+				cache.popitem()
+
+			return v
+
+		caching.cache_clear = cache.clear
+
+		return caching
+
+	return cache_dec
 
 
-def linear_wrapper_func(start, end, duration, use_cache=True):
+def linear_wrapper_func(start, end, duration, max_length=1, use_cache=True):
 	def linear_inner_func(x):
 		b = start
 		m = (end - start) / duration
@@ -26,19 +35,19 @@ def linear_wrapper_func(start, end, duration, use_cache=True):
 		return (max if m < 0 else min)(end, m * x + b)
 	
 	if use_cache:
-		linear_inner_func = cache_dec(linear_inner_func)
+		linear_inner_func = cache(max_length)(linear_inner_func)
 
 	linear_inner_func.start = start
 
 	return linear_inner_func
 
 
-@cache_dec
+@cache()
 def increment_turn(turn, increment, length):
 	return (turn + increment) % length
 
 
-@cache_dec
+@cache(10000)
 def calculate_legal_moves(board):
 	legal_moves = []
 
@@ -57,7 +66,7 @@ def calculate_legal_moves(board):
 	return legal_moves
 
 
-@cache_dec
+@cache(10000)
 def score_row(row):
 	sum_score = 0
 
@@ -94,7 +103,7 @@ def score_row(row):
 	return sum_score
 
 
-@cache_dec
+@cache(10000)
 def format_state(board):
 	shape = (environment.NN_INPUT_DIMENSIONS[0][-1],) +  environment.NN_INPUT_DIMENSIONS[0][:-2]
 	binary_map = np.reshape([(np.array(board) == i).astype(int) for i in range(1, environment.DECK_LENGTH + 1)], shape)
@@ -102,14 +111,14 @@ def format_state(board):
 	return np.moveaxis(binary_map, 0, -1).tolist()
 
 
-@cache_dec
+@cache()
 def get_card(value):
 	suit, value = divmod(value - 1, environment.SUIT_LENGTH)
 
 	return suit, value + 2
 
 
-@cache_dec
+@cache()
 def format_card(card):
 	suit_dict = {0: "sp", 1: "hj", 2: "ru", 3: "kl"}
 	suit, value = get_card(card)
@@ -138,12 +147,12 @@ def print_move(env, probs, action):
 	print_state(env.game_state)
 
 
-@cache_dec
+@cache()
 def order_moves(moves):
 	return sorted(moves, key=lambda x: (x[0], x[1]) if x else (0, 0))
 
 
-@cache_dec
+@cache()
 def format_move(move):
 	if move != np.prod(environment.GAME_DIMENSIONS):
 		dim1 = move % environment.GAME_DIMENSIONS[0] + 1
@@ -166,7 +175,7 @@ def get_move(moves):
 	return user_move
 
 
-@cache_dec
+@cache()
 def string_to_tuple(s):
 		a = s.replace(" ", "").replace("(", "").replace(")", "")
 		b = a.split(',')

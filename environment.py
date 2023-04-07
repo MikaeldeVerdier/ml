@@ -2,7 +2,7 @@ import numpy as np
 import random
 
 import config
-from funcs import increment_turn, print_state, print_move, calculate_legal_moves, score_row, format_state, cache_dec
+from funcs import increment_turn, print_state, print_move, calculate_legal_moves, score_row, format_state, cache
 
 DECK_LENGTH = 52
 SUIT_AMOUNT = 4
@@ -167,7 +167,7 @@ class GameState():
 							game_state = self.history[-depth - 2]
 						else:
 							for i, func in enumerate([np.zeros, np.ones, np.zeros]):
-								empty_dim = cache_dec(func)(np.shape(nn_pass[-1][i][-1])).tolist()
+								empty_dim = cache(1)(func)(np.shape(nn_pass[-1][i][-1])).tolist()
 								nn_pass[-1][i] += [empty_dim] * (config.DEPTH - depth - 1)
 							
 							break

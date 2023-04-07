@@ -12,17 +12,11 @@ from keras.utils.vis_utils import plot_model
 import environment
 import config
 import files
-from funcs import cache_dec
+from funcs import cache
 
-try:
-	matplotlib.use("Agg")
-	matplotlib.rcParams["agg.path.chunksize"] = 10000
+matplotlib.use("Agg")
+matplotlib.rcParams["agg.path.chunksize"] = 10000
 
-	from functools import cache as cache_dec
-	raise ImportError  # functools cache is really slow for some reason
-
-except ImportError:
-	from funcs import cache_dec
 
 class NeuralNetwork:
 	def __init__(self, load, name):
@@ -142,7 +136,7 @@ class NeuralNetwork:
 
 		return x
 
-	@cache_dec
+	@cache(100000)
 	def get_preds(self, game_state):
 		data = [np.expand_dims(dat, 0) for dat in game_state.generate_nn_pass()[0]]
 		logits = self.model.predict_on_batch(data)[0]
