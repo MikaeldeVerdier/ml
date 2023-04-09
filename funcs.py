@@ -51,7 +51,7 @@ def increment_turn(turn, increment, length):
 def calculate_legal_moves(board):
 	legal_moves = []
 
-	for index in np.where(np.array(board) != 0)[0]:
+	for index in np.where(np.array(board) != -1)[0]:
 		for multiplier in [-1, 0, 1]:
 			for add_on in [-1, 0, 1]:
 				if not multiplier and not add_on:
@@ -60,7 +60,7 @@ def calculate_legal_moves(board):
 				check_index = index + environment.GAME_DIMENSIONS[1] * multiplier + add_on
 
 				row_diff = check_index // environment.GAME_DIMENSIONS[1] - index // environment.GAME_DIMENSIONS[1]
-				if check_index not in legal_moves and 0 <= check_index < np.prod(environment.GAME_DIMENSIONS) and not board[check_index] and row_diff == multiplier:
+				if check_index not in legal_moves and 0 <= check_index < np.prod(environment.GAME_DIMENSIONS) and board[check_index] == -1 and row_diff == multiplier:
 					legal_moves.append(check_index)
 
 	return legal_moves
@@ -128,7 +128,7 @@ def format_card(card):
 
 def print_state(state):
 	board = state.s.astype("<U4")
-	board = np.array([format_card(float(cell)) if cell != "0.0" else "---" for cell in board])
+	board = np.array([format_card(float(cell)) if cell != "-1" else "---" for cell in board])
 
 	print(f"Position is:\n{board.reshape(environment.GAME_DIMENSIONS)}")
 

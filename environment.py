@@ -66,7 +66,9 @@ class Environment:
 		deck = self.deck.copy()
 		drawn_card = deck.pop()
 
-		self.game_state = GameState(self.starts, (None,) * config.DEPTH, np.zeros(np.prod(GAME_DIMENSIONS)), deck, drawn_card)
+		empty_history = (None,) * config.DEPTH
+		empty_state = np.full(np.prod(GAME_DIMENSIONS), -1)
+		self.game_state = GameState(self.starts, empty_history, empty_state, deck, drawn_card)
 
 		self.update_turn()
 
@@ -82,7 +84,10 @@ class GameState():
 		self.deck = deck
 		self.drawn_card = drawn_card
 
-		self.replace_card = not len(np.where(self.s == 0)[0])
+		amount_empty = len(np.where(self.s == -1)[0])
+		self.first_card = amount_empty == len(s)
+		self.replace_card = not amount_empty
+
 		self.legal_moves = self.get_legal_moves()
 		self.done = self.check_game_over()
 		self.scores = self.get_scores()
@@ -100,7 +105,7 @@ class GameState():
 		return (board, deck, deck.pop())
 
 	def get_legal_moves(self):
-		if not len(np.where(self.s != 0)[0]):
+		if self.first_card:
 			return list(range(np.prod(GAME_DIMENSIONS)))
 
 		if self.replace_card:
@@ -148,7 +153,7 @@ class GameState():
 					dr = [game_state.drawn_card]
 					for var in [s, de, dr]:
 						for i, card in enumerate(var):
-							if card != 0:
+							if card != -1:
 								var[i] = int((var[i] + suit_change - 1) % DECK_LENGTH + 1)
 
 					state = format_state(tuple(s))
