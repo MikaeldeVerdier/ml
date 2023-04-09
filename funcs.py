@@ -139,7 +139,7 @@ def print_state(state):
 		print(f"Game over! The outcomes were: {state.scores}\n")
 
 
-def print_move(env, probs, action):
+def print_action(env, probs, action):
 	if probs is not None:
 		print(f"Action values are: {[probs[-1]]}\n{np.round(probs[:-1], 8).reshape(environment.GAME_DIMENSIONS)}")
 

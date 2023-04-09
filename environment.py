@@ -2,7 +2,7 @@ import numpy as np
 import random
 
 import config
-from funcs import increment_turn, print_state, print_move, calculate_legal_moves, score_row, format_state, cache
+from funcs import increment_turn, print_state, print_action, calculate_legal_moves, score_row, format_state, cache
 
 DECK_LENGTH = 52
 SUIT_AMOUNT = 4
@@ -46,7 +46,7 @@ class Environment:
 		self.game_state = GameState(new_turn, self.game_state.history, s, deck, drawn_card)
 
 		if self.verbose:
-			print_move(self, probs, action)
+			print_action(self, probs, action)
 
 		self.update_turn()
 

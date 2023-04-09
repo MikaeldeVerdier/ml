@@ -93,7 +93,7 @@ class NeuralNetwork:
 		loss = tf.reduce_mean(tf.math.square(targets - preds))
 
 		return loss
-	
+
 	@staticmethod
 	def convolutional_layer_3D(x, filters, kernel_size):
 		x = Conv3D(filters=filters, kernel_size=kernel_size, padding="same", data_format="channels_last", use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
@@ -179,7 +179,6 @@ class MainNeuralNetwork(NeuralNetwork):
 				# y = moving_average(data, n)
 
 				ax = divmod(i, 2)
-				# color = list(matplotlib.colors.BASE_COLORS.keys())[i]
 				axs[ax].plot(x, data, color=color, label=f"{metric}\n(last point: {data[-1]:5f})")
 				axs[ax].axhline(data[-1], color="black", linestyle=":")
 
@@ -214,6 +213,6 @@ class TargetNeuralNetwork(NeuralNetwork):
 		v_next = np.max(self.get_preds(data["next_state"])) if not data["next_state"].done else 0
 
 		return data["reward"] + config.GAMMA * v_next
-	
+
 	def copy_model(self, model):
 		self.model = clone_model(model)

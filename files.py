@@ -1,7 +1,7 @@
 import numpy as np
 import os
 import json
-from shutil import copyfile, rmtree, copytree
+from shutil import copyfile, copytree, rmtree
 
 import config
 
@@ -25,7 +25,6 @@ EMPTY_FILES = {
 	"positions.npy": EMPTY_POSITIONS,
 	"log.txt": EMPTY_LOG
 }
-
 
 def setup_files():
 	save_folder = (config.SAVE_PATH, os.mkdir)
