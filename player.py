@@ -79,11 +79,11 @@ class Agent():
 		self.main_nn.version += 1
 		self.main_nn.model.optimizer.learning_rate.assign(config.learning_rate(self.main_nn.version))
 
-		if not self.main_nn.version % config.SAVING_FREQUENCY:
-			self.save_progress()
-
 		if not self.main_nn.version % config.VERSION_OFFSET:
 			self.copy_network()
+
+		if not self.main_nn.version % config.SAVING_FREQUENCY:
+			self.save_progress()
 
 		if not self.main_nn.version % config.MODEL_CHECKPOINT_FREQUENCY:
 			self.save_checkpoint()
