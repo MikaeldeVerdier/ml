@@ -73,19 +73,19 @@ def score_row(row):
 	suits, values = tuple(zip(*[get_card(card) for card in row]))
 	values = sorted(values)
 
-	histo_dict = {(4,): 20, (3, 2): 15, (3,): 8, (2,): 2}
+	histo_scoring_dict = {(4,): 20, (3, 2): 15, (3,): 8, (2,): 2}
 
 	histo = tuple(sorted([values.count(value) for value in set(values)]))
 
-	maxes = {num: comb.count(num) for comb in histo_dict.keys() for num in comb}
-	for key, value in list(histo_dict.items()):
-		key_count = list(zip(*[(histo.count(val) // key.count(val), maxes[val]) for val in key]))
+	max_num_occs = {num: comb.count(num) for comb in histo_scoring_dict.keys() for num in comb}
+	for comb, score in list(histo_scoring_dict.items()):
+		comb_count = list(zip(*[(histo.count(num) // comb.count(num), max_num_occs[num]) for num in comb]))
 
-		if min(key_count[0]) and min(key_count[1]) > 0:
-			for val in set(key):
-				maxes[val] -= min(key_count[0])
+		if min(comb_count[0]) and min(comb_count[1]) > 0:
+			for num in set(comb):
+				max_num_occs[num] -= min(comb_count[0])
 
-			sum_score += min(key_count[0]) * value
+			sum_score += min(comb_count[0]) * score
 
 	is_flush = len(set(suits)) == 1
 
@@ -176,12 +176,11 @@ def get_move(moves):
 
 
 @cache()
-def string_to_tuple(s):
-		a = s.replace(" ", "").replace("(", "").replace(")", "")
-		b = a.split(',')
-		res = tuple(int(el) for el in b)
+def string_to_tuple(string):
+	split_string = string.replace(" ", "").replace("(", "").replace(")", "").split(",")
+	result = tuple(int(letter) for letter in split_string)
 
-		return res
+	return result
 
 
 """def moving_average(data, n):

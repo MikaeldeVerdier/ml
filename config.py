@@ -18,7 +18,7 @@ USE_BIAS = True
 
 # Self-play
 GAME_AMOUNT_SELF_PLAY = 8
-BUFFER_REQUIREMENT = 3000
+BUFFER_REQUIREMENT = 3000  # Minimum requirement of new positions generated during training
 BUFFER_SIZE = 30000  # Replay buffer size
 DEPTH = 1  # Amount of previous states included in nn input
 epsilon = linear_wrapper_func(1, 0.1, VERSION_AMOUNT * 0.8)  # Linearly annealing function for probability of choosing random action, if not specified (like in training)
