@@ -38,7 +38,7 @@ class Environment:
 
 		self.players_turn = -1
 
-		self.deck = list(range(1, DECK_LENGTH + 1))
+		self.deck = list(range(DECK_LENGTH))
 
 	def step(self, probs, action):
 		s, deck, drawn_card = self.game_state.take_action(action)
@@ -136,35 +136,35 @@ class GameState():
 
 		if modify:
 			flips = [None, 0, 1, (0, 1)]
+			flipped_states = [np.flip(game_state.s.reshape(GAME_DIMENSIONS), flip).flatten() for flip in flips]
 			suit_changes = [i * SUIT_LENGTH for i in range(SUIT_AMOUNT)]
 		else:
-			flips = [None]
+			flipped_states = [game_state.s]
 			suit_changes = [0]
 
 		nn_pass = []
-		for flip in flips:
-			s = game_state.s if flip is None else np.flip(game_state.s.reshape(GAME_DIMENSIONS), flip).flatten()
-
+		for state_s in flipped_states:
 			for suit_change in suit_changes:
 				nn_pass.append([[] for _ in range(len(NN_INPUT_DIMENSIONS))])
 
 				for depth in range(config.DEPTH):
-					de = game_state.deck
-					dr = [game_state.drawn_card]
-					for var in [s, de, dr]:
+					state_deck = game_state.deck
+					state_drawn_card = [game_state.drawn_card]
+
+					for var in [state_s, state_deck, state_drawn_card]:
 						for i, card in enumerate(var):
 							if card != -1:
-								var[i] = int((var[i] + suit_change - 1) % DECK_LENGTH + 1)
+								var[i] = int((var[i] + suit_change) % DECK_LENGTH)
 
-					state = format_state(tuple(s))
+					state = format_state(tuple(state_s))
 					nn_pass[-1][0].append(state)
 
 					deck = np.zeros(DECK_LENGTH)
-					deck[np.array(de, dtype=np.int32) - 1] = 1
+					deck[np.array(state_deck, dtype=np.int32) - 1] = 1
 					nn_pass[-1][1].append(deck.tolist())
 
 					drawn_card = np.zeros(DECK_LENGTH)
-					drawn_card[dr[0] - 1] = (dr[0] != 0)
+					drawn_card[state_drawn_card[0] - 1] = (state_drawn_card[0] != 0)
 					nn_pass[-1][2].append(drawn_card.tolist())
 
 					if depth != config.DEPTH - 1:
@@ -172,11 +172,11 @@ class GameState():
 							game_state = self.history[-depth - 2]
 						else:
 							for i, func in enumerate([np.zeros, np.ones, np.zeros]):
-								empty_dim = cache(1)(func)(np.shape(nn_pass[-1][i][-1])).tolist()
+								empty_dim = func(np.shape(nn_pass[-1][i][-1])).tolist()
 								nn_pass[-1][i] += [empty_dim] * (config.DEPTH - depth - 1)
-							
+
 							break
 
-				nn_pass[-1] = [np.moveaxis(dim, 0, -2).tolist() for dim in nn_pass[-1]]
+				nn_pass[-1][0] = np.moveaxis(nn_pass[-1][0], 0, -2).tolist()
 
 		return nn_pass

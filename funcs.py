@@ -29,10 +29,10 @@ def cache(max_length=5000):
 
 def linear_wrapper_func(start, end, duration, max_length=1, use_cache=True):
 	def linear_inner_func(x):
-		b = start
-		m = (end - start) / duration
+		intercept = start
+		slope = (end - start) / duration
 
-		return (max if m < 0 else min)(end, m * x + b)
+		return (max if slope < 0 else min)(end, slope * x + intercept)
 	
 	if use_cache:
 		linear_inner_func = cache(max_length)(linear_inner_func)
@@ -113,14 +113,14 @@ def format_state(board):
 
 @cache()
 def get_card(value):
-	suit, value = divmod(value - 1, environment.SUIT_LENGTH)
+	suit, value = divmod(value, environment.SUIT_LENGTH)
 
 	return suit, value + 2
 
 
 @cache()
 def format_card(card):
-	suit_dict = {0: "sp", 1: "hj", 2: "ru", 3: "kl"}
+	suit_dict = {0: "kl", 1: "ru", 2: "hj", 3: "sp"}
 	suit, value = get_card(card)
 
 	return f"{suit_dict[suit]}{int(value)}"
@@ -186,12 +186,3 @@ def string_to_tuple(s):
 
 """def moving_average(data, n):
 	return [np.mean(data[i:i + n]) for i in np.arange(0, len(data) - n + 1)]"""
-
-
-"""def inverse_format_card(card):
-	suit_dict = {"sp": 0, "hj": 1, "ru": 2, "kl": 3}
-
-	card_num = int(card[2:]) - 1
-	card_num += environment.DECK_LENGTH / environment.SUIT_AMOUNT * suit_dict[card[:2]]
-
-	return card_num"""
