@@ -129,9 +129,9 @@ def format_card(card):
 
 def print_state(state):
 	board = state.s.astype("<U4")
-	board = np.array([format_card(float(cell)) if cell != "-1" else "---" for cell in board])
+	board = [format_card(float(cell)) if cell != "-1" else "---" for cell in board]
 
-	print(f"Position is:\n{board.reshape(environment.GAME_DIMENSIONS)}")
+	print(f"Position is:\n{np.reshape(board, environment.GAME_DIMENSIONS)}")
 
 	if not state.done:
 		print(f"Drawn card is: {format_card(state.drawn_card)}")

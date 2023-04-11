@@ -32,7 +32,7 @@ def results_transform(results):
 class Environment:
 	def __init__(self, players, epsilons=None, starts=0, verbose=False):
 		self.players = players
-		self.epsilons = epsilons or np.full(np.shape(players), None)
+		self.epsilons = epsilons or np.full_like(players, None)
 		self.starts = starts - 1
 		self.verbose = verbose
 

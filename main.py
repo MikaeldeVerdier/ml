@@ -153,11 +153,10 @@ def compete(agents, epsilons, games, starts, verbose=False):
 
 def load_opponents(loads):
 	for load in loads.flatten():
-		is_random = load is None
-		uses_nn = not is_random
+		is_not_random = load is not None
 
-		agent = Agent(load=load, name=load, uses_nn=uses_nn)
-		epsilon = 1 if is_random else 0.05
+		agent = Agent(load=load, name=load, uses_nn=is_not_random)
+		epsilon = 0.05 if is_not_random else 1
 		yield (agent, epsilon)
 
 
@@ -176,7 +175,6 @@ def play_test(loads, games, starts=0, verbose=True):
 	epsilons[idx] = opposing_epsilons
 
 	agents[~idx] = you
-	epsilons[~idx] = None
 
 	compete(agents, epsilons, games, starts, verbose=verbose)
 
