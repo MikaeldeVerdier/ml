@@ -59,9 +59,10 @@ def calculate_legal_moves(board):
 
 				check_index = index + environment.GAME_DIMENSIONS[1] * multiplier + add_on
 
-				row_diff = check_index // environment.GAME_DIMENSIONS[1] - index // environment.GAME_DIMENSIONS[1]
-				if check_index not in legal_moves and 0 <= check_index < np.prod(environment.GAME_DIMENSIONS) and board[check_index] == -1 and row_diff == multiplier:
-					legal_moves.append(check_index)
+				if check_index not in legal_moves and 0 <= check_index < np.prod(environment.GAME_DIMENSIONS) and board[check_index] == -1:
+					row_diff = check_index // environment.GAME_DIMENSIONS[1] - index // environment.GAME_DIMENSIONS[1]
+					if row_diff == multiplier:
+						legal_moves.append(check_index)
 
 	return legal_moves
 

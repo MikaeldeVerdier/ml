@@ -69,14 +69,14 @@ class NeuralNetwork:
 		else:
 			self.model.load_weights(path).expect_partial()
 
-	def save_model(self, to_weights, name=None):
+	def save_model(self, is_to_weights, name=None):
 		if not name:
 			name = self.name
 			path = "training/"
 		else:
 			path = "checkpoints/"
 
-		if not to_weights:
+		if not is_to_weights:
 			self.model.save(files.get_path(f"{path}{name}"))
 		else:
 			self.model.save_weights(files.get_path(f"{path}{name}/checkpoint"))

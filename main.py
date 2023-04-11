@@ -17,7 +17,7 @@ def initiate():
 		files.reset_file("positions.npy")
 		files.reset_file("log.txt")
 
-	agent = Agent(load=load, trainable=True)
+	agent = Agent(load=load, is_trainable=True)
 
 	return agent
 
@@ -37,7 +37,7 @@ def play(env, games, training=False):
 		if env.players_turn == 0:
 			game_count += 1
 
-		if env.player.trainable:
+		if env.player.is_trainable:
 			q_values = np.empty(np.shape(env.current_players) + (0,)).tolist()
 
 		storage = []
@@ -47,7 +47,7 @@ def play(env, games, training=False):
 
 			probs, action = env.player.get_action(env.game_state, env.epsilon)
 
-			if env.player.trainable:
+			if env.player.is_trainable and probs is not None:
 				q_values[env.game_state.turn].append(probs[action])
 
 			env.step(probs, action)
@@ -60,7 +60,7 @@ def play(env, games, training=False):
 			transformed_result = environment.inverse_reward_transform(score)
 			results[env.players_turn][i].append(transformed_result)
 
-			if player.trainable:
+			if player.is_trainable and len(q_values[i]):
 				player.main_nn.metrics["average_q_value"].append(float(np.mean(q_values[i])))
 
 		if not game_count % games:
@@ -86,7 +86,7 @@ def play(env, games, training=False):
 		for i2, player in enumerate(players):
 			results[i][i2] = environment.results_transform(results[i][i2])
 
-			if not training and player.trainable:
+			if not training and player.is_trainable:
 				player.main_nn.metrics["outcomes"][f"{player.main_nn.version}"] = results[i][i2]
 
 	return results
@@ -136,13 +136,13 @@ def evaluate_network(agent):
 	print(f"\nThe results were: {outcomes}")
 
 
-def compete(agents, games, multiplayer, starts, verbose=False):
-	epsilons = [0.05] * len(agents)
-	if not multiplayer:
-		competing_agents = np.array(agents).reshape(-1, 1)
-		epsilons = np.expand_dims(epsilons, 1).tolist()
+def log(agent_s, average_s, games):
+	message = f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}: {' vs '.join([agent.full_name for agent in agent_s])} ({games} games):\nAverage results were {average_s}\n"
+	files.write("log.txt", message, "a")
 
-	outcomes = play(Environment(competing_agents, epsilons=epsilons, starts=starts, verbose=verbose), games)
+
+def compete(agents, epsilons, games, starts, verbose=False):
+	outcomes = play(Environment(agents.tolist(), epsilons=epsilons.tolist(), starts=starts, verbose=verbose), games)
 
 	log(agents, outcomes, games)
 
@@ -151,27 +151,52 @@ def compete(agents, games, multiplayer, starts, verbose=False):
 	print(f"The best agent was: {best}")
 
 
-def log(agent_s, average_s, games):
-	message = f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}: {' vs '.join([agent.full_name for agent in agent_s])} ({games} games):\nAverage results were {average_s}\n"
-	files.write("log.txt", message, "a")
+def load_opponents(loads):
+	for load in loads.flatten():
+		is_random = load is None
+		uses_nn = not is_random
+
+		agent = Agent(load=load, name=load, uses_nn=uses_nn)
+		epsilon = 1 if is_random else 0.05
+		yield (agent, epsilon)
 
 
-def play_test(load, games, multiplayer, starts=0, verbose=True):
-	you = User()
-	agents = [Agent(load=load, name=load), you]
-	compete(agents, games, starts, multiplayer, verbose=verbose)
+def play_test(loads, games, starts=0, verbose=True):
+	you = User(name="You")
+
+	loads = np.array(loads, dtype=object)
+	idx = loads != "You"
+
+	opposing_agents, opposing_epsilons = zip(*load_opponents(loads[idx]))
+
+	agents = np.full_like(loads, None, dtype=object)
+	epsilons = np.full_like(loads, None, dtype=object)
+
+	agents[idx] = opposing_agents
+	epsilons[idx] = opposing_epsilons
+
+	agents[~idx] = you
+	epsilons[~idx] = None
+
+	compete(agents, epsilons, games, starts, verbose=verbose)
 
 
-def play_versions(loads, games, multiplayer, starts=0, verbose=False):
-	agents = [Agent(load=load, name=load) for load in loads]
-	compete(agents, games, multiplayer, starts, verbose=verbose)
+def play_versions(loads, games, starts=0, verbose=False):
+	loads = np.array(loads, dtype=object)
+
+	agents, epsilons = zip(*load_opponents(loads))
+
+	agents = np.reshape(agents, loads.shape)
+	epsilons = np.reshape(epsilons, loads.shape)
+
+	compete(agents, epsilons, games, starts, verbose=verbose)
 
 
 def main():
-	agent = initiate()
+	# play_versions([[None], ["main_nn"]], config.GAME_AMOUNT_PLAY_VERSIONS)
+	# play_test([[None], ["You"]], config.GAME_AMOUNT_PLAY_TEST)
 
-	# play_versions([None, "trained_model"], config.GAME_AMOUNT_PLAY_VERSIONS, False)
-	# play_test(None, config.GAME_AMOUNT_PLAY_TEST, False)
+	agent = initiate()
 
 	while agent.main_nn.version <= config.VERSION_AMOUNT:
 		if not agent.main_nn.version % config.EVALUATION_FREQUENCY:

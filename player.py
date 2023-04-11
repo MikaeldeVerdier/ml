@@ -9,7 +9,7 @@ class User():
 	def __init__(self, name="You"):
 		self.name = name
 
-		self.trainable = False
+		self.is_trainable = False
 
 	@property
 	def full_name(self):
@@ -17,7 +17,7 @@ class User():
 
 	def get_action(self, state, *_):
 		formatted_moves = [format_move(move) for move in state.legal_moves]
-		moves = order_moves(formatted_moves)
+		moves = order_moves(tuple(formatted_moves))
 		user_move = get_move(moves)
 
 		action = state.legal_moves[formatted_moves.index(user_move)]
@@ -26,35 +26,37 @@ class User():
 
 
 class Agent():
-	def __init__(self, load=False, name=None, trainable=False, to_weights=False):
+	def __init__(self, load=False, name=None, uses_nn=True, is_trainable=False, to_weights=False):
 		self.name = name
-		self.trainable = trainable
+		self.is_trainable = is_trainable
 		self.to_weights = to_weights
 
-		if trainable:
-			self.target_nn = TargetNeuralNetwork(load)
-			self.main_nn = MainNeuralNetwork(load)
-		else:
-			self.main_nn = NeuralNetwork(load, name)
+		if uses_nn:
+			if is_trainable:
+				self.target_nn = TargetNeuralNetwork(load)
+				self.main_nn = MainNeuralNetwork(load)
+			else:
+				self.main_nn = NeuralNetwork(load, name)
 
 	@property
 	def full_name(self):
 		return self.name or f"Version {self.main_nn.version}"
+	
+	def choose_action(self, state, pi, is_random_action):
+		action = np.random.choice(state.legal_moves) if is_random_action else np.argmax(pi)
+
+		return action
 
 	def get_action(self, state, epsilon):
-		probs = self.main_nn.get_preds(state)
-		action = self.choose_action(state, probs, epsilon)
-
-		return probs, action
-
-	def choose_action(self, state, pi, epsilon):
 		if epsilon is None:
 			epsilon = config.epsilon(self.main_nn.version)
 
-		action = np.random.choice(state.legal_moves) if np.random.rand() <= epsilon else np.argmax(pi)
+		is_random_action = np.random.rand() <= epsilon
+		probs = self.main_nn.get_preds(state) if not is_random_action else None
+		action = self.choose_action(state, probs, is_random_action)
 
-		return action
-	
+		return probs, action
+
 	def save_metrics(self):
 		files.edit_keys("save.json", ["main_nn_version", "target_nn_version", "metrics"], [self.main_nn.version, self.target_nn.version, self.main_nn.metrics])
 	
@@ -69,6 +71,7 @@ class Agent():
 		# self.target_nn.save_model(self.to_weights)
 
 		self.target_nn.copy_model(self.main_nn.model)
+		self.target_nn.version = self.main_nn.version
 
 		# self.target_nn = copy(self.main_nn)  # target_nn becomes a main_nn object
 
