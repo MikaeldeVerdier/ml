@@ -53,7 +53,7 @@ def play(env, games, training=False):
 			env.step(probs, action)
 
 			if training:
-				for key, var in [("action", action), ("reward", env.game_state.scores[env.game_state.turn]), ("next_state", env.game_state)]:
+				for key, var in [("action", action), ("reward", env.game_state.scores[storage[-1]["state"].turn]), ("next_state", env.game_state)]:
 					storage[-1][key] = var
 
 		for (i, player), score in zip(enumerate(env.current_players), env.game_state.scores):
