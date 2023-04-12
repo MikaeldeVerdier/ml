@@ -35,10 +35,12 @@ class Environment:
 		self.epsilons = epsilons or np.full_like(players, None)
 		self.starts = starts - 1
 		self.verbose = verbose
-
+		
 		self.players_turn = -1
 
 		self.deck = list(range(DECK_LENGTH))
+
+		self.players_names = np.reshape([agent.full_name for agent in np.concatenate(players)], np.shape(players)).tolist()
 
 	def step(self, probs, action):
 		s, deck, drawn_card = self.game_state.take_action(action)
@@ -90,7 +92,7 @@ class GameState():
 
 		self.legal_moves = self.get_legal_moves()
 		self.done = self.check_game_over()
-		self.scores = self.get_scores()
+		self.reward = self.get_reward()
 
 	def __hash__(self):
 		return hash(self.history[:-1] + tuple(self.s) + tuple(self.deck) + (self.drawn_card,))
@@ -118,9 +120,9 @@ class GameState():
 	def check_game_over(self):
 		return len(self.deck) == DECK_LENGTH - np.prod(GAME_DIMENSIONS) - REPLACE_CARDS - 1
 
-	def get_scores(self):
+	def get_reward(self):
 		if not self.done:
-			return (0,)
+			return 0
 
 		sum_score = 0
 
@@ -129,7 +131,7 @@ class GameState():
 			for row in rowcol:
 				sum_score += score_row(tuple(row))
 
-		return (reward_transform(sum_score),)
+		return reward_transform(sum_score)
 
 	def generate_nn_pass(self, modify=False):
 		game_state = self.history[-1]

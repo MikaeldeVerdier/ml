@@ -49,22 +49,24 @@ def play(env, games, training=False):
 
 			if env.player.is_trainable and probs is not None:
 				q_values[env.game_state.turn].append(probs[action])
+			
+			last_turn = env.game_state.turn
 
 			env.step(probs, action)
 
 			if training:
-				for key, var in [("action", action), ("reward", env.game_state.scores[env.game_state.turn]), ("next_state", env.game_state)]:
+				for key, var in [("action", action), ("reward", env.game_state.reward), ("next_state", env.game_state)]:
 					storage[-1][key] = var
 
-		for (i, player), score in zip(enumerate(env.current_players), env.game_state.scores):
-			transformed_result = environment.inverse_reward_transform(score)
-			results[env.players_turn][i].append(transformed_result)
+		transformed_result = environment.inverse_reward_transform(env.game_state.reward)
+		results[env.players_turn][last_turn].append(transformed_result)
 
-			if player.is_trainable and len(q_values[i]):
-				player.main_nn.metrics["average_q_value"].append(float(np.mean(q_values[i])))
+		for player, q_value in zip(env.current_players, q_values):
+			if player.is_trainable and len(q_value):
+				player.main_nn.metrics["average_q_value"].append(float(np.mean(q_value)))
 
 		if not game_count % games:
-			print(f"Amount of games played is now: {game_count} ({env.player.full_name})")
+			print(f"Amount of games played is now: {game_count} ({env.players_names})")
 
 		if training:
 			for data in storage:
@@ -94,7 +96,9 @@ def play(env, games, training=False):
 
 def self_play(agent):
 	print("\nSelf-play started!\n")
-	outcomes = play(Environment([[agent]]), config.GAME_AMOUNT_SELF_PLAY, training=True)
+
+	env = Environment([[agent]])
+	outcomes = play(env, config.GAME_AMOUNT_SELF_PLAY, training=True)
 
 	print(f"The results were: {outcomes}")
 
@@ -129,7 +133,8 @@ def retrain_network(agent):
 def evaluate_network(agent):
 	print("\nEvaluation of agent started!\n")
 
-	outcomes = play(Environment([[agent]], epsilons=[[0.05]]), config.GAME_AMOUNT_EVALUATION)
+	env = Environment([[agent]], epsilons=[[0.05]])
+	outcomes = play(env, config.GAME_AMOUNT_EVALUATION)
 
 	# log([agent], outcome)
 
@@ -142,15 +147,14 @@ def log(names, average_s, games):
 
 
 def compete(agents, epsilons, games, starts, verbose=False):
-	outcomes = play(Environment(agents.tolist(), epsilons=epsilons.tolist(), starts=starts, verbose=verbose), games)
+	env = Environment(agents.tolist(), epsilons=epsilons.tolist(), starts=starts, verbose=verbose)
+	outcomes = play(env, games)
 
-	names = [agent.full_name for agent in agents.flatten()]
-	names = np.reshape(names, agents.shape).tolist()
-	for name, outcome in zip(names, outcomes):
+	for name, outcome in zip(env.players_names, outcomes):
 		log(name, outcome, games)
 
 		print(f"\nThe results between agents named {' and '.join(name)} were: {outcome}")
-		best = names[np.argmax(outcome)]
+		best = name[np.argmax(outcome)]
 		print(f"The best agent was: {best}")
 
 

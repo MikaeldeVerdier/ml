@@ -211,8 +211,9 @@ class TargetNeuralNetwork(NeuralNetwork):
 
 	def calculate_target(self, data):
 		v_next = np.max(self.get_preds(data["next_state"])) if not data["next_state"].done else 0
+		modifier = -1 if data["state"].turn != data["next_state"].turn else 1
 
-		return data["reward"] + config.GAMMA * v_next
+		return data["reward"] + config.GAMMA * v_next * modifier
 
 	def copy_model(self, model):
 		self.model = clone_model(model)
