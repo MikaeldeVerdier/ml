@@ -76,7 +76,7 @@ class Agent():
 		# self.target_nn = copy(self.main_nn)  # target_nn becomes a main_nn object
 
 	def save_checkpoint(self):
-		self.main_nn.save_model(self.to_weights, f"{self.name} v.{self.main_nn.version}")
+		self.main_nn.save_model(self.to_weights, f"{self.name} v.{self.main_nn.version}", is_checkpoint=True)
 
 	def change_version(self):
 		self.main_nn.version += 1

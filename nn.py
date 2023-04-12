@@ -25,7 +25,7 @@ class NeuralNetwork:
 
 		if load:
 			if self.load_dir(name):
-				print(f"NN loaded with version called: {name}")
+				print(f"NN loaded with model: {name}")
 				return
 
 		position_input = Input(shape=environment.NN_INPUT_DIMENSIONS[0], name="position_input")
@@ -46,7 +46,7 @@ class NeuralNetwork:
 		
 		if load:
 			self.load_dir(name, from_weights=True)
-			print(f"Weights loaded from version called: {name}")
+			print(f"Weights loaded from model: {name}")
 		else:
 			try:
 				plot_model(self.model, to_file=files.get_path("model.png"), show_shapes=True, show_layer_names=True)
@@ -60,23 +60,26 @@ class NeuralNetwork:
 		return hash(self.version)
 
 	def load_dir(self, file, from_weights=False):
-		path = files.get_path(f"training/{file}/checkpoint")
+		path = files.find_dir(file)
+
 		if not from_weights:
-			if not os.path.exists(path):
-				self.model = load_model(files.get_path(f"training/{file}"), custom_objects={"mean_squared_error": self.mean_squared_error})
+			if not os.path.exists(path + "/checkpoint"):
+				self.model = load_model(path, custom_objects={"mean_squared_error": self.mean_squared_error})
 
 				return True
+
+			return False
 		else:
 			self.model.load_weights(path).expect_partial()
 
-	def save_model(self, is_to_weights, name=None):
-		if not name:
+	def save_model(self, to_weights, name=None, is_checkpoint=False):
+		if is_checkpoint:
+			path = "checkpoints/"
+		else:
 			name = self.name
 			path = "training/"
-		else:
-			path = "checkpoints/"
 
-		if not is_to_weights:
+		if not to_weights:
 			self.model.save(files.get_path(f"{path}{name}"))
 		else:
 			self.model.save_weights(files.get_path(f"{path}{name}/checkpoint"))
