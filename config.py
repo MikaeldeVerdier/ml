@@ -1,7 +1,7 @@
 from funcs import linear_wrapper_func
 
 # Main loop
-VERSION_AMOUNT = 2000
+VERSION_AMOUNT = 1500
 
 # Network architecture
 CONVOLUTIONAL_LAYERS_POSITION = (4, 8, 16, 32, 64, 128, 128, 128)
@@ -38,7 +38,7 @@ GAME_AMOUNT_EVALUATION = 100
 EVALUATION_FREQUENCY = 10  # Reciprocal of frequency of evaluating model
 
 # Play versions
-GAME_AMOUNT_PLAY_VERSIONS = 1000
+GAME_AMOUNT_PLAY_VERSIONS = 1
 
 # Play-test
 GAME_AMOUNT_PLAY_TEST = 4

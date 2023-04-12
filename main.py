@@ -151,7 +151,7 @@ def compete(agents, epsilons, games, starts, verbose=False):
 		log(name, outcome, games)
 
 		print(f"\nThe results between agents named {' and '.join(name)} were: {outcome}")
-		best = names[np.argmax(outcome)]
+		best = name[np.argmax(outcome)]
 		print(f"The best agent was: {best}")
 
 
