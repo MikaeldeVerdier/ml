@@ -137,19 +137,22 @@ def evaluate_network(agent):
 	print(f"\nThe results were: {outcomes}")
 
 
-def log(agent_s, average_s, games):
-	message = f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}: {' vs '.join([agent.full_name for agent in agent_s])} ({games} games):\nAverage results were {average_s}\n"
+def log(names, average_s, games):
+	message = f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}: {' vs '.join(names)} ({games} games):\nAverage results were {average_s}\n"
 	files.write("log.txt", message, "a")
 
 
 def compete(agents, epsilons, games, starts, verbose=False):
 	outcomes = play(Environment(agents.tolist(), epsilons=epsilons.tolist(), starts=starts, verbose=verbose), games)
 
-	log(agents, outcomes, games)
+	names = [agent.full_name for agent in agents.flatten()]
+	names = np.reshape(names, agents.shape).tolist()
+	for name, outcome in zip(names, outcomes):
+		log(name, outcome, games)
 
-	print(f"\nThe results between agents named {' and '.join([agent.full_name for agent in agents])} were: {outcomes}")
-	best = agents[np.argmax(outcomes)].full_name
-	print(f"The best agent was: {best}")
+		print(f"\nThe results between agents named {' and '.join(name)} were: {outcome}")
+		best = names[np.argmax(outcome)]
+		print(f"The best agent was: {best}")
 
 
 def load_opponents(loads):
@@ -192,8 +195,8 @@ def play_versions(loads, games, starts=0, verbose=False):
 
 
 def main():
-	# play_versions([[None], ["main_nn"]], config.GAME_AMOUNT_PLAY_VERSIONS)
-	# play_test([[None], ["You"]], config.GAME_AMOUNT_PLAY_TEST)
+	# play_versions([[None, "trained_model"]], config.GAME_AMOUNT_PLAY_VERSIONS)
+	# play_test([[None, "You"]], config.GAME_AMOUNT_PLAY_TEST)
 
 	agent = initiate()
 
