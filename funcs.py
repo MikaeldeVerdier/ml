@@ -29,10 +29,10 @@ def cache(max_length=5000):
 
 def linear_wrapper_func(start, end, duration, max_length=1, use_cache=True):
 	def linear_inner_func(x):
-		intercept = start
-		slope = (end - start) / duration
+		b = start
+		m = (end - start) / duration
 
-		return (max if slope < 0 else min)(end, slope * x + intercept)
+		return (max if m < 0 else min)(end, m * x + b)
 	
 	if use_cache:
 		linear_inner_func = cache(max_length)(linear_inner_func)
@@ -49,100 +49,62 @@ def increment_turn(turn, increment, length):
 
 @cache(10000)
 def calculate_legal_moves(board):
-	legal_moves = []
-
-	for index in np.where(np.array(board) != -1)[0]:
-		for multiplier in [-1, 0, 1]:
-			for add_on in [-1, 0, 1]:
-				if not multiplier and not add_on:
-					continue
-
-				check_index = index + environment.GAME_DIMENSIONS[1] * multiplier + add_on
-
-				if check_index not in legal_moves and 0 <= check_index < np.prod(environment.GAME_DIMENSIONS) and board[check_index] == -1:
-					row_diff = check_index // environment.GAME_DIMENSIONS[1] - index // environment.GAME_DIMENSIONS[1]
-					if row_diff == multiplier:
-						legal_moves.append(check_index)
+	if environment.MOVE_AMOUNT != np.prod(environment.GAME_DIMENSIONS):
+		legal_moves = []
+		for dim1 in range(environment.GAME_DIMENSIONS[1]):
+			for dim2 in range(environment.GAME_DIMENSIONS[0]):
+				if board[dim1 + dim2 * environment.GAME_DIMENSIONS[1]] != -1:
+					if dim2 != 0:
+						legal_moves.append(dim1 + (dim2 - 1) * environment.GAME_DIMENSIONS[1])
+					break
+			else:
+				legal_moves.append(dim1 + dim2 * environment.GAME_DIMENSIONS[1])
+	else:
+		legal_moves = np.where(board == -1)
+		if not len(legal_moves):
+			legal_moves = legal_moves[0]
 
 	return legal_moves
 
 
 @cache(10000)
-def score_row(row):
-	sum_score = 0
+def score_board(board):
+	for player in range(environment.PLAYER_AMOUNT):
+		for checks in [[[environment.GAME_DIMENSIONS[0], environment.GAME_DIMENSIONS[1] - environment.IN_A_ROW + 1], list(range(environment.IN_A_ROW))], [[environment.GAME_DIMENSIONS[0] - environment.IN_A_ROW + 1, environment.GAME_DIMENSIONS[1]], [element * environment.GAME_DIMENSIONS[1] for element in list(range(environment.IN_A_ROW))]], [[environment.GAME_DIMENSIONS[0] - environment.IN_A_ROW + 1, environment.GAME_DIMENSIONS[1] - environment.IN_A_ROW + 1], [element * (environment.GAME_DIMENSIONS[1] - 1) + environment.IN_A_ROW - 1 for element in list(range(environment.IN_A_ROW))]], [[environment.GAME_DIMENSIONS[0] - environment.IN_A_ROW + 1, environment.GAME_DIMENSIONS[1] - environment.IN_A_ROW + 1], [element * (environment.GAME_DIMENSIONS[1] + 1) for element in list(range(environment.IN_A_ROW))]]]:
+			for i in range(checks[0][0]):
+				for i2 in range(checks[0][1]):
+					pos = [board[i * environment.GAME_DIMENSIONS[1] + i2 + i3] == player for i3 in checks[1]]
+					if pos.count(True) == environment.IN_A_ROW:
+						res = [-1] * environment.PLAYER_AMOUNT
+						res[player] = 1
+						return res
 
-	suits, values = tuple(zip(*[get_card(card) for card in row]))
-	values = sorted(values)
+	if not board.count(-1):
+		return (1e-5,) * environment.PLAYER_AMOUNT
 
-	histo_scoring_dict = {(4,): 20, (3, 2): 15, (3,): 8, (2,): 2}
-
-	histo = tuple(sorted([values.count(value) for value in set(values)]))
-
-	max_num_occs = {num: comb.count(num) for comb in histo_scoring_dict.keys() for num in comb}
-	for comb, score in list(histo_scoring_dict.items()):
-		comb_count = list(zip(*[(histo.count(num) // comb.count(num), max_num_occs[num]) for num in comb]))
-
-		if min(comb_count[0]) and min(comb_count[1]) > 0:
-			for num in set(comb):
-				max_num_occs[num] -= min(comb_count[0])
-
-			sum_score += min(comb_count[0]) * score
-
-	is_flush = len(set(suits)) == 1
-
-	low_ace_straight = list(range(1, len(row))) + [environment.SUIT_LENGTH + 1]
-	is_straight = values[-1] - values[0] == len(row) - 1 or values == low_ace_straight
-
-	if is_flush:
-		sum_score += 10
-	if is_straight:
-		if values[-2] == environment.SUIT_LENGTH:
-			sum_score += 40 if is_flush else 20
-		else:
-			sum_score += 10
-
-	return sum_score
-
-
-@cache(10000)
-def format_state(board):
-	shape = (environment.NN_INPUT_DIMENSIONS[0][-1],) + environment.NN_INPUT_DIMENSIONS[0][:-2]
-	binary_map = np.reshape([(np.array(board) == i).astype(int) for i in range(1, environment.DECK_LENGTH + 1)], shape)
-
-	return np.moveaxis(binary_map, 0, -1).tolist()
+	return (0,) * environment.PLAYER_AMOUNT
 
 
 @cache()
-def get_card(value):
-	suit, value = divmod(value, environment.SUIT_LENGTH)
+def format_cell(player):
+	player_dict = {"-1": "-", "0": "X", "1": "O"}
 
-	return suit, value + 2
-
-
-@cache()
-def format_card(card):
-	suit_dict = {0: "kl", 1: "ru", 2: "hj", 3: "sp"}
-	suit, value = get_card(card)
-
-	return f"{suit_dict[suit]}{int(value)}"
+	return player_dict[player]
 
 
 def print_state(state):
 	board = state.s.astype("<U4")
-	board = [format_card(float(cell)) if cell != "-1" else "---" for cell in board]
+	board = np.array([format_cell(cell) for cell in board])
 
-	print(f"Position is:\n{np.reshape(board, environment.GAME_DIMENSIONS)}")
+	print(f"Position is:\n{board.reshape(environment.GAME_DIMENSIONS)}")
 
-	if not state.done:
-		print(f"Drawn card is: {format_card(state.drawn_card)}")
-		print(f"Amount of cards left is: {len(state.deck)}\n")
-	else:
+	if state.done:
 		print(f"Game over! The outcomes were: {state.scores}\n")
 
 
 def print_action(env, probs, action):
 	if probs is not None:
-		print(f"Action values are: {[probs[-1]]}\n{np.round(probs[:-1], 8).reshape(environment.GAME_DIMENSIONS)}")
+		print(f"Action values are:\n{np.round(probs, 6).reshape(environment.GAME_DIMENSIONS)}")
 
 	print(f"Action taken by {env.player.full_name} is: {action}")
 	print_state(env.game_state)
@@ -177,11 +139,12 @@ def get_move(moves):
 
 
 @cache()
-def string_to_tuple(string):
-	split_string = string.replace(" ", "").replace("(", "").replace(")", "").split(",")
-	result = tuple(int(letter) for letter in split_string)
+def string_to_tuple(s):
+		a = s.replace(" ", "").replace("(", "").replace(")", "")
+		b = a.split(',')
+		res = tuple(int(el) for el in b)
 
-	return result
+		return res
 
 
 """def moving_average(data, n):

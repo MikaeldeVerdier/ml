@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import os
 from tensorflow.keras import regularizers
 from tensorflow.keras.models import Model, load_model, clone_model
-from tensorflow.keras.layers import Input, Conv3D, Flatten, Dense, BatchNormalization, ReLU, Concatenate
+from tensorflow.keras.layers import Input, Conv2D, Flatten, Dense, BatchNormalization, ReLU, Concatenate
 from tensorflow.keras.optimizers import Adam
 from keras.utils.vis_utils import plot_model
 
@@ -31,17 +31,14 @@ class NeuralNetwork:
 		position_input = Input(shape=environment.NN_INPUT_DIMENSIONS[0], name="position_input")
 		position = self.position_cnn(position_input)
 
-		deck_input = Input(shape=environment.NN_INPUT_DIMENSIONS[1], name="deck_input")
-		deck = self.deck_mlp(deck_input)
+		turn_input = Input(shape=environment.NN_INPUT_DIMENSIONS[1], name="turn_input")
+		turn = self.turn_mlp(turn_input)
 
-		drawn_card_input = Input(shape=environment.NN_INPUT_DIMENSIONS[2], name="drawn_card_input")
-		drawn_card = self.drawn_card_mlp(drawn_card_input)
-
-		x = Concatenate()([position, deck, drawn_card])
+		x = Concatenate()([position, turn])
 
 		ph = self.policy_head(x)
 
-		self.model = Model(inputs=[position_input, deck_input, drawn_card_input], outputs=ph)
+		self.model = Model(inputs=[position_input, turn_input], outputs=ph)
 		self.model.compile(loss=self.mean_squared_error, optimizer=Adam(learning_rate=config.learning_rate.start))
 		
 		if load:
@@ -69,14 +66,14 @@ class NeuralNetwork:
 		else:
 			self.model.load_weights(path).expect_partial()
 
-	def save_model(self, is_to_weights, name=None):
+	def save_model(self, to_weights, name=None):
 		if not name:
 			name = self.name
 			path = "training/"
 		else:
 			path = "checkpoints/"
 
-		if not is_to_weights:
+		if not to_weights:
 			self.model.save(files.get_path(f"{path}{name}"))
 		else:
 			self.model.save_weights(files.get_path(f"{path}{name}/checkpoint"))
@@ -95,8 +92,8 @@ class NeuralNetwork:
 		return loss
 
 	@staticmethod
-	def convolutional_layer_3D(x, filters, kernel_size):
-		x = Conv3D(filters=filters, kernel_size=kernel_size, padding="same", data_format="channels_last", use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
+	def convolutional_layer_2D(x, filters, kernel_size):
+		x = Conv2D(filters=filters, kernel_size=kernel_size, padding="same", data_format="channels_last", use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
 		x = BatchNormalization()(x)
 		x = ReLU()(x)
 
@@ -104,26 +101,18 @@ class NeuralNetwork:
 
 	def position_cnn(self, x):
 		for filter_amount in config.CONVOLUTIONAL_LAYERS_POSITION:
-			x = self.convolutional_layer_3D(x, filter_amount, config.CONVOLUTIOANL_SHAPE_POSITION)
+			x = self.convolutional_layer_2D(x, filter_amount, config.CONVOLUTIOANL_SHAPE_POSITION)
 
 		x = Flatten()(x)
 		for neuron_amount in config.DENSE_POSITION:
 			x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
 
 		return x
-
+	
 	@staticmethod
-	def deck_mlp(x):
+	def turn_mlp(x):
 		x = Flatten()(x)
-		for neuron_amount in config.DENSE_DECK:
-			x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
-
-		return x
-
-	@staticmethod
-	def drawn_card_mlp(x):
-		x = Flatten()(x)
-		for neuron_amount in config.DENSE_DRAWN_CARD:
+		for neuron_amount in config.DENSE_TURN:
 			x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
 
 		return x
@@ -132,7 +121,7 @@ class NeuralNetwork:
 	def policy_head(x):
 		for neuron_amount in config.DENSE_POLICY_HEAD:
 			x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
-		x = Dense(environment.MOVE_AMOUNT, use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST), name="policy_head")(x)
+		x = Dense(np.prod(environment.GAME_DIMENSIONS), use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST), name="policy_head")(x)
 
 		return x
 
@@ -210,7 +199,7 @@ class TargetNeuralNetwork(NeuralNetwork):
 		self.version = loaded["target_nn_version"]
 
 	def calculate_target(self, data):
-		v_next = np.max(self.get_preds(data["next_state"])) if not data["next_state"].done else 0
+		v_next = -np.max(self.get_preds(data["next_state"])) if not data["next_state"].done else 0
 
 		return data["reward"] + config.GAMMA * v_next
 
