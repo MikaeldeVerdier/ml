@@ -156,7 +156,7 @@ def load_opponents(loads):
 	for load in loads.flatten():
 		is_not_random = load is not None
 
-		agent = Agent(load=load, name=load, uses_nn=is_not_random)
+		agent = Agent(load=load, name=load or "Random agent", uses_nn=is_not_random)
 		epsilon = 0.05 if is_not_random else 1
 		yield (agent, epsilon)
 
