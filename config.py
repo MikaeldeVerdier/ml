@@ -15,7 +15,7 @@ DENSE_POLICY_HEAD = [512, 512, 512, 512, 512, 256, 128, 64, 64]
 USE_BIAS = True
 
 # Self-play
-GAME_AMOUNT_SELF_PLAY = 30
+GAME_AMOUNT_SELF_PLAY = 90
 BUFFER_REQUIREMENT = 3000
 BUFFER_SIZE = 30000  # Replay buffer size
 DEPTH = 1  # Amount of previous states included in nn input
@@ -27,8 +27,8 @@ BATCH_SIZE = (256, 32)  # Index 0: amount of positions sampled. Index 1: actual 
 EPOCHS = 1  # Amount of times batch is looped over
 GAMMA = 0.99  # Discounting factor for future rewards when calculating targets
 VERSION_OFFSET = 50  # Reciprocal of frequency of target nn copying main nn
-SAVING_FREQUENCY = 125  # Reciprocal of frequency of saving progress
-MODEL_CHECKPOINT_FREQUENCY = 500  # Reciprocal of frequency of saving checkpoint models
+SAVING_FREQUENCY = 100  # Reciprocal of frequency of saving progress
+MODEL_CHECKPOINT_FREQUENCY = 250  # Reciprocal of frequency of saving checkpoint models
 VALIDATION_SPLIT = 0.2  # Share of data used as validation
 REG_CONST = 1e-4  # L2 Regularization Hyperparameter
 learning_rate = linear_wrapper_func(1e-4, 1e-6, VERSION_AMOUNT * 0.9, use_cache=False)
