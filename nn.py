@@ -141,7 +141,8 @@ class NeuralNetwork:
 
 	@cache(100000)
 	def get_preds(self, game_state):
-		data = [np.expand_dims(dat, 0) for dat in game_state.generate_nn_pass()[0]]
+		nn_pass = game_state.generate_nn_pass()
+		data = [np.expand_dims(dat, 0) for dat in nn_pass[0]]
 		logits = self.model.predict_on_batch(data)[0]
 
 		mask = np.full(logits.shape, True)
@@ -213,7 +214,8 @@ class TargetNeuralNetwork(NeuralNetwork):
 		self.version = loaded["target_nn_version"]
 
 	def calculate_target(self, data):
-		v_next = np.max(self.get_preds(data["next_state"])) if not data["next_state"].done else 0
+		q_values_next = self.get_preds(data["next_state"])
+		v_next = np.max(q_values_next) if not data["next_state"].done else 0
 		modifier = -1 if data["state"].turn != data["next_state"].turn else 1
 
 		return data["reward"] + config.GAMMA * v_next * modifier

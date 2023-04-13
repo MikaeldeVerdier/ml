@@ -41,19 +41,18 @@ class Agent():
 	@property
 	def full_name(self):
 		return self.name or f"Version {self.main_nn.version}"
-	
-	def choose_action(self, state, pi, is_random_action):
-		action = np.random.choice(state.legal_moves) if is_random_action else np.argmax(pi)
-
-		return action
 
 	def get_action(self, state, epsilon):
 		if epsilon is None:
 			epsilon = config.epsilon(self.main_nn.version)
 
 		is_random_action = np.random.rand() <= epsilon
-		probs = self.main_nn.get_preds(state) if not is_random_action else None
-		action = self.choose_action(state, probs, is_random_action)
+		if is_random_action:
+			probs = None
+			action = np.random.choice(state.legal_moves)
+		else:
+			probs = self.main_nn.get_preds(state)
+			action = np.argmax(probs)
 
 		return probs, action
 

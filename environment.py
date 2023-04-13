@@ -133,52 +133,58 @@ class GameState():
 
 		return reward_transform(sum_score)
 
-	def generate_nn_pass(self, modify=False):
+	@cache(100000)
+	def format_game_state(self, flip, suit_change):
 		game_state = self.history[-1]
 
+		nn_pass = [[] for _ in range(len(NN_INPUT_DIMENSIONS))]
+
+		for depth in range(config.DEPTH):
+			state = np.flip(game_state.s.reshape(GAME_DIMENSIONS), flip).flatten() if flip is not None else game_state.s
+			state_deck = game_state.deck
+			state_drawn_card = [game_state.drawn_card]
+
+			for var in [state, state_deck, state_drawn_card]:
+				for i, card in enumerate(var):
+					if card != -1:
+						var[i] = int((var[i] + suit_change) % DECK_LENGTH)
+
+			formatted_state = format_state(tuple(state))
+			nn_pass[0].append(formatted_state)
+
+			deck = np.zeros(DECK_LENGTH)
+			deck[np.array(state_deck, dtype=np.int32) - 1] = 1
+			nn_pass[1].append(deck.tolist())
+
+			drawn_card = np.zeros(DECK_LENGTH)
+			drawn_card[state_drawn_card[0] - 1] = (state_drawn_card[0] != 0)
+			nn_pass[2].append(drawn_card.tolist())
+
+			if depth != config.DEPTH - 1:
+				if self.history[-depth - 2]:
+					game_state = self.history[-depth - 2]
+				else:
+					for i, func in enumerate([np.zeros, np.ones, np.zeros]):
+						empty_dim = func(np.shape(nn_pass[i][-1])).tolist()
+						nn_pass[i] += [empty_dim] * (config.DEPTH - depth - 1)
+
+					break
+
+		nn_pass[0] = np.moveaxis(nn_pass[0], 0, -2).tolist()
+
+		return nn_pass
+
+	def generate_nn_pass(self, modify=False):
 		if modify:
 			flips = [None, 0, 1, (0, 1)]
-			flipped_states = [np.flip(game_state.s.reshape(GAME_DIMENSIONS), flip).flatten() for flip in flips]
 			suit_changes = [i * SUIT_LENGTH for i in range(SUIT_AMOUNT)]
 		else:
-			flipped_states = [game_state.s]
+			flips = [None]
 			suit_changes = [0]
 
 		nn_pass = []
-		for state_s in flipped_states:
+		for flip in flips:
 			for suit_change in suit_changes:
-				nn_pass.append([[] for _ in range(len(NN_INPUT_DIMENSIONS))])
-
-				for depth in range(config.DEPTH):
-					state_deck = game_state.deck
-					state_drawn_card = [game_state.drawn_card]
-
-					for var in [state_s, state_deck, state_drawn_card]:
-						for i, card in enumerate(var):
-							if card != -1:
-								var[i] = int((var[i] + suit_change) % DECK_LENGTH)
-
-					state = format_state(tuple(state_s))
-					nn_pass[-1][0].append(state)
-
-					deck = np.zeros(DECK_LENGTH)
-					deck[np.array(state_deck, dtype=np.int32) - 1] = 1
-					nn_pass[-1][1].append(deck.tolist())
-
-					drawn_card = np.zeros(DECK_LENGTH)
-					drawn_card[state_drawn_card[0] - 1] = (state_drawn_card[0] != 0)
-					nn_pass[-1][2].append(drawn_card.tolist())
-
-					if depth != config.DEPTH - 1:
-						if self.history[-depth - 2]:
-							game_state = self.history[-depth - 2]
-						else:
-							for i, func in enumerate([np.zeros, np.ones, np.zeros]):
-								empty_dim = func(np.shape(nn_pass[-1][i][-1])).tolist()
-								nn_pass[-1][i] += [empty_dim] * (config.DEPTH - depth - 1)
-
-							break
-
-				nn_pass[-1][0] = np.moveaxis(nn_pass[-1][0], 0, -2).tolist()
+				nn_pass.append(self.format_game_state(flip, suit_change))
 
 		return nn_pass
