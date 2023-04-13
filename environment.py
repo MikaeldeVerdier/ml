@@ -10,12 +10,14 @@ PLAYER_AMOUNT = 2
 NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (config.DEPTH * PLAYER_AMOUNT,), (PLAYER_AMOUNT,)]
 MOVE_AMOUNT = GAME_DIMENSIONS[1]
 
+REWARD_FACTOR = 20
+
 def reward_transform(reward):
-	return reward
+	return tuple(np.array(reward) * REWARD_FACTOR)
 
 
 def inverse_reward_transform(transformed_reward):
-	return transformed_reward
+	return int(transformed_reward / REWARD_FACTOR)
 
 
 def results_transform(results):

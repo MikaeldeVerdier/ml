@@ -1,7 +1,7 @@
 from funcs import linear_wrapper_func
 
 # Main loop
-VERSION_AMOUNT = 1500
+VERSION_AMOUNT = 500
 
 # Network architecture
 CONVOLUTIONAL_LAYERS_POSITION = (4, 8, 16, 32, 64, 128, 256, 256, 256)
@@ -15,9 +15,9 @@ DENSE_POLICY_HEAD = [512, 512, 512, 512, 512, 256, 128, 64, 64]
 USE_BIAS = True
 
 # Self-play
-GAME_AMOUNT_SELF_PLAY = 90
+GAME_AMOUNT_SELF_PLAY = 30
 BUFFER_REQUIREMENT = 3000
-BUFFER_SIZE = 90000  # Replay buffer size
+BUFFER_SIZE = 30000  # Replay buffer size
 DEPTH = 1  # Amount of previous states included in nn input
 epsilon = linear_wrapper_func(1, 0.1, VERSION_AMOUNT * 0.8)  # Linearly annealing function for probability of choosing random action, if not specified (like in training)
 
@@ -31,7 +31,7 @@ SAVING_FREQUENCY = 125  # Reciprocal of frequency of saving progress
 MODEL_CHECKPOINT_FREQUENCY = 500  # Reciprocal of frequency of saving checkpoint models
 VALIDATION_SPLIT = 0.2  # Share of data used as validation
 REG_CONST = 1e-4  # L2 Regularization Hyperparameter
-learning_rate = linear_wrapper_func(1e-3, 1e-5, VERSION_AMOUNT * 0.9, use_cache=False)
+learning_rate = linear_wrapper_func(1e-4, 1e-6, VERSION_AMOUNT * 0.9, use_cache=False)
 
 # Evaluating network
 GAME_AMOUNT_EVALUATION = 100
