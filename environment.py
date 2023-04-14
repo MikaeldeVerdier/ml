@@ -140,8 +140,8 @@ class GameState():
 		nn_pass = [[] for _ in range(len(NN_INPUT_DIMENSIONS))]
 
 		for depth in range(config.DEPTH):
-			state = np.flip(game_state.s.reshape(GAME_DIMENSIONS), flip).flatten() if flip is not None else game_state.s
-			state_deck = game_state.deck
+			state = np.flip(game_state.s.reshape(GAME_DIMENSIONS), flip).flatten() if flip is not None else game_state.s.copy()
+			state_deck = game_state.deck.copy()
 			state_drawn_card = [game_state.drawn_card]
 
 			for var in [state, state_deck, state_drawn_card]:
