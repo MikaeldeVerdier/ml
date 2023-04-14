@@ -42,16 +42,6 @@ class Environment:
 
 		self.players_names = np.reshape([agent.full_name for agent in np.concatenate(players)], np.shape(players)).tolist()
 
-	def step(self, probs, action):
-		s, deck, drawn_card = self.game_state.take_action(action)
-		new_turn = increment_turn(self.game_state.turn, 1, len(self.current_players))
-		self.game_state = GameState(new_turn, self.game_state.history, s, deck, drawn_card)
-
-		if self.verbose:
-			print_action(self, probs, action)
-
-		self.update_turn()
-
 	def update_turn(self):
 		self.player = self.current_players[self.game_state.turn]
 		self.epsilon = self.epsilons[self.players_turn][self.game_state.turn]
@@ -76,6 +66,16 @@ class Environment:
 
 		if self.verbose:
 			print_state(self.game_state)
+
+	def step(self, probs, action):
+		s, deck, drawn_card = self.game_state.take_action(action)
+		new_turn = increment_turn(self.game_state.turn, 1, len(self.current_players))
+		self.game_state = GameState(new_turn, self.game_state.history, s, deck, drawn_card)
+
+		if self.verbose:
+			print_action(self, probs, action)
+
+		self.update_turn()
 
 
 class GameState():

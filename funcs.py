@@ -134,10 +134,13 @@ def print_state(state):
 	print(f"Position is:\n{np.reshape(board, environment.GAME_DIMENSIONS)}")
 
 	if not state.done:
+		if state.reward:
+			print(f"The reward for this state is: {state.reward}")
+
 		print(f"Drawn card is: {format_card(state.drawn_card)}")
 		print(f"Amount of cards left is: {len(state.deck)}\n")
 	else:
-		print(f"Game over! The outcomes were: {state.scores}\n")
+		print(f"Game over! The outcomes were: {state.reward}\n")
 
 
 def print_action(env, probs, action):
