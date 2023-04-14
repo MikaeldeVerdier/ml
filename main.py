@@ -8,9 +8,7 @@ import files
 from player import User, Agent
 from environment import Environment
 
-def initiate():
-	load = False
-
+def initiate(load):
 	files.setup_files()
 	if not load:
 		files.reset_file("save.json")
@@ -61,9 +59,9 @@ def play(env, games, training=False):
 		transformed_result = environment.inverse_reward_transform(env.game_state.reward)
 		results[env.players_turn][last_turn].append(transformed_result)
 
-		for player, q_value in zip(env.current_players, q_values):
-			if player.is_trainable and len(q_value):
-				player.main_nn.metrics["average_q_value"].append(float(np.mean(q_value)))
+		for i, player in enumerate(env.current_players):
+			if player.is_trainable and len(q_values[i]):
+				player.main_nn.metrics["average_q_value"].append(float(np.mean(q_values[i])))
 
 		if not game_count % games:
 			print(f"Amount of games played is now: {game_count} ({env.players_names})")
@@ -201,7 +199,8 @@ def main():
 	# play_versions([[None], ["main_nn"]], config.GAME_AMOUNT_PLAY_VERSIONS)
 	# play_test([[None], ["You"]], config.GAME_AMOUNT_PLAY_TEST)
 
-	agent = initiate()
+	load = False
+	agent = initiate(load)
 
 	while agent.main_nn.version <= config.VERSION_AMOUNT:
 		if not agent.main_nn.version % config.EVALUATION_FREQUENCY:
