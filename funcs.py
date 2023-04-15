@@ -107,7 +107,7 @@ def score_row(row):
 @cache(10000)
 def format_state(board):
 	shape = (environment.NN_INPUT_DIMENSIONS[0][-1],) + environment.NN_INPUT_DIMENSIONS[0][:-2]
-	binary_map = np.reshape([(np.array(board) == i).astype(int) for i in range(1, environment.DECK_LENGTH + 1)], shape)
+	binary_map = np.reshape([(np.array(board) == i).astype(int) for i in range(environment.DECK_LENGTH)], shape)
 
 	return np.moveaxis(binary_map, 0, -1).tolist()
 
