@@ -69,8 +69,8 @@ class Environment:
 
 	def step(self, probs, action):
 		s, deck, drawn_card = self.game_state.take_action(action)
-
-		self.game_state = GameState(self.game_state.history, s, deck, drawn_card)
+		new_turn = increment_turn(self.game_state.turn, 1, len(self.current_players))
+		self.game_state = GameState(new_turn, self.game_state.history, s, deck, drawn_card)
 
 		if self.verbose:
 			print_action(self, probs, action)
@@ -79,7 +79,8 @@ class Environment:
 
 
 class GameState():
-	def __init__(self, history, s, deck, drawn_card):
+	def __init__(self, turn, history, s, deck, drawn_card):
+		self.turn = turn
 		self.history = history[1:] + (self,)
 		self.s = s
 		self.deck = deck
@@ -152,11 +153,11 @@ class GameState():
 			nn_pass[0].append(formatted_state)
 
 			deck = np.zeros(DECK_LENGTH)
-			deck[np.array(state_deck, dtype=np.int32) - 1] = 1
+			deck[np.array(state_deck, dtype=np.int32)] = 1
 			nn_pass[1].append(deck.tolist())
 
 			drawn_card = np.zeros(DECK_LENGTH)
-			drawn_card[state_drawn_card[0] - 1] = 1
+			drawn_card[state_drawn_card[0]] = 1
 			nn_pass[2].append(drawn_card.tolist())
 
 			if depth != config.DEPTH - 1:
