@@ -109,15 +109,14 @@ def retrain_network(agent):
 	for _ in range(config.TRAINING_ITERATIONS):
 		minibatch = random.sample(positions, config.BATCH_SIZE[0])
 
-		x = [[] for _ in range(len(environment.NN_INPUT_DIMENSIONS))]
+		x = []
 		y = []
 
 		for position in minibatch:
 			y.append(position[1:])
-			for i, dim in enumerate(position[0]):
-				x[i].append(np.array(dim))
+			x.append([np.array(dim) for dim in position[0]])
 
-		x = [np.array(var) for var in x]
+		x = [np.array(var) for var in zip(*x)]
 		y = np.array(y)
 
 		agent.main_nn.train(x, y)
