@@ -1,8 +1,9 @@
-import numpy as np
 import random
 
+import numpy as np
+
 import config
-from funcs import increment_turn, print_state, print_action, calculate_legal_moves, score_row, format_state, cache
+from funcs import cache, calculate_legal_moves, format_state, increment_turn, print_action, print_state, score_row
 
 DECK_LENGTH = 52
 SUIT_AMOUNT = 4

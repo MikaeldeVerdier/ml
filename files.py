@@ -1,7 +1,8 @@
-import numpy as np
-import os
 import json
+import os
 from shutil import copyfile, copytree, rmtree
+
+import numpy as np
 
 import config
 

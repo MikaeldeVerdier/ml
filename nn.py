@@ -1,16 +1,17 @@
-import numpy as np
-import tensorflow as tf
+import os
+
 import matplotlib
 import matplotlib.pyplot as plt
-import os
-from tensorflow.keras import regularizers
-from tensorflow.keras.models import Model, load_model, clone_model
-from tensorflow.keras.layers import Input, Conv3D, Flatten, Dense, BatchNormalization, ReLU, Concatenate
-from tensorflow.keras.optimizers import Adam
+import numpy as np
+import tensorflow as tf
 from keras.utils.vis_utils import plot_model
+from tensorflow.keras import regularizers
+from tensorflow.keras.layers import BatchNormalization, Concatenate, Conv3D, Dense, Flatten, Input, ReLU
+from tensorflow.keras.models import Model, clone_model, load_model
+from tensorflow.keras.optimizers import Adam
 
-import environment
 import config
+import environment
 import files
 from funcs import cache
 

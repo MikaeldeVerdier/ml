@@ -1,12 +1,14 @@
-import numpy as np
 import random
 from datetime import datetime
 
-import environment
+import numpy as np
+
 import config
+import environment
 import files
-from player import User, Agent
 from environment import Environment
+from player import Agent, User
+
 
 def initiate(load):
 	files.setup_files()
