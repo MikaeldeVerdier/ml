@@ -2,7 +2,6 @@ import numpy as np
 
 import environment
 
-
 def cache(max_length=5000):
 	def cache_dec(f):
 		cache = {}

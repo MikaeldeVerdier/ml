@@ -2,9 +2,8 @@ import numpy as np
 
 import config
 import files
-from funcs import format_move, get_move, order_moves
-from nn import MainNeuralNetwork, NeuralNetwork, TargetNeuralNetwork
-
+from nn import NeuralNetwork, MainNeuralNetwork, TargetNeuralNetwork
+from funcs import order_moves, format_move, get_move
 
 class User():
 	def __init__(self, name="You"):
