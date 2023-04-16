@@ -179,6 +179,7 @@ def play_test(loads, games, starts=0, verbose=True):
 	epsilons[idx] = opposing_epsilons
 
 	agents[~idx] = you
+	# agents[~idx] = None
 
 	compete(agents, epsilons, games, starts, verbose=verbose)
 
