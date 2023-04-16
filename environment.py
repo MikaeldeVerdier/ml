@@ -140,7 +140,7 @@ class GameState():
 		nn_pass = [[] for _ in range(len(NN_INPUT_DIMENSIONS))]
 
 		for depth in range(config.DEPTH):
-			state = np.flip(game_state.s.reshape(GAME_DIMENSIONS), flip).flatten() if flip is not None else game_state.s.copy()
+			state = np.rot90(game_state.s.reshape(GAME_DIMENSIONS), k=flip).flatten()
 			state_deck = game_state.deck.copy()
 			state_drawn_card = [game_state.drawn_card]
 
@@ -176,10 +176,10 @@ class GameState():
 
 	def generate_nn_pass(self, modify=False):
 		if modify:
-			flips = [None, 0, 1, (0, 1)]
+			flips = range(SUIT_AMOUNT)
 			suit_changes = [i * SUIT_LENGTH for i in range(SUIT_AMOUNT)]
 		else:
-			flips = [None]
+			flips = [0]
 			suit_changes = [0]
 
 		nn_pass = []
