@@ -71,12 +71,15 @@ def calculate_legal_moves(board):
 
 @cache(10000)
 def score_row(row):
+	if not row:
+		return 0
+
 	sum_score = 0
 
-	suits, values = tuple(zip(*[get_card(card) for card in row]))
+	_, values = tuple(zip(*[get_card(card) for card in row]))
 	values = sorted(values)
 
-	histo_scoring_dict = {(4,): 20, (3, 2): 15, (3,): 8, (2,): 2}
+	histo_scoring_dict = {(2,): 1}
 
 	histo = tuple(sorted([values.count(value) for value in set(values)]))
 
@@ -89,19 +92,6 @@ def score_row(row):
 				max_num_occs[num] -= min(comb_count[0])
 
 			sum_score += min(comb_count[0]) * score
-
-	is_flush = len(set(suits)) == 1
-
-	low_ace_straight = list(range(2, environment.GAME_DIMENSIONS[1] + 1)) + [int(environment.SUIT_LENGTH + 1)]
-	is_straight = values[-1] - values[0] == environment.GAME_DIMENSIONS[1] - 1 or values == low_ace_straight
-
-	if is_flush:
-		sum_score += 10
-	if is_straight:
-		if values[-2] == environment.SUIT_LENGTH:
-			sum_score += 40 if is_flush else 20
-		else:
-			sum_score += 10
 
 	return sum_score
 

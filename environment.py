@@ -4,19 +4,24 @@ import random
 import config
 from funcs import increment_turn, print_state, print_action, calculate_legal_moves, score_row, format_state, cache
 
-DECK_LENGTH = 52
+DECK_LENGTH = 24
 SUIT_AMOUNT = 4
 SUIT_LENGTH = DECK_LENGTH / SUIT_AMOUNT
 
-GAME_DIMENSIONS = (5, 5)
-NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (config.DEPTH, DECK_LENGTH), (config.DEPTH, DECK_LENGTH), (config.DEPTH, DECK_LENGTH)]
+GAME_DIMENSIONS = (3, 3)
+NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (config.DEPTH, DECK_LENGTH), (config.DEPTH, DECK_LENGTH), (config.DEPTH, DECK_LENGTH), (config.DEPTH,)]
 MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
 
-REPLACE_CARDS = 3
-REWARD_FACTOR = 0.02
+REPLACE_CARDS = 1
+REWARD_FACTOR = 0.25
+INTERMEDIATE_REWARD_FACTOR = 0.15
 
 def reward_transform(reward):
 	return reward * REWARD_FACTOR
+
+
+def intermediate_reward_transform(reward):
+	return reward * INTERMEDIATE_REWARD_FACTOR
 
 
 def inverse_reward_transform(transformed_reward):
@@ -121,17 +126,15 @@ class GameState():
 		return len(self.deck) == DECK_LENGTH - np.prod(GAME_DIMENSIONS) - REPLACE_CARDS - 1
 
 	def get_reward(self):
-		if not self.done:
-			return 0
-
 		sum_score = 0
 
 		board = self.s.reshape(GAME_DIMENSIONS)
 		for rowcol in [board, board.T]:
 			for row in rowcol:
+				row = row[np.where(row != -1)].tolist()
 				sum_score += score_row(tuple(row))
 
-		return reward_transform(sum_score)
+		return (reward_transform if self.done else intermediate_reward_transform)(sum_score)
 
 	@cache(100000)
 	def format_game_state(self, flip, suit_change):
@@ -159,6 +162,8 @@ class GameState():
 			drawn_card = np.zeros(DECK_LENGTH, dtype=np.int32)
 			drawn_card[state_drawn_card[0]] = 1
 			nn_pass[2].append(drawn_card.tolist())
+
+			nn_pass[3].append([game_state.reward])
 
 			if depth != config.DEPTH - 1:
 				if self.history[-depth - 2]:
