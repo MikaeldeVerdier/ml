@@ -6,7 +6,6 @@ VERSION_AMOUNT = 10000
 # Network architecture
 CONVOLUTIONAL_LAYERS_POSITION = (64, 128, 128)
 CONVOLUTIOANL_SHAPE_POSITION = (3, 3, 3)
-# POOL_SHAPE_POSITION = (2, 2)
 DENSE_POSITION = [2048, 2048, 1024, 512]
 
 DENSE_DECK = [32, 32, 64]
@@ -25,7 +24,7 @@ epsilon = linear_wrapper_func(1, 0.1, VERSION_AMOUNT * 0.8)  # Linearly annealin
 
 # Retraining network
 TRAINING_ITERATIONS = 10
-BATCH_SIZE = (256, 32)  # Index 0: amount of positions sampled. Index 1: actual batch_size used in momdel.fit()
+BATCH_SIZE = (256, 32)  # Index 0: amount of positions sampled. Index 1: actual batch_size used in model.fit()
 EPOCHS = 1  # Amount of times batch is looped over
 GAMMA = 0.99  # Discounting factor for future rewards when calculating targets
 VERSION_OFFSET = 50  # Reciprocal of frequency of target nn copying main nn
