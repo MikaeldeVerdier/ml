@@ -92,7 +92,7 @@ def score_row(row):
 
 	is_flush = len(set(suits)) == 1
 
-	low_ace_straight = list(range(2, len(row) + 1)) + [int(environment.SUIT_LENGTH - 1)]
+	low_ace_straight = list(range(2, len(row) + 1)) + [int(environment.SUIT_LENGTH + 1)]
 	is_straight = values[-1] - values[0] == len(row) - 1 or values == low_ace_straight
 
 	if is_flush:
