@@ -222,3 +222,4 @@ class TargetNeuralNetwork(NeuralNetwork):
 
 	def copy_model(self, model):
 		self.model = clone_model(model)
+		self.model.set_weights(model.get_weights())
