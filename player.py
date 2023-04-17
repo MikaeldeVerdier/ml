@@ -33,8 +33,10 @@ class Agent():
 
 		if uses_nn:
 			if is_trainable:
-				self.target_nn = TargetNeuralNetwork(load)
 				self.main_nn = MainNeuralNetwork(load)
+				self.target_nn = TargetNeuralNetwork(load)
+				if not load:
+					self.copy_network()
 			else:
 				self.main_nn = NeuralNetwork(load, name)
 
