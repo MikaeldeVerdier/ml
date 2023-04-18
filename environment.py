@@ -4,8 +4,8 @@ import random
 import config
 from funcs import increment_turn, print_state, print_action, calculate_legal_moves, score_row, format_state, cache
 
-DECK_LENGTH = 24
-SUIT_AMOUNT = 4
+DECK_LENGTH = 26
+SUIT_AMOUNT = 2
 SUIT_LENGTH = DECK_LENGTH / SUIT_AMOUNT
 
 GAME_DIMENSIONS = (3, 3)
@@ -14,7 +14,7 @@ MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
 
 REPLACE_CARDS = 1
 REWARD_FACTOR = 0.25
-INTERMEDIATE_REWARD_FACTOR = 0.15
+INTERMEDIATE_REWARD_FACTOR = 0.20
 
 def reward_transform(reward):
 	return reward * REWARD_FACTOR
@@ -65,7 +65,7 @@ class Environment:
 
 		empty_history = (None,) * config.DEPTH
 		empty_state = np.full(np.prod(GAME_DIMENSIONS), -1)
-		self.game_state = GameState(self.starts, empty_history, empty_state, deck, drawn_card)
+		self.game_state = GameState(self.starts, empty_history, empty_state, deck, drawn_card, 0)
 
 		self.update_turn()
 
@@ -75,7 +75,7 @@ class Environment:
 	def step(self, probs, action):
 		s, deck, drawn_card = self.game_state.take_action(action)
 		new_turn = increment_turn(self.game_state.turn, 1, len(self.current_players))
-		self.game_state = GameState(new_turn, self.game_state.history, s, deck, drawn_card)
+		self.game_state = GameState(new_turn, self.game_state.history, s, deck, drawn_card, self.game_state.amount_pairs)
 
 		if self.verbose:
 			print_action(self, probs, action)
@@ -84,12 +84,13 @@ class Environment:
 
 
 class GameState():
-	def __init__(self, turn, history, s, deck, drawn_card):
+	def __init__(self, turn, history, s, deck, drawn_card, prev_amount_pairs):
 		self.turn = turn
 		self.history = history[1:] + (self,)
 		self.s = s
 		self.deck = deck
 		self.drawn_card = drawn_card
+		self.prev_amount_pairs = prev_amount_pairs
 
 		amount_empty = len(np.where(self.s == -1)[0])
 		self.first_card = amount_empty == len(s)
@@ -97,6 +98,8 @@ class GameState():
 
 		self.legal_moves = self.get_legal_moves()
 		self.done = self.check_game_over()
+
+		self.amount_pairs = self.get_pairs()
 		self.reward = self.get_reward()
 
 	def __hash__(self):
@@ -125,16 +128,22 @@ class GameState():
 	def check_game_over(self):
 		return len(self.deck) == DECK_LENGTH - np.prod(GAME_DIMENSIONS) - REPLACE_CARDS - 1
 
-	def get_reward(self):
-		sum_score = 0
+	def get_pairs(self):
+		sum_pairs = 0
 
 		board = self.s.reshape(GAME_DIMENSIONS)
 		for rowcol in [board, board.T]:
 			for row in rowcol:
 				row = row[np.where(row != -1)].tolist()
-				sum_score += score_row(tuple(row))
+				sum_pairs += score_row(tuple(row))
 
-		return (reward_transform if self.done else intermediate_reward_transform)(sum_score)
+		return sum_pairs
+	
+	def get_reward(self):
+		if self.done:
+			return reward_transform(self.amount_pairs)
+		else:
+			return intermediate_reward_transform(self.amount_pairs - self.prev_amount_pairs)
 
 	@cache(100000)
 	def format_game_state(self, flip, suit_change):
