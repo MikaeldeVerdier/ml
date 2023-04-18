@@ -58,9 +58,7 @@ class Environment:
 		deck = self.deck.copy()
 		drawn_card = deck.pop()
 
-		empty_history = (None,) * config.DEPTH
-		empty_state = np.full(np.prod(GAME_DIMENSIONS), -1)
-		self.game_state = GameState(self.starts, empty_history, empty_state, deck, drawn_card)
+		self.game_state = GameState(self.starts, deck, drawn_card)
 
 		self.update_turn()
 
@@ -70,7 +68,8 @@ class Environment:
 	def step(self, probs, action):
 		s, deck, drawn_card = self.game_state.take_action(action)
 		new_turn = increment_turn(self.game_state.turn, 1, len(self.current_players))
-		self.game_state = GameState(new_turn, self.game_state.history, s, deck, drawn_card)
+
+		self.game_state = GameState(new_turn, deck, drawn_card, old_history=self.game_state.history, s=s)
 
 		if self.verbose:
 			print_action(self, probs, action)
@@ -79,9 +78,12 @@ class Environment:
 
 
 class GameState():
-	def __init__(self, turn, history, s, deck, drawn_card):
+	empty_history = (None,) * config.DEPTH
+	empty_state = np.full(np.prod(GAME_DIMENSIONS), -1)
+
+	def __init__(self, turn, deck, drawn_card, old_history=empty_history, s=empty_state):
 		self.turn = turn
-		self.history = history[1:] + (self,)
+		self.history = old_history[1:] + (self,)
 		self.s = s
 		self.deck = deck
 		self.drawn_card = drawn_card
@@ -153,7 +155,7 @@ class GameState():
 			nn_pass[0].append(formatted_state)
 
 			deck = np.zeros(DECK_LENGTH, dtype=np.int32)
-			deck[np.array(state_deck, dtype=np.int32)] = 1
+			deck[np.array(state_deck)] = 1
 			nn_pass[1].append(deck.tolist())
 
 			drawn_card = np.zeros(DECK_LENGTH, dtype=np.int32)
