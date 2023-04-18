@@ -190,7 +190,7 @@ class GameState():
 
 	def generate_nn_pass(self, modify=False):
 		if modify:
-			flips = range(SUIT_AMOUNT)
+			flips = [0, 1, 2, 3]
 			suit_changes = [i * SUIT_LENGTH for i in range(SUIT_AMOUNT)]
 		else:
 			flips = [0]
