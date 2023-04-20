@@ -4,17 +4,17 @@ import random
 import config
 from funcs import increment_turn, print_state, print_action, calculate_legal_moves, score_row, format_state, cache
 
-DECK_LENGTH = 26
-SUIT_AMOUNT = 2
+DECK_LENGTH = 52
+SUIT_AMOUNT = 4
 SUIT_LENGTH = DECK_LENGTH / SUIT_AMOUNT
 
-GAME_DIMENSIONS = (3, 3)
+GAME_DIMENSIONS = (5, 5)
 NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (config.DEPTH, DECK_LENGTH), (config.DEPTH, DECK_LENGTH), (config.DEPTH, DECK_LENGTH), (config.DEPTH,)]
 MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
 
 REPLACE_CARDS = 1
-REWARD_FACTOR = 0.25
-INTERMEDIATE_REWARD_FACTOR = 0.20
+REWARD_FACTOR = 0.15
+INTERMEDIATE_REWARD_FACTOR = 0.075
 
 def reward_transform(reward):
 	return reward * REWARD_FACTOR
