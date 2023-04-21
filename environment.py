@@ -65,7 +65,7 @@ class Environment:
 
 		empty_history = (None,) * config.DEPTH
 		empty_state = np.full(np.prod(GAME_DIMENSIONS), -1)
-		self.game_state = GameState(self.starts, empty_history, empty_state, deck, drawn_card, 0)
+		self.game_state = GameState(self.starts, empty_history, empty_state, deck, drawn_card)
 
 		self.update_turn()
 
@@ -75,7 +75,7 @@ class Environment:
 	def step(self, probs, action):
 		s, deck, drawn_card = self.game_state.take_action(action)
 		new_turn = increment_turn(self.game_state.turn, 1, len(self.current_players))
-		self.game_state = GameState(new_turn, self.game_state.history, s, deck, drawn_card, self.game_state.amount_pairs)
+		self.game_state = GameState(new_turn, self.game_state.history, s, deck, drawn_card)
 
 		if self.verbose:
 			print_action(self, probs, action)
@@ -84,13 +84,12 @@ class Environment:
 
 
 class GameState():
-	def __init__(self, turn, history, s, deck, drawn_card, prev_amount_pairs):
+	def __init__(self, turn, history, s, deck, drawn_card):
 		self.turn = turn
 		self.history = history[1:] + (self,)
 		self.s = s
 		self.deck = deck
 		self.drawn_card = drawn_card
-		self.prev_amount_pairs = prev_amount_pairs
 
 		amount_empty = len(np.where(self.s == -1)[0])
 		self.first_card = amount_empty == len(s)
@@ -98,8 +97,6 @@ class GameState():
 
 		self.legal_moves = self.get_legal_moves()
 		self.done = self.check_game_over()
-
-		self.amount_pairs = self.get_pairs()
 		self.reward = self.get_reward()
 
 	def __hash__(self):
@@ -140,10 +137,15 @@ class GameState():
 		return sum_pairs
 	
 	def get_reward(self):
-		if self.done:
-			return reward_transform(self.amount_pairs)
-		else:
-			return intermediate_reward_transform(self.amount_pairs - self.prev_amount_pairs)
+		sum_score = 0
+
+		board = self.s.reshape(GAME_DIMENSIONS)
+		for rowcol in [board, board.T]:
+			for row in rowcol:
+				row = row[np.where(row != -1)].tolist()
+				sum_score += score_row(tuple(row))
+
+		return (reward_transform if self.done else intermediate_reward_transform)(sum_score)
 
 	@cache(100000)
 	def format_game_state(self, flip, suit_change):
