@@ -124,17 +124,6 @@ class GameState():
 
 	def check_game_over(self):
 		return len(self.deck) == DECK_LENGTH - np.prod(GAME_DIMENSIONS) - REPLACE_CARDS - 1
-
-	def get_pairs(self):
-		sum_pairs = 0
-
-		board = self.s.reshape(GAME_DIMENSIONS)
-		for rowcol in [board, board.T]:
-			for row in rowcol:
-				row = row[np.where(row != -1)].tolist()
-				sum_pairs += score_row(tuple(row))
-
-		return sum_pairs
 	
 	def get_reward(self):
 		sum_score = 0
