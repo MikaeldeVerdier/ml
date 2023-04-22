@@ -202,7 +202,7 @@ def main():
 	load = False
 	agent = initiate(load)
 
-	while agent.main_nn.version <= config.VERSION_AMOUNT:
+	while agent.main_nn.version < config.VERSION_AMOUNT:
 		if not agent.main_nn.version % config.EVALUATION_FREQUENCY:
 			evaluate_network(agent)
 		self_play(agent)
