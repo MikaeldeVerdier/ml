@@ -1,6 +1,7 @@
 import numpy as np
 
 import environment
+import config
 
 def cache(max_length=5000):
 	def cache_dec(f):
@@ -45,8 +46,8 @@ def linear_wrapper_func(start, end, duration, max_length=1, use_cache=True):
 
 
 @cache()
-def increment_turn(turn, increment, length):
-	return (turn + increment) % length
+def increment_var(var, increment, limit):
+	return (var + increment) % limit
 
 
 @cache(10000)
@@ -96,12 +97,60 @@ def score_row(row):
 	return sum_score
 
 
+@cache()
+def change_suit(card, suit_change, deck_length):
+	return 
+
+
 @cache(10000)
 def format_state(board):
 	shape = (environment.NN_INPUT_DIMENSIONS[0][-1],) + environment.NN_INPUT_DIMENSIONS[0][:-2]
 	binary_map = np.reshape([(np.array(board) == i).astype(np.int32) for i in range(environment.DECK_LENGTH)], shape)
 
 	return np.moveaxis(binary_map, 0, -1).tolist()
+
+
+@cache(100000)
+def format_game_state(history, rot, flip):
+	game_state = history[-1]
+
+	nn_pass = [[] for _ in range(len(environment.NN_INPUT_DIMENSIONS))]
+
+	for depth in range(config.DEPTH):
+		state = np.rot90(game_state.s.reshape(environment.GAME_DIMENSIONS), k=rot)
+		if flip is not None:
+			state = np.flip(state, axis=flip)
+
+		state = state.flatten()
+		state_deck = game_state.deck.copy()
+		state_drawn_card = [game_state.drawn_card]
+
+		formatted_state = format_state(tuple(state))
+		nn_pass[0].append(formatted_state)
+
+		deck = np.zeros(environment.DECK_LENGTH, dtype=np.int32)
+		deck[np.array(state_deck)] = 1
+		nn_pass[1].append(deck.tolist())
+
+		drawn_card = np.zeros(environment.DECK_LENGTH, dtype=np.int32)
+		drawn_card[state_drawn_card[0]] = 1
+		nn_pass[2].append(drawn_card.tolist())
+
+		nn_pass[3].append([game_state.reward])
+
+		if depth != config.DEPTH - 1:
+			if history[-depth - 2]:
+				game_state = history[-depth - 2]
+			else:
+				for i, func in enumerate([np.zeros, np.ones, np.zeros]):
+					empty_dim = func(np.shape(nn_pass[i][-1])).tolist()
+					nn_pass[i] += [empty_dim] * (config.DEPTH - depth - 1)
+
+				break
+
+	nn_pass[0] = np.moveaxis(nn_pass[0], 0, -2).tolist()
+
+	return nn_pass
 
 
 @cache()
