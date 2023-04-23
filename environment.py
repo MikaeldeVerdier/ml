@@ -130,7 +130,11 @@ class GameState():
 		nn_pass = [[] for _ in range(len(NN_INPUT_DIMENSIONS))]
 
 		for depth in range(config.DEPTH):
-			s = np.rot90(game_state.s.reshape(GAME_DIMENSIONS), k=flip).flatten()
+			s = game_state.s.reshape(GAME_DIMENSIONS)
+			if flip is not None:
+				s = np.flip(s, axis=flip)
+
+			s = s.flatten()
 
 			for player in list(range(PLAYER_AMOUNT)):
 				state = []
@@ -156,7 +160,10 @@ class GameState():
 		return nn_pass
 
 	def generate_nn_pass(self, modify=False):
-		flips = [0, 1, 2, 3] if modify else [0]
+		if modify:
+			flips = [0, 1]
+		else:
+			flips = [None]
 
 		nn_pass = []
 		for flip in flips:

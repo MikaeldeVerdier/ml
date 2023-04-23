@@ -95,7 +95,7 @@ def play(env, games, training=False):
 def self_play(agent):
 	print("\nSelf-play started!\n")
 
-	env = Environment([[agent, agent]], verbose=True)
+	env = Environment([[agent, agent]])
 	outcomes = play(env, config.GAME_AMOUNT_SELF_PLAY, training=True)
 
 	print(f"The results were: {outcomes}")
