@@ -122,7 +122,9 @@ def format_game_state(history, rot, flip):
 	nn_pass = [[] for _ in range(len(environment.NN_INPUT_DIMENSIONS))]
 
 	for depth in range(config.DEPTH):
-		state = np.rot90(game_state.s.reshape(environment.GAME_DIMENSIONS), k=rot)
+		state = game_state.s.reshape(environment.GAME_DIMENSIONS)
+		if rot != 0:
+			state = np.rot90(state, k=rot)
 		if flip is not None:
 			state = np.flip(state, axis=flip)
 
