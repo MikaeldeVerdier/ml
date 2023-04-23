@@ -127,18 +127,16 @@ def format_game_state(history, rot, flip):
 			state = np.flip(state, axis=flip)
 
 		state = state.flatten()
-		state_deck = game_state.deck.copy()
-		state_drawn_card = [game_state.drawn_card]
 
 		formatted_state = format_state(tuple(state))
 		nn_pass[0].append(formatted_state)
 
 		deck = np.zeros(environment.DECK_LENGTH, dtype=np.int32)
-		deck[np.array(state_deck)] = 1
+		deck[np.array(game_state.deck)] = 1
 		nn_pass[1].append(deck.tolist())
 
 		drawn_card = np.zeros(environment.DECK_LENGTH, dtype=np.int32)
-		drawn_card[state_drawn_card[0]] = 1
+		drawn_card[game_state.drawn_card] = 1
 		nn_pass[2].append(drawn_card.tolist())
 
 		if depth != config.DEPTH - 1:
