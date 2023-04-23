@@ -95,6 +95,12 @@ def copy_dir(old_dir, new_dir):
 	copytree(old_path, new_path)
 
 
+def find_dir(file, path=""):
+	for root, dirs, _ in os.walk(get_path(path)):
+		if file in dirs:
+			return os.path.join(root, file)
+
+
 """def reset_key(file, key):
 	loaded = load_file(file)
 	loaded[key] = EMPTY_FILES[file][key]

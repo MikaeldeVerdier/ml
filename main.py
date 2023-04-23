@@ -8,9 +8,7 @@ import files
 from player import User, Agent
 from environment import Environment
 
-def initiate():
-	load = False
-
+def initiate(load):
 	files.setup_files()
 	if not load:
 		files.reset_file("save.json")
@@ -49,22 +47,24 @@ def play(env, games, training=False):
 
 			if env.player.is_trainable and probs is not None:
 				q_values[env.game_state.turn].append(probs[action])
+			
+			last_turn = env.game_state.turn
 
 			env.step(probs, action)
 
 			if training:
-				for key, var in [("action", action), ("reward", env.game_state.scores[storage[-1]["state"].turn]), ("next_state", env.game_state)]:
+				for key, var in [("action", action), ("reward", env.game_state.reward), ("next_state", env.game_state)]:
 					storage[-1][key] = var
 
-		for (i, player), score in zip(enumerate(env.current_players), env.game_state.scores):
-			transformed_result = environment.inverse_reward_transform(score)
-			results[env.players_turn][i].append(transformed_result)
+		transformed_result = environment.inverse_reward_transform(env.game_state.reward)
+		results[env.players_turn][last_turn].append(transformed_result)
 
+		for i, player in enumerate(env.current_players):
 			if player.is_trainable and len(q_values[i]):
 				player.main_nn.metrics["average_q_value"].append(float(np.mean(q_values[i])))
 
 		if not game_count % games:
-			print(f"Amount of games played is now: {game_count} ({env.player.full_name})")
+			print(f"Amount of games played is now: {game_count} ({env.players_names})")
 
 		if training:
 			for data in storage:
@@ -94,7 +94,9 @@ def play(env, games, training=False):
 
 def self_play(agent):
 	print("\nSelf-play started!\n")
-	outcomes = play(Environment([[agent, agent]]), config.GAME_AMOUNT_SELF_PLAY, training=True)
+
+	env = Environment([[agent, agent]], verbose=True)
+	outcomes = play(env, config.GAME_AMOUNT_SELF_PLAY, training=True)
 
 	print(f"The results were: {outcomes}")
 
@@ -107,15 +109,14 @@ def retrain_network(agent):
 	for _ in range(config.TRAINING_ITERATIONS):
 		minibatch = random.sample(positions, config.BATCH_SIZE[0])
 
-		x = [[] for _ in range(len(environment.NN_INPUT_DIMENSIONS))]
+		x = []
 		y = []
 
 		for position in minibatch:
 			y.append(position[1:])
-			for i, dim in enumerate(position[0]):
-				x[i].append(np.array(dim))
+			x.append([np.array(dim) for dim in position[0]])
 
-		x = [np.array(var) for var in x]
+		x = [np.array(var) for var in zip(*x)]
 		y = np.array(y)
 
 		agent.main_nn.train(x, y)
@@ -130,7 +131,8 @@ def evaluate_network(agent):
 	print("\nEvaluation of agent started!\n")
 
 	opponent = Agent(name="Random agent", uses_nn=False)
-	outcomes = play(Environment([[agent, opponent]], epsilons=[[0.05, 1]]), config.GAME_AMOUNT_EVALUATION)
+	env = Environment([[agent, opponent]], epsilons=[[0.05, 1]])
+	outcomes = play(env, config.GAME_AMOUNT_EVALUATION)
 
 	# log([agent], outcome)
 
@@ -143,11 +145,10 @@ def log(names, average_s, games):
 
 
 def compete(agents, epsilons, games, starts, verbose=False):
-	outcomes = play(Environment(agents.tolist(), epsilons=epsilons.tolist(), starts=starts, verbose=verbose), games)
+	env = Environment(agents.tolist(), epsilons=epsilons.tolist(), starts=starts, verbose=verbose)
+	outcomes = play(env, games)
 
-	names = [agent.full_name for agent in agents.flatten()]
-	names = np.reshape(names, agents.shape).tolist()
-	for name, outcome in zip(names, outcomes):
+	for name, outcome in zip(env.players_names, outcomes):
 		log(name, outcome, games)
 
 		print(f"\nThe results between agents named {' and '.join(name)} were: {outcome}")
@@ -179,6 +180,7 @@ def play_test(loads, games, starts=0, verbose=True):
 	epsilons[idx] = opposing_epsilons
 
 	agents[~idx] = you
+	# agents[~idx] = None
 
 	compete(agents, epsilons, games, starts, verbose=verbose)
 
@@ -198,9 +200,10 @@ def main():
 	# play_versions([[None, "trained_model"]], config.GAME_AMOUNT_PLAY_VERSIONS)
 	# play_test([[None, "You"]], config.GAME_AMOUNT_PLAY_TEST)
 
-	agent = initiate()
+	load = False
+	agent = initiate(load)
 
-	while agent.main_nn.version <= config.VERSION_AMOUNT:
+	while agent.main_nn.version < config.VERSION_AMOUNT:
 		if not agent.main_nn.version % config.EVALUATION_FREQUENCY:
 			evaluate_network(agent)
 		self_play(agent)

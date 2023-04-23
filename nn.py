@@ -25,7 +25,7 @@ class NeuralNetwork:
 
 		if load:
 			if self.load_dir(name):
-				print(f"NN loaded with version called: {name}")
+				print(f"NN loaded with model: {name}")
 				return
 
 		position_input = Input(shape=environment.NN_INPUT_DIMENSIONS[0], name="position_input")
@@ -43,7 +43,7 @@ class NeuralNetwork:
 		
 		if load:
 			self.load_dir(name, from_weights=True)
-			print(f"Weights loaded from version called: {name}")
+			print(f"Weights loaded from model: {name}")
 		else:
 			try:
 				plot_model(self.model, to_file=files.get_path("model.png"), show_shapes=True, show_layer_names=True)
@@ -57,21 +57,24 @@ class NeuralNetwork:
 		return hash(self.version)
 
 	def load_dir(self, file, from_weights=False):
-		path = files.get_path(f"training/{file}/checkpoint")
+		path = files.find_dir(file)
+
 		if not from_weights:
-			if not os.path.exists(path):
-				self.model = load_model(files.get_path(f"training/{file}"), custom_objects={"mean_absolute_error": self.mean_absolute_error})
+			if not os.path.exists(path + "/checkpoint"):
+				self.model = load_model(path, custom_objects={"mean_squared_error": self.mean_squared_error})
 
 				return True
+
+			return False
 		else:
 			self.model.load_weights(path).expect_partial()
 
-	def save_model(self, to_weights, name=None):
-		if not name:
+	def save_model(self, to_weights, name=None, is_checkpoint=False):
+		if is_checkpoint:
+			path = "checkpoints/"
+		else:
 			name = self.name
 			path = "training/"
-		else:
-			path = "checkpoints/"
 
 		if not to_weights:
 			self.model.save(files.get_path(f"{path}{name}"))
@@ -127,7 +130,8 @@ class NeuralNetwork:
 
 	@cache(100000)
 	def get_preds(self, game_state):
-		data = [np.expand_dims(dat, 0) for dat in game_state.generate_nn_pass()[0]]
+		nn_pass = game_state.generate_nn_pass()
+		data = [np.expand_dims(dat, 0) for dat in nn_pass[0]]
 		logits = self.model.predict_on_batch(data)[0]
 
 		mask = np.full(logits.shape, True)
@@ -199,9 +203,12 @@ class TargetNeuralNetwork(NeuralNetwork):
 		self.version = loaded["target_nn_version"]
 
 	def calculate_target(self, data):
-		v_next = -np.max(self.get_preds(data["next_state"])) if not data["next_state"].done else 0
+		q_values_next = self.get_preds(data["next_state"])
+		v_next = np.max(q_values_next) if not data["next_state"].done else 0
+		modifier = -1 if data["state"].turn != data["next_state"].turn else 1
 
-		return data["reward"] + config.GAMMA * v_next
+		return data["reward"] + config.GAMMA * v_next * modifier
 
 	def copy_model(self, model):
 		self.model = clone_model(model)
+		self.model.set_weights(model.get_weights())

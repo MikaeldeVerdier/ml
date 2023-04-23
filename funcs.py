@@ -28,11 +28,13 @@ def cache(max_length=5000):
 
 
 def linear_wrapper_func(start, end, duration, max_length=1, use_cache=True):
-	def linear_inner_func(x):
-		b = start
-		m = (end - start) / duration
+	intercept = start
+	slope = (end - start) / duration
 
-		return (max if m < 0 else min)(end, m * x + b)
+	func = max if slope < 0 else min
+
+	def linear_inner_func(x):
+		return func(end, slope * x + intercept)
 	
 	if use_cache:
 		linear_inner_func = cache(max_length)(linear_inner_func)
@@ -49,40 +51,17 @@ def increment_turn(turn, increment, length):
 
 @cache(10000)
 def calculate_legal_moves(board):
-	if environment.MOVE_AMOUNT != np.prod(environment.GAME_DIMENSIONS):
-		legal_moves = []
-		for dim1 in range(environment.GAME_DIMENSIONS[1]):
-			for dim2 in range(environment.GAME_DIMENSIONS[0]):
-				if board[dim1 + dim2 * environment.GAME_DIMENSIONS[1]] != -1:
-					if dim2 != 0:
-						legal_moves.append(dim1 + (dim2 - 1) * environment.GAME_DIMENSIONS[1])
-					break
-			else:
-				legal_moves.append(dim1 + dim2 * environment.GAME_DIMENSIONS[1])
-	else:
-		legal_moves = np.where(board == -1)
-		if not len(legal_moves):
-			legal_moves = legal_moves[0]
+	legal_moves = []
+	for dim1 in range(environment.GAME_DIMENSIONS[1]):
+		for dim2 in range(environment.GAME_DIMENSIONS[0]):
+			if board[dim1 + dim2 * environment.GAME_DIMENSIONS[1]] != -1:
+				if dim2 != 0:
+					legal_moves.append(dim1 + (dim2 - 1) * environment.GAME_DIMENSIONS[1])
+				break
+		else:
+			legal_moves.append(dim1 + dim2 * environment.GAME_DIMENSIONS[1])
 
 	return legal_moves
-
-
-@cache(10000)
-def score_board(board):
-	for player in range(environment.PLAYER_AMOUNT):
-		for checks in [[[environment.GAME_DIMENSIONS[0], environment.GAME_DIMENSIONS[1] - environment.IN_A_ROW + 1], list(range(environment.IN_A_ROW))], [[environment.GAME_DIMENSIONS[0] - environment.IN_A_ROW + 1, environment.GAME_DIMENSIONS[1]], [element * environment.GAME_DIMENSIONS[1] for element in list(range(environment.IN_A_ROW))]], [[environment.GAME_DIMENSIONS[0] - environment.IN_A_ROW + 1, environment.GAME_DIMENSIONS[1] - environment.IN_A_ROW + 1], [element * (environment.GAME_DIMENSIONS[1] - 1) + environment.IN_A_ROW - 1 for element in list(range(environment.IN_A_ROW))]], [[environment.GAME_DIMENSIONS[0] - environment.IN_A_ROW + 1, environment.GAME_DIMENSIONS[1] - environment.IN_A_ROW + 1], [element * (environment.GAME_DIMENSIONS[1] + 1) for element in list(range(environment.IN_A_ROW))]]]:
-			for i in range(checks[0][0]):
-				for i2 in range(checks[0][1]):
-					pos = [board[i * environment.GAME_DIMENSIONS[1] + i2 + i3] == player for i3 in checks[1]]
-					if pos.count(True) == environment.IN_A_ROW:
-						res = [-1] * environment.PLAYER_AMOUNT
-						res[player] = 1
-						return res
-
-	if not board.count(-1):
-		return (1e-5,) * environment.PLAYER_AMOUNT
-
-	return (0,) * environment.PLAYER_AMOUNT
 
 
 @cache()
@@ -99,7 +78,7 @@ def print_state(state):
 	print(f"Position is:\n{board.reshape(environment.GAME_DIMENSIONS)}")
 
 	if state.done:
-		print(f"Game over! The outcomes were: {state.scores}\n")
+		print(f"Game over! The outcomes were: {state.reward}\n")
 
 
 def print_action(env, probs, action):
