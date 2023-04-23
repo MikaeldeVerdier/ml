@@ -1,8 +1,9 @@
 import numpy as np
 import random
+from copy import deepcopy
 
 import config
-from funcs import increment_turn, print_state, print_action, calculate_legal_moves, score_row, format_state, cache
+from funcs import increment_var, print_state, print_action, calculate_legal_moves, score_row, format_game_state
 
 DECK_LENGTH = 52
 SUIT_AMOUNT = 4
@@ -47,10 +48,10 @@ class Environment:
 		self.epsilon = self.epsilons[self.players_turn][self.game_state.turn]
 
 	def reset(self):
-		self.players_turn = increment_turn(self.players_turn, 1, len(self.players))
+		self.players_turn = increment_var(self.players_turn, 1, len(self.players))
 		self.current_players = self.players[self.players_turn]
 
-		self.starts = increment_turn(self.starts, 1, len(self.current_players))
+		self.starts = increment_var(self.starts, 1, len(self.current_players))
 
 		if self.players_turn == 0:
 			random.shuffle(self.deck)
@@ -67,7 +68,7 @@ class Environment:
 
 	def step(self, probs, action):
 		s, deck, drawn_card = self.game_state.take_action(action)
-		new_turn = increment_turn(self.game_state.turn, 1, len(self.current_players))
+		new_turn = increment_var(self.game_state.turn, 1, len(self.current_players))
 
 		self.game_state = GameState(new_turn, deck, drawn_card, old_history=self.game_state.history, s=s)
 
@@ -88,12 +89,13 @@ class GameState():
 		self.deck = deck
 		self.drawn_card = drawn_card
 
+		self.done = self.check_game_over()
+
 		amount_empty = len(np.where(self.s == -1)[0])
 		self.first_card = amount_empty == len(s)
-		self.replace_card = not amount_empty
+		self.replace_card = not amount_empty and not self.done
 
 		self.legal_moves = self.get_legal_moves()
-		self.done = self.check_game_over()
 		self.reward = self.get_reward()
 
 	def __hash__(self):
@@ -114,6 +116,9 @@ class GameState():
 
 		if self.replace_card:
 			return list(range(MOVE_AMOUNT))
+		
+		if self.done:
+			return []
 
 		legal_moves = calculate_legal_moves(tuple(self.s))
 
@@ -135,58 +140,35 @@ class GameState():
 
 		return reward_transform(sum_score)
 
-	@cache(100000)
-	def format_game_state(self, flip, suit_change):
-		game_state = self.history[-1]
-
-		nn_pass = [[] for _ in range(len(NN_INPUT_DIMENSIONS))]
-
-		for depth in range(config.DEPTH):
-			state = np.rot90(game_state.s.reshape(GAME_DIMENSIONS), k=flip).flatten()
-			state_deck = game_state.deck.copy()
-			state_drawn_card = [game_state.drawn_card]
-
-			for var in [state, state_deck, state_drawn_card]:
-				for i, card in enumerate(var):
-					if card != -1:
-						var[i] = int((var[i] + suit_change) % DECK_LENGTH)
-
-			formatted_state = format_state(tuple(state))
-			nn_pass[0].append(formatted_state)
-
-			deck = np.zeros(DECK_LENGTH, dtype=np.int32)
-			deck[np.array(state_deck)] = 1
-			nn_pass[1].append(deck.tolist())
-
-			drawn_card = np.zeros(DECK_LENGTH, dtype=np.int32)
-			drawn_card[state_drawn_card[0]] = 1
-			nn_pass[2].append(drawn_card.tolist())
-
-			if depth != config.DEPTH - 1:
-				if self.history[-depth - 2]:
-					game_state = self.history[-depth - 2]
-				else:
-					for i, func in enumerate([np.zeros, np.ones, np.zeros]):
-						empty_dim = func(np.shape(nn_pass[i][-1])).tolist()
-						nn_pass[i] += [empty_dim] * (config.DEPTH - depth - 1)
-
-					break
-
-		nn_pass[0] = np.moveaxis(nn_pass[0], 0, -2).tolist()
-
-		return nn_pass
-
 	def generate_nn_pass(self, modify=False):
 		if modify:
-			flips = [0, 1, 2, 3]
+			rots = [0, 1, 2, 3]
+			flips = [0, 1]
 			suit_changes = [i * SUIT_LENGTH for i in range(SUIT_AMOUNT)]
 		else:
-			flips = [0]
+			rots = [0]
+			flips = [None]
 			suit_changes = [0]
 
 		nn_pass = []
-		for flip in flips:
-			for suit_change in suit_changes:
-				nn_pass.append(self.format_game_state(flip, suit_change))
+		for suit_change in suit_changes:
+			if suit_change:
+				history = []
+				for old_game_state in self.history:
+					game_state = deepcopy(old_game_state)
+					for var in [game_state.s, game_state.deck]:
+						for i, card in enumerate(var):
+							if card != -1:
+								var[i] = int(increment_var(card, suit_change, DECK_LENGTH))
+					game_state.drawn_card = int(increment_var(game_state.drawn_card, suit_change, DECK_LENGTH))
+				
+					history.append(game_state)
+				history = tuple(history)
+			else:
+				history = self.history
+
+			for rot in rots:
+				for flip in flips:
+					nn_pass.append(format_game_state(history, rot, flip))
 
 		return nn_pass

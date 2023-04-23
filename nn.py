@@ -216,7 +216,7 @@ class TargetNeuralNetwork(NeuralNetwork):
 	def calculate_target(self, data):
 		q_values_next = self.get_preds(data["next_state"])
 		v_next = np.max(q_values_next) if not data["next_state"].done else 0
-		modifier = -1 if data["state"].turn != data["next_state"].turn else 1
+		modifier = 1 if data["state"].turn == data["next_state"].turn else -1
 
 		return data["reward"] + config.GAMMA * v_next * modifier
 
