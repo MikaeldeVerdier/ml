@@ -197,7 +197,7 @@ def play_versions(loads, games, starts=0, verbose=False):
 
 def main():
 	# play_versions([[None], ["main_nn"]], config.GAME_AMOUNT_PLAY_VERSIONS)
-	# play_test([[None], ["You"]], config.GAME_AMOUNT_PLAY_TEST)
+	# play_test([[None], ["main_nn"], ["You"]], config.GAME_AMOUNT_PLAY_TEST)
 
 	load = False
 	agent = initiate(load)

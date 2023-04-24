@@ -16,7 +16,7 @@ DENSE_POLICY_HEAD = [512, 512, 512, 256, 128, 64, 32, 32]
 USE_BIAS = True
 
 # Self-play
-GAME_AMOUNT_SELF_PLAY = 15
+GAME_AMOUNT_SELF_PLAY = 14
 BUFFER_REQUIREMENT = 12000  # Minimum requirement of new positions generated during training
 BUFFER_SIZE = 90000  # Replay buffer size
 DEPTH = 1  # Amount of previous state observations used as information for the neural network
