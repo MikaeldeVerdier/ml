@@ -82,7 +82,7 @@ class NeuralNetwork:
 			self.model.save_weights(files.get_path(f"{path}{name}/checkpoint"))
 
 	@staticmethod
-	def mean_absolute_error(y_true, y_pred):
+	def mean_squared_error(y_true, y_pred):
 		logits = tf.reshape(y_pred, (tf.shape(y_true)[0], -1))
 
 		actions = tf.cast(tf.gather(y_true, tf.constant([0]), axis=1), tf.int32)
@@ -90,7 +90,7 @@ class NeuralNetwork:
 
 		index_tensor = tf.stack([tf.range(tf.shape(actions)[0]), actions[:, 0]], axis=1)
 		preds = tf.gather_nd(logits, index_tensor)
-		loss = tf.reduce_mean(tf.math.abs(targets - preds))
+		loss = tf.reduce_mean(tf.math.square(targets - preds))
 
 		return loss
 
