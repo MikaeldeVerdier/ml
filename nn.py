@@ -39,7 +39,7 @@ class NeuralNetwork:
 		ph = self.policy_head(x)
 
 		self.model = Model(inputs=[position_input, turn_input], outputs=ph)
-		self.model.compile(loss=self.mean_absolute_error, optimizer=Adam(learning_rate=config.learning_rate.start))
+		self.model.compile(loss=self.mean_squared_error, optimizer=Adam(learning_rate=config.learning_rate.start))
 		
 		if load:
 			self.load_dir(name, from_weights=True)
