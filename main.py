@@ -133,7 +133,7 @@ def evaluate_network(agent):
 	env = Environment([[agent]], epsilons=[[0.05]])
 	outcomes = play(env, config.GAME_AMOUNT_EVALUATION)
 
-	# log([agent], outcome)
+	# log(env.players_names, outcome, config.GAME_AMOUNT_EVALUATION)
 
 	print(f"\nThe results were: {outcomes}")
 
@@ -196,8 +196,8 @@ def play_versions(loads, games, starts=0, verbose=False):
 
 
 def main():
-	# play_versions([[None], ["main_nn"]], config.GAME_AMOUNT_PLAY_VERSIONS)
-	# play_test([[None], ["main_nn"], ["You"]], config.GAME_AMOUNT_PLAY_TEST)
+	# play_versions([["main_nn"], [None]], config.GAME_AMOUNT_PLAY_VERSIONS)
+	# play_test([["main_nn"], ["you"], [None]], config.GAME_AMOUNT_PLAY_TEST)
 
 	load = False
 	agent = initiate(load)
