@@ -1,7 +1,7 @@
 from funcs import linear_wrapper_func
 
 # Main loop
-VERSION_AMOUNT = 500
+VERSION_AMOUNT = 2500
 
 # Network architecture
 CONVOLUTIONAL_LAYERS_POSITION = (4, 8, 16, 32, 64, 128, 128, 128)

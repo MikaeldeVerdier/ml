@@ -19,7 +19,7 @@ def inverse_reward_transform(transformed_reward):
 
 
 def results_transform(results):
-	return len(results)
+	return sum(results)
 
 
 class Environment:
