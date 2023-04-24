@@ -47,7 +47,7 @@ def play(env, games, training=False):
 
 			if env.player.is_trainable and probs is not None:
 				q_values[env.game_state.turn].append(probs[action])
-			
+
 			last_turn = env.game_state.turn
 
 			env.step(probs, action)
