@@ -20,16 +20,16 @@ def initiate(load):
 	return agent
 
 
-def play(env, games, training=False):
+def play(env, game_amount, training=False):
 	if training:
 		buffer = np.load(files.get_path("positions.npy"), allow_pickle=True).tolist()
 		length_generated = 0
 
 	results = np.empty(np.shape(env.players) + (0,)).tolist()
 
-	og_games = games
+	og_game_amount = game_amount
 	game_count = 0
-	while game_count < games:
+	while game_count < game_amount:
 		env.reset()
 
 		if env.players_turn == 0:
@@ -47,7 +47,7 @@ def play(env, games, training=False):
 
 			if env.player.is_trainable and probs is not None:
 				q_values[env.game_state.turn].append(probs[action])
-			
+
 			last_turn = env.game_state.turn
 
 			env.step(probs, action)
@@ -63,7 +63,7 @@ def play(env, games, training=False):
 			if player.is_trainable and len(q_values[i]):
 				player.main_nn.metrics["average_q_value"].append(float(np.mean(q_values[i])))
 
-		if not game_count % games:
+		if not game_count % game_amount:
 			print(f"Amount of games played is now: {game_count} ({env.players_names})")
 
 		if training:
@@ -74,13 +74,13 @@ def play(env, games, training=False):
 				buffer = (buffer + [[state, data["action"], data["target"]] for state in generated_states])[-config.BUFFER_SIZE:]
 				length_generated += len(generated_states)
 
-			if not game_count % games:
+			if not game_count % game_amount:
 				files.write("positions.npy", np.array(buffer, dtype=object))
 
 				print(f"New positions generated is now: {length_generated}\n")
 
-			if (length_generated < config.BUFFER_REQUIREMENT or len(buffer) != config.BUFFER_SIZE) and games == game_count:
-				games += og_games
+			if (length_generated < config.BUFFER_REQUIREMENT or len(buffer) != config.BUFFER_SIZE) and game_amount == game_count:
+				game_amount += og_game_amount
 
 	for i, players in enumerate(env.players):
 		for i2, player in enumerate(players):
@@ -133,22 +133,22 @@ def evaluate_network(agent):
 	env = Environment([[agent]], epsilons=[[0.05]])
 	outcomes = play(env, config.GAME_AMOUNT_EVALUATION)
 
-	# log([agent], outcome)
+	# log(env.players_names, outcome, config.GAME_AMOUNT_EVALUATION)
 
 	print(f"\nThe results were: {outcomes}")
 
 
-def log(names, average_s, games):
-	message = f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}: {' vs '.join(names)} ({games} games):\nAverage results were {average_s}\n"
+def log(names, average_s, amount_games):
+	message = f"{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}: {' vs '.join(names)} ({amount_games} games):\nAverage results were {average_s}\n"
 	files.write("log.txt", message, "a")
 
 
-def compete(agents, epsilons, games, starts, verbose=False):
+def compete(agents, epsilons, amount_games, starts, verbose=False):
 	env = Environment(agents.tolist(), epsilons=epsilons.tolist(), starts=starts, verbose=verbose)
-	outcomes = play(env, games)
+	outcomes = play(env, amount_games)
 
 	for name, outcome in zip(env.players_names, outcomes):
-		log(name, outcome, games)
+		log(name, outcome, amount_games)
 
 		print(f"\nThe results between agents named {' and '.join(name)} were: {outcome}")
 		best = name[np.argmax(outcome)]
@@ -164,7 +164,7 @@ def load_opponents(loads):
 		yield (agent, epsilon)
 
 
-def play_test(loads, games, starts=0, verbose=True):
+def play_test(loads, amount_games, starts=0, verbose=True):
 	you = User(name="You")
 
 	loads = np.array(loads, dtype=object)
@@ -181,10 +181,10 @@ def play_test(loads, games, starts=0, verbose=True):
 	agents[~idx] = you
 	# agents[~idx] = None
 
-	compete(agents, epsilons, games, starts, verbose=verbose)
+	compete(agents, epsilons, amount_games, starts, verbose=verbose)
 
 
-def play_versions(loads, games, starts=0, verbose=False):
+def play_versions(loads, amount_games, starts=0, verbose=False):
 	loads = np.array(loads, dtype=object)
 
 	agents, epsilons = zip(*load_opponents(loads))
@@ -192,12 +192,12 @@ def play_versions(loads, games, starts=0, verbose=False):
 	agents = np.reshape(agents, loads.shape)
 	epsilons = np.reshape(epsilons, loads.shape)
 
-	compete(agents, epsilons, games, starts, verbose=verbose)
+	compete(agents, epsilons, amount_games, starts, verbose=verbose)
 
 
 def main():
-	# play_versions([[None], ["main_nn"]], config.GAME_AMOUNT_PLAY_VERSIONS)
-	# play_test([[None], ["You"]], config.GAME_AMOUNT_PLAY_TEST)
+	# play_versions([["main_nn"], [None]], config.GAME_AMOUNT_PLAY_VERSIONS)
+	# play_test([["main_nn"], ["you"], [None]], config.GAME_AMOUNT_PLAY_TEST)
 
 	load = False
 	agent = initiate(load)

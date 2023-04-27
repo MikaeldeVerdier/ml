@@ -97,11 +97,6 @@ def score_row(row):
 	return sum_score
 
 
-@cache()
-def change_suit(card, suit_change, deck_length):
-	return 
-
-
 @cache(10000)
 def format_state(board):
 	shape = (environment.NN_INPUT_DIMENSIONS[0][-1],) + environment.NN_INPUT_DIMENSIONS[0][:-2]
@@ -117,23 +112,23 @@ def format_game_state(history, rot, flip):
 	nn_pass = [[] for _ in range(len(environment.NN_INPUT_DIMENSIONS))]
 
 	for depth in range(config.DEPTH):
-		state = np.rot90(game_state.s.reshape(environment.GAME_DIMENSIONS), k=rot)
+		state = game_state.s.reshape(environment.GAME_DIMENSIONS)
+		if rot != 0:
+			state = np.rot90(state, k=rot)
 		if flip is not None:
 			state = np.flip(state, axis=flip)
 
 		state = state.flatten()
-		state_deck = game_state.deck.copy()
-		state_drawn_card = [game_state.drawn_card]
 
 		formatted_state = format_state(tuple(state))
 		nn_pass[0].append(formatted_state)
 
 		deck = np.zeros(environment.DECK_LENGTH, dtype=np.int32)
-		deck[np.array(state_deck)] = 1
+		deck[np.array(game_state.deck)] = 1
 		nn_pass[1].append(deck.tolist())
 
 		drawn_card = np.zeros(environment.DECK_LENGTH, dtype=np.int32)
-		drawn_card[state_drawn_card[0]] = 1
+		drawn_card[game_state.drawn_card] = 1
 		nn_pass[2].append(drawn_card.tolist())
 
 		nn_pass[3].append([game_state.reward])
