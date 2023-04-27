@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import os
 from tensorflow.keras import regularizers
 from tensorflow.keras.models import Model, load_model, clone_model
-from tensorflow.keras.layers import Input, Conv3D, Flatten, Dense, BatchNormalization, ReLU, Concatenate
+from tensorflow.keras.layers import Input, Conv3D, Flatten, Dense, Dropout, BatchNormalization, ReLU, Concatenate
 from tensorflow.keras.optimizers import Adam
 from keras.utils.vis_utils import plot_model
 
@@ -99,9 +99,19 @@ class NeuralNetwork:
 
 	@staticmethod
 	def convolutional_layer_3D(x, filters, kernel_size):
-		x = Conv3D(filters=filters, kernel_size=kernel_size, padding="same", data_format="channels_last", use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
+		x = Conv3D(filters=filters, kernel_size=kernel_size, padding="same", data_format="channels_last", use_bias=config.USE_BIAS, kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
 		x = BatchNormalization()(x)
 		x = ReLU()(x)
+		x = Dropout(config.DROPOUT_FACTOR)(x)
+
+		return x
+
+	@staticmethod
+	def dense_layer(x, neuron_amount):
+		x = Dense(neuron_amount, use_bias=config.USE_BIAS, kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
+		x = BatchNormalization()(x)
+		x = ReLU()(x)
+		x = Dropout(config.DROPOUT_FACTOR)(x)
 
 		return x
 
@@ -111,30 +121,27 @@ class NeuralNetwork:
 
 		x = Flatten()(x)
 		for neuron_amount in config.DENSE_POSITION:
-			x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
+			x = self.dense_layer(x, neuron_amount)
 
 		return x
 
-	@staticmethod
-	def deck_mlp(x):
+	def deck_mlp(self, x):
 		x = Flatten()(x)
 		for neuron_amount in config.DENSE_DECK:
-			x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
+			x = self.dense_layer(x, neuron_amount)
 
 		return x
 
-	@staticmethod
-	def drawn_card_mlp(x):
+	def drawn_card_mlp(self, x):
 		x = Flatten()(x)
 		for neuron_amount in config.DENSE_DRAWN_CARD:
-			x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
+			x = self.dense_layer(x, neuron_amount)
 
 		return x
 
-	@staticmethod
-	def policy_head(x):
+	def policy_head(self, x):
 		for neuron_amount in config.DENSE_POLICY_HEAD:
-			x = Dense(neuron_amount, use_bias=config.USE_BIAS, activation="relu", kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
+			x = self.dense_layer(x, neuron_amount)
 		x = Dense(environment.MOVE_AMOUNT, use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST), name="policy_head")(x)
 
 		return x
