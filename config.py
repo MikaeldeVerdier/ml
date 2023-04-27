@@ -1,7 +1,7 @@
 from funcs import linear_wrapper_func
 
 # Main loop
-VERSION_AMOUNT = 2500
+VERSION_AMOUNT = 1500
 
 # Network architecture
 USE_BIAS = True
@@ -31,9 +31,9 @@ TRAINING_ITERATIONS = 40  # Amount of times a random positions are sampled and u
 BATCH_SIZE = (256, 64)  # [0]: amount of positions sampled. [1]: actual batch_size used in model.fit()
 EPOCHS = 1  # Amount of times batch is looped over
 GAMMA = 0.7  # Discounting factor for future rewards when calculating targets
-VERSION_OFFSET = 50  # Reciprocal of frequency of target neural network copying main neural network
+VERSION_OFFSET = 25  # Reciprocal of frequency of target neural network copying main neural network
 SAVING_FREQUENCY = 250  # Reciprocal of frequency of saving progress
-MODEL_CHECKPOINT_FREQUENCY = 1000  # Reciprocal of frequency of saving checkpoint models
+MODEL_CHECKPOINT_FREQUENCY = 750  # Reciprocal of frequency of saving checkpoint models
 VALIDATION_SPLIT = 0.2  # Share of data used for validation
 REG_CONST = 1e-4  # L2 Regularization hyperparameter
 learning_rate = linear_wrapper_func(1e-4, 1e-6, VERSION_AMOUNT * 0.9, use_cache=False)
