@@ -75,7 +75,7 @@ class Environment:
 		s, deck, drawn_card = self.game_state.take_action(action)
 		new_turn = increment_var(self.game_state.turn, 1, len(self.current_players))
 
-		self.game_state = GameState(new_turn, deck, drawn_card, old_history=self.game_state.history, s=s)
+		self.game_state = GameState(new_turn, deck, drawn_card, old_history=self.game_state.history, s=s, prev_pairs=self.game_state.amount_pairs)
 
 		if self.verbose:
 			print_action(self, probs, action)
@@ -86,10 +86,12 @@ class Environment:
 class GameState():
 	empty_history = (None,) * config.DEPTH
 	empty_state = np.full(np.prod(GAME_DIMENSIONS), -1)
+	empty_prev_pairs = 0
 
-	def __init__(self, turn, deck, drawn_card, old_history=empty_history, s=empty_state):
+	def __init__(self, turn, deck, drawn_card, old_history=empty_history, s=empty_state, prev_pairs=empty_prev_pairs):
 		self.turn = turn
 		self.history = old_history[1:] + (self,)
+		self.prev_pairs = prev_pairs
 		self.s = s
 		self.deck = deck
 		self.drawn_card = drawn_card
@@ -101,6 +103,7 @@ class GameState():
 		self.replace_card = not amount_empty and not self.done
 
 		self.legal_moves = self.get_legal_moves()
+		self.amount_pairs = self.get_pairs()
 		self.reward = self.get_reward()
 
 	def __hash__(self):
@@ -132,16 +135,22 @@ class GameState():
 	def check_game_over(self):
 		return len(self.deck) == DECK_LENGTH - np.prod(GAME_DIMENSIONS) - REPLACE_CARDS - 1
 	
-	def get_reward(self):
-		sum_score = 0
+	def get_pairs(self):
+		sum_amount = 0
 
 		board = self.s.reshape(GAME_DIMENSIONS)
 		for rowcol in [board, board.T]:
 			for row in rowcol:
 				row = row[np.where(row != -1)].tolist()
-				sum_score += score_row(tuple(row))
+				sum_amount += score_row(tuple(row))
 
-		return (reward_transform if self.done else intermediate_reward_transform)(sum_score)
+		return sum_amount
+	
+	def get_reward(self):
+		if self.done:
+			return reward_transform(self.amount_pairs)
+		else:
+			return intermediate_reward_transform(self.amount_pairs - self.prev_pairs)
 
 	def generate_nn_pass(self, modify=False):
 		if modify:
