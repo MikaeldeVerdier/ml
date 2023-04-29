@@ -84,10 +84,10 @@ class GameState():
 
 	def __init__(self, turn, deck, drawn_card, old_history=empty_history, s=empty_state):
 		self.turn = turn
-		self.history = old_history[1:] + (self,)
-		self.s = s
 		self.deck = deck
 		self.drawn_card = drawn_card
+		self.history = old_history[1:] + (self,)
+		self.s = s
 
 		self.done = self.check_game_over()
 
