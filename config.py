@@ -5,9 +5,9 @@ VERSION_AMOUNT = 1500
 
 # Network architecture
 USE_BIAS = True
-DROPOUT_FACTOR = 0.3
+DROPOUT_FACTOR = 0.5
 
-CONVOLUTIONAL_LAYERS_POSITION = (64, 128, 128)
+CONVOLUTIONAL_LAYERS_POSITION = (64, 128, 128, 128, 128, 128)
 CONVOLUTIOANL_SHAPE_POSITION = (3, 3, 3)
 DENSE_POSITION = [3200, 3000, 2500, 2048, 2048, 2048, 2048, 2048, 2048, 1024, 512]
 
@@ -30,7 +30,7 @@ epsilon = linear_wrapper_func(1, 0.1, VERSION_AMOUNT * 0.8)  # Function for prob
 TRAINING_ITERATIONS = 40  # Amount of times a random positions are sampled and used to train the neural network
 BATCH_SIZE = (256, 64)  # [0]: amount of positions sampled. [1]: actual batch_size used in model.fit()
 EPOCHS = 1  # Amount of times batch is looped over
-GAMMA = 0.7  # Discounting factor for future rewards when calculating targets
+GAMMA = 0.9  # Discounting factor for future rewards when calculating targets
 VERSION_OFFSET = 25  # Reciprocal of frequency of target neural network copying main neural network
 SAVING_FREQUENCY = 250  # Reciprocal of frequency of saving progress
 MODEL_CHECKPOINT_FREQUENCY = 750  # Reciprocal of frequency of saving checkpoint models
