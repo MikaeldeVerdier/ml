@@ -11,9 +11,7 @@ from environment import Environment
 def initiate(load):
 	files.setup_files()
 	if not load:
-		files.reset_file("save.json")
-		files.reset_file("positions.npy")
-		files.reset_file("log.txt")
+		files.reset_files()
 
 	agent = Agent(load=load, is_trainable=True)
 

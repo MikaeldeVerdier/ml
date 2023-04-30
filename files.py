@@ -26,20 +26,26 @@ EMPTY_FILES = {
 	"log.txt": EMPTY_LOG
 }
 
+def get_path(file):
+	return f"{config.SAVE_PATH}{file}"
+
+
 def setup_files():
-	save_folder = (config.SAVE_PATH, os.mkdir)
-	backup_folder = (f"{config.SAVE_PATH}backup/", os.mkdir)
-	save_file = (f"{config.SAVE_PATH}save.json", open, "x")
-	positions_file = (f"{config.SAVE_PATH}positions.npy", open, "x")
-	log_file = (f"{config.SAVE_PATH}log.txt", open, "x")
+	save_folder = (get_path(""), os.mkdir)
+	backup_folder = (get_path(f"backup/"), os.mkdir)
+	save_file = (get_path("save.json"), open, "x")
+	positions_file = (get_path("positions.npy"), open, "x")
+	log_file = (get_path("log.txt"), open, "x")
 
 	for file, func, *args in [save_folder, backup_folder, save_file, positions_file, log_file]:
 		if not os.path.exists(file):
 			func(file, *args)
 
 
-def get_path(file):
-	return f"{config.SAVE_PATH}{file}"
+def reset_files():
+	reset_file("save.json")
+	reset_file("positions.npy")
+	reset_file("log.txt")
 
 
 def read(file):
@@ -105,3 +111,12 @@ def find_dir(file, path=""):
 	loaded = load_file(file)
 	loaded[key] = EMPTY_FILES[file][key]
 	write(file, json.dumps(loaded))"""
+
+
+"""def copy_dir(old_dir, new_dir):
+	old_path = get_path(old_dir)
+	new_path = get_path(new_dir)
+
+	if os.path.exists(new_path):
+		rmtree(new_path)
+	copytree(old_path, new_path)"""
