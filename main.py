@@ -208,6 +208,8 @@ def main():
 		self_play(agent)
 		retrain_network(agent)
 
+	play_versions([["main_nn"], [None]], config.GAME_AMOUNT_PLAY_VERSIONS)
+
 
 if __name__ == "__main__":
 	main()
