@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import os
 from tensorflow.keras import regularizers
 from tensorflow.keras.models import Model, load_model, clone_model
-from tensorflow.keras.layers import Input, Conv3D, Flatten, Dense, Dropout, BatchNormalization, ReLU, Concatenate
+from tensorflow.keras.layers import Input, Conv3D, Flatten, Dense, BatchNormalization, ReLU, Concatenate
 from tensorflow.keras.optimizers import Adam
 from keras.utils.vis_utils import plot_model
 
@@ -105,7 +105,6 @@ class NeuralNetwork:
 		x = Conv3D(filters=filters, kernel_size=kernel_size, padding="same", data_format="channels_last", use_bias=config.USE_BIAS, kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
 		x = BatchNormalization()(x)
 		x = ReLU()(x)
-		x = Dropout(config.DROPOUT_FACTOR)(x)
 
 		return x
 
@@ -114,7 +113,6 @@ class NeuralNetwork:
 		x = Dense(neuron_amount, use_bias=config.USE_BIAS, kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
 		x = BatchNormalization()(x)
 		x = ReLU()(x)
-		x = Dropout(config.DROPOUT_FACTOR)(x)
 
 		return x
 
