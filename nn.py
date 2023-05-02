@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import os
 from tensorflow.keras import regularizers
 from tensorflow.keras.models import Model, load_model, clone_model
-from tensorflow.keras.layers import Input, Conv3D, Flatten, Dense, BatchNormalization, ReLU, Concatenate
+from tensorflow.keras.layers import Input, Conv3D, Flatten, Dense, BatchNormalization, Sigmoid, Concatenate
 from tensorflow.keras.optimizers import Adam
 from keras.utils.vis_utils import plot_model
 
@@ -45,7 +45,7 @@ class NeuralNetwork:
 		ph = self.policy_head(x)
 
 		self.model = Model(inputs=[position_input, deck_input, drawn_card_input, scores_input], outputs=ph)
-		self.model.compile(loss=self.mean_squared_error, optimizer=Adam(learning_rate=config.learning_rate.start))
+		self.model.compile(loss=self.mean_absolute_error, optimizer=Adam(learning_rate=config.learning_rate.start))
 		
 		if load:
 			self.load_dir(name, from_weights=True)
@@ -67,7 +67,7 @@ class NeuralNetwork:
 
 		if not from_weights:
 			if not os.path.exists(path + "/checkpoint"):
-				self.model = load_model(path, custom_objects={"mean_squared_error": self.mean_squared_error})
+				self.model = load_model(path, custom_objects={"mean_absolute_error": self.mean_absolute_error})
 
 				return True
 
@@ -88,7 +88,7 @@ class NeuralNetwork:
 			self.model.save_weights(files.get_path(f"{path}{name}/checkpoint"))
 
 	@staticmethod
-	def mean_squared_error(y_true, y_pred):
+	def mean_absolute_error(y_true, y_pred):
 		logits = tf.reshape(y_pred, (tf.shape(y_true)[0], -1))
 
 		actions = tf.cast(tf.gather(y_true, tf.constant([0]), axis=1), tf.int32)
@@ -96,7 +96,7 @@ class NeuralNetwork:
 
 		index_tensor = tf.stack([tf.range(tf.shape(actions)[0]), actions[:, 0]], axis=1)
 		preds = tf.gather_nd(logits, index_tensor)
-		loss = tf.reduce_mean(tf.math.square(targets - preds))
+		loss = tf.reduce_mean(tf.math.abs(targets - preds))
 
 		return loss
 
@@ -104,7 +104,7 @@ class NeuralNetwork:
 	def convolutional_layer_3D(x, filters, kernel_size):
 		x = Conv3D(filters=filters, kernel_size=kernel_size, padding="same", data_format="channels_last", use_bias=config.USE_BIAS, kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
 		x = BatchNormalization()(x)
-		x = ReLU()(x)
+		x = Sigmoid()(x)
 
 		return x
 
@@ -112,7 +112,7 @@ class NeuralNetwork:
 	def dense_layer(x, neuron_amount):
 		x = Dense(neuron_amount, use_bias=config.USE_BIAS, kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
 		x = BatchNormalization()(x)
-		x = ReLU()(x)
+		x = Sigmoid()(x)
 
 		return x
 
@@ -150,7 +150,7 @@ class NeuralNetwork:
 	def policy_head(self, x):
 		for neuron_amount in config.DENSE_POLICY_HEAD:
 			x = self.dense_layer(x, neuron_amount)
-		x = Dense(environment.MOVE_AMOUNT, use_bias=config.USE_BIAS, activation="linear", kernel_regularizer=regularizers.l2(config.REG_CONST), name="policy_head")(x)
+		x = Dense(environment.MOVE_AMOUNT, use_bias=config.USE_BIAS, kernel_regularizer=regularizers.l2(config.REG_CONST), name="policy_head")(x)
 
 		return x
 
