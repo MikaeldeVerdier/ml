@@ -1,7 +1,7 @@
 from funcs import linear_wrapper_func
 
 # Main loop
-VERSION_AMOUNT = 1500
+VERSION_AMOUNT = 3000
 
 # Network architecture
 USE_BIAS = True
@@ -16,7 +16,7 @@ DENSE_DRAWN_CARD = [64, 128, 128, 128]
 
 DENSE_SCORES = [2, 4, 8, 16, 32, 32, 32]
 
-DENSE_POLICY_HEAD = [800, 750, 512, 512, 512, 256, 128, 64, 32, 32]
+DENSE_POLICY_HEAD = [800, 1024, 1024, 1024, 512, 512, 512, 256, 128, 64, 32, 32]
 
 # Self-play
 GAME_AMOUNT_SELF_PLAY = 43
@@ -29,7 +29,7 @@ epsilon = linear_wrapper_func(1, 0.1, VERSION_AMOUNT * 0.8)  # Function for prob
 TRAINING_ITERATIONS = 40  # Amount of times a random positions are sampled and used to train the neural network
 BATCH_SIZE = (256, 64)  # [0]: amount of positions sampled. [1]: actual batch_size used in model.fit()
 EPOCHS = 1  # Amount of times batch is looped over
-GAMMA = 0.9  # Discounting factor for future rewards when calculating targets
+GAMMA = 0.7  # Discounting factor for future rewards when calculating targets
 VERSION_OFFSET = 25  # Reciprocal of frequency of target neural network copying main neural network
 SAVING_FREQUENCY = 250  # Reciprocal of frequency of saving progress
 MODEL_CHECKPOINT_FREQUENCY = 750  # Reciprocal of frequency of saving checkpoint models
@@ -42,7 +42,7 @@ GAME_AMOUNT_EVALUATION = 100
 EVALUATION_FREQUENCY = 25  # Reciprocal of frequency of evaluating model
 
 # Play versions
-GAME_AMOUNT_PLAY_VERSIONS = 10000
+GAME_AMOUNT_PLAY_VERSIONS = 2000
 
 # Play-test
 GAME_AMOUNT_PLAY_TEST = 4
