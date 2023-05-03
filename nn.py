@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import os
 from tensorflow.keras import regularizers
 from tensorflow.keras.models import Model, load_model, clone_model
-from tensorflow.keras.layers import Input, Conv3D, Flatten, Dense, BatchNormalization, Sigmoid, Concatenate
+from tensorflow.keras.layers import Input, Conv3D, Flatten, Dense, BatchNormalization, Activation, Concatenate
 from tensorflow.keras.optimizers import Adam
 from keras.utils.vis_utils import plot_model
 
@@ -104,7 +104,7 @@ class NeuralNetwork:
 	def convolutional_layer_3D(x, filters, kernel_size):
 		x = Conv3D(filters=filters, kernel_size=kernel_size, padding="same", data_format="channels_last", use_bias=config.USE_BIAS, kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
 		x = BatchNormalization()(x)
-		x = Sigmoid()(x)
+		x = Activation(activation="sigmoid")(x)
 
 		return x
 
@@ -112,7 +112,7 @@ class NeuralNetwork:
 	def dense_layer(x, neuron_amount):
 		x = Dense(neuron_amount, use_bias=config.USE_BIAS, kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
 		x = BatchNormalization()(x)
-		x = Sigmoid()(x)
+		x = Activation(activation="sigmoid")(x)
 
 		return x
 
