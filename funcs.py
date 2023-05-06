@@ -131,8 +131,6 @@ def format_game_state(history, rot, flip):
 		drawn_card[game_state.drawn_card] = 1
 		nn_pass[2].append(drawn_card.tolist())
 
-		nn_pass[3].append([game_state.reward])
-
 		if depth != config.DEPTH - 1:
 			if history[-depth - 2]:
 				game_state = history[-depth - 2]

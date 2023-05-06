@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import os
 from tensorflow.keras import regularizers
 from tensorflow.keras.models import Model, load_model, clone_model
-from tensorflow.keras.layers import Input, Conv3D, Flatten, Dense, BatchNormalization, Activation, Concatenate
+from tensorflow.keras.layers import Input, Conv3D, Flatten, Dense, BatchNormalization, ReLU, Concatenate
 from tensorflow.keras.optimizers import Adam
 from keras.utils.vis_utils import plot_model
 
@@ -37,14 +37,11 @@ class NeuralNetwork:
 		drawn_card_input = Input(shape=environment.NN_INPUT_DIMENSIONS[2], name="drawn_card_input")
 		drawn_card = self.drawn_card_mlp(drawn_card_input)
 
-		scores_input = Input(shape=environment.NN_INPUT_DIMENSIONS[3], name="scores_input")
-		scores = self.scores_mlp(scores_input)
-
-		x = Concatenate()([position, deck, drawn_card, scores])
+		x = Concatenate()([position, deck, drawn_card])
 
 		ph = self.policy_head(x)
 
-		self.model = Model(inputs=[position_input, deck_input, drawn_card_input, scores_input], outputs=ph)
+		self.model = Model(inputs=[position_input, deck_input, drawn_card_input], outputs=ph)
 		self.model.compile(loss=self.mean_absolute_error, optimizer=Adam(learning_rate=config.learning_rate.start))
 		
 		if load:
@@ -104,7 +101,7 @@ class NeuralNetwork:
 	def convolutional_layer_3D(x, filters, kernel_size):
 		x = Conv3D(filters=filters, kernel_size=kernel_size, padding="same", data_format="channels_last", use_bias=config.USE_BIAS, kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
 		x = BatchNormalization()(x)
-		x = Activation(activation="sigmoid")(x)
+		x = ReLU()(x)
 
 		return x
 
@@ -112,7 +109,7 @@ class NeuralNetwork:
 	def dense_layer(x, neuron_amount):
 		x = Dense(neuron_amount, use_bias=config.USE_BIAS, kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
 		x = BatchNormalization()(x)
-		x = Activation(activation="sigmoid")(x)
+		x = ReLU()(x)
 
 		return x
 
@@ -136,13 +133,6 @@ class NeuralNetwork:
 	def drawn_card_mlp(self, x):
 		x = Flatten()(x)
 		for neuron_amount in config.DENSE_DRAWN_CARD:
-			x = self.dense_layer(x, neuron_amount)
-
-		return x
-
-	def scores_mlp(self, x):
-		x = Flatten()(x)
-		for neuron_amount in config.DENSE_SCORES:
 			x = self.dense_layer(x, neuron_amount)
 
 		return x
