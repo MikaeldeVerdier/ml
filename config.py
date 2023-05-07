@@ -28,12 +28,12 @@ epsilon = linear_wrapper_func(1, 0.1, VERSION_AMOUNT * 0.8)  # Function for prob
 TRAINING_ITERATIONS = 40  # Amount of times a random positions are sampled and used to train the neural network
 BATCH_SIZE = (256, 32)  # [0]: amount of positions sampled. [1]: actual batch_size used in model.fit()
 EPOCHS = 1  # Amount of times batch is looped over
-GAMMA = 0.6  # Discounting factor for future rewards when calculating targets
+GAMMA = 0.8  # Discounting factor for future rewards when calculating targets
 VERSION_OFFSET = 50  # Reciprocal of frequency of target neural network copying main neural network
 SAVING_FREQUENCY = 250  # Reciprocal of frequency of saving progress
 MODEL_CHECKPOINT_FREQUENCY = 1000  # Reciprocal of frequency of saving checkpoint models
 VALIDATION_SPLIT = 0.2  # Share of data used for validation
-REG_CONST = 1e-4  # L2 Regularization hyperparameter
+REG_CONST = 1e-2  # L2 Regularization hyperparameter
 learning_rate = linear_wrapper_func(1e-4, 1e-6, VERSION_AMOUNT * 0.9, use_cache=False)
 
 # Evaluating network

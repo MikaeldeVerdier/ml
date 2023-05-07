@@ -5,9 +5,9 @@ from copy import deepcopy
 import config
 from funcs import increment_var, print_state, print_action, calculate_legal_moves, score_row, format_game_state
 
-DECK_LENGTH = 52
 SUIT_AMOUNT = 4
-SUIT_LENGTH = DECK_LENGTH / SUIT_AMOUNT
+SUIT_LENGTH = 13
+DECK_LENGTH = SUIT_AMOUNT * SUIT_LENGTH
 
 GAME_DIMENSIONS = (5, 5)
 NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (config.DEPTH, DECK_LENGTH), (config.DEPTH, DECK_LENGTH), (config.DEPTH, DECK_LENGTH)]

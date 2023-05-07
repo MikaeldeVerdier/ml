@@ -49,9 +49,9 @@ class NeuralNetwork:
 			print(f"Weights loaded from model: {name}")
 		else:
 			try:
-				plot_model(self.model, to_file=files.get_path("model.png"), show_shapes=True, show_layer_names=True)
+				plot_model(self.model, to_file=files.get_path("model_architecture.png"), show_shapes=True, show_layer_names=True)
 			except ImportError:
-				print("You need to download pydot and graphviz to plot model.")
+				print("You need to install pydot and graphviz to plot model architecture.")
 
 		print(f"Num GPUs Available: {len(tf.config.list_physical_devices('GPU'))}")
 		self.model.summary()
@@ -72,8 +72,8 @@ class NeuralNetwork:
 		else:
 			self.model.load_weights(path).expect_partial()
 
-	def save_model(self, to_weights, name=None, is_checkpoint=False):
-		if is_checkpoint:
+	def save_model(self, to_weights, name=None, as_checkpoint=False):
+		if as_checkpoint:
 			path = "checkpoints/"
 		else:
 			name = self.name
@@ -175,7 +175,7 @@ class MainNeuralNetwork(NeuralNetwork):
 		for metric in fit.history:
 			self.metrics[metric] += list(map(float, fit.history[metric]))
 
-	def plot_agent(self):
+	def plot_metrics(self):
 		_, axs = plt.subplots(2, 2, figsize=(40, 15))
 
 		for (i, metric), color in zip(enumerate(self.metrics), list(matplotlib.colors.BASE_COLORS.keys())):
@@ -208,7 +208,7 @@ class MainNeuralNetwork(NeuralNetwork):
 				# axs[ax[0] + 1, ax[1]].plot(x[1:], deriv, color=color, label=f"Derivative of {metric}")
 
 		plt.ioff()
-		plt.savefig(files.get_path(f"agent.png"), dpi=300)
+		plt.savefig(files.get_path("metrics.png"), dpi=300)
 		plt.close()
 
 

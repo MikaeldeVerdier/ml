@@ -65,7 +65,7 @@ class Agent():
 		self.main_nn.save_model(self.to_weights)
 		self.target_nn.save_model(self.to_weights)
 		self.save_metrics()
-		self.main_nn.plot_agent()
+		self.main_nn.plot_metrics()
 
 	def copy_network(self):
 		# self.target_nn.load_dir(self.main_nn.name)
@@ -77,7 +77,7 @@ class Agent():
 		# self.target_nn = copy(self.main_nn)  # target_nn becomes a main_nn object
 
 	def save_checkpoint(self):
-		self.main_nn.save_model(self.to_weights, f"{self.name} v.{self.main_nn.version}", is_checkpoint=True)
+		self.main_nn.save_model(self.to_weights, f"{self.name} v.{self.main_nn.version}", as_checkpoint=True)
 
 	def change_version(self):
 		self.main_nn.version += 1
@@ -85,9 +85,6 @@ class Agent():
 
 		if not self.main_nn.version % config.VERSION_OFFSET:
 			self.copy_network()
-
-		if not self.main_nn.version % config.SAVING_FREQUENCY:
-			self.save_progress()
 
 		if not self.main_nn.version % config.MODEL_CHECKPOINT_FREQUENCY:
 			self.save_checkpoint()

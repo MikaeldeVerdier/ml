@@ -200,11 +200,15 @@ def main():
 	load = False
 	agent = initiate(load)
 
+	evaluate_network(agent)
 	while agent.main_nn.version < config.VERSION_AMOUNT:
-		if not agent.main_nn.version % config.EVALUATION_FREQUENCY:
-			evaluate_network(agent)
 		self_play(agent)
 		retrain_network(agent)
+		if not agent.main_nn.version % config.EVALUATION_FREQUENCY:
+			evaluate_network(agent)
+
+		if not agent.main_nn.version % config.SAVING_FREQUENCY:
+			agent.save_progress()
 
 
 if __name__ == "__main__":
