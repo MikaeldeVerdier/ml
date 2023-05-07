@@ -29,7 +29,7 @@ class NeuralNetwork:
 				return
 
 		position_input = Input(shape=environment.NN_INPUT_DIMENSIONS[0], name="position_input")
-		position = self.position_cnn(position_input)
+		position = self.position_mlp(position_input)
 
 		deck_input = Input(shape=environment.NN_INPUT_DIMENSIONS[1], name="deck_input")
 		deck = self.deck_mlp(deck_input)
@@ -113,10 +113,7 @@ class NeuralNetwork:
 
 		return x
 
-	def position_cnn(self, x):
-		for filter_amount in config.CONVOLUTIONAL_LAYERS_POSITION:
-			x = self.convolutional_layer_3D(x, filter_amount, config.CONVOLUTIOANL_SHAPE_POSITION)
-
+	def position_mlp(self, x):
 		x = Flatten()(x)
 		for neuron_amount in config.DENSE_POSITION:
 			x = self.dense_layer(x, neuron_amount)

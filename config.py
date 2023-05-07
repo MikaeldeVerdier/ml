@@ -6,8 +6,6 @@ VERSION_AMOUNT = 1500
 # Network architecture
 USE_BIAS = True
 
-CONVOLUTIONAL_LAYERS_POSITION = (64, 128, 128, 128, 128, 128)
-CONVOLUTIOANL_SHAPE_POSITION = (3, 3, 3)
 DENSE_POSITION = [3200, 3000, 2500, 2048, 2048, 2048, 2048, 2048, 2048, 1024, 512]
 
 DENSE_DECK = [64, 128, 128, 128]
@@ -17,7 +15,7 @@ DENSE_DRAWN_CARD = [64, 128, 128, 128]
 DENSE_POLICY_HEAD = [768, 1024, 1024, 1024, 512, 512, 512, 256, 128, 64, 32, 32]
 
 # Self-play
-GAME_AMOUNT_SELF_PLAY = 43
+GAME_AMOUNT_SELF_PLAY = 190
 BUFFER_REQUIREMENT = 12000  # Minimum requirement of new positions generated during training
 BUFFER_SIZE = 90000  # Replay buffer size
 DEPTH = 1  # Amount of previous state observations used as information for the neural network

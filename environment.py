@@ -5,15 +5,14 @@ from copy import deepcopy
 import config
 from funcs import increment_var, print_state, print_action, calculate_legal_moves, score_row, format_game_state
 
-DECK_LENGTH = 52
-SUIT_AMOUNT = 4
+DECK_LENGTH = 8
+SUIT_AMOUNT = 2
 SUIT_LENGTH = DECK_LENGTH / SUIT_AMOUNT
 
-GAME_DIMENSIONS = (3, 3)
+GAME_DIMENSIONS = (2, 2)
 NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (config.DEPTH, DECK_LENGTH), (config.DEPTH, DECK_LENGTH), (config.DEPTH, DECK_LENGTH)]
 MOVE_AMOUNT = np.prod(GAME_DIMENSIONS)
 
-REPLACE_CARDS = 0
 REWARD_FACTOR = 0.25
 INTERMEDIATE_REWARD_FACTOR = 0.15
 
@@ -96,12 +95,9 @@ class GameState():
 		self.deck = deck
 		self.drawn_card = drawn_card
 
+		self.first_card = not len(np.where(self.s != -1)[0])
+
 		self.done = self.check_game_over()
-
-		amount_empty = len(np.where(self.s == -1)[0])
-		self.first_card = amount_empty == len(s)
-		self.replace_card = not amount_empty and not self.done
-
 		self.legal_moves = self.get_legal_moves()
 		self.amount_pairs = self.get_pairs()
 		self.reward = self.get_reward()
@@ -113,17 +109,13 @@ class GameState():
 		board = self.s.copy()
 		deck = self.deck.copy()
 
-		if action != np.prod(GAME_DIMENSIONS):
-			board[action] = self.drawn_card
+		board[action] = self.drawn_card
 
 		return (board, deck, deck.pop())
 
 	def get_legal_moves(self):
 		if self.first_card:
 			return list(range(np.prod(GAME_DIMENSIONS)))
-
-		if self.replace_card:
-			return list(range(MOVE_AMOUNT))
 		
 		if self.done:
 			return []
@@ -133,7 +125,7 @@ class GameState():
 		return legal_moves
 
 	def check_game_over(self):
-		return len(self.deck) == DECK_LENGTH - np.prod(GAME_DIMENSIONS) - REPLACE_CARDS - 1
+		return len(self.deck) == DECK_LENGTH - np.prod(GAME_DIMENSIONS) - 1
 	
 	def get_pairs(self):
 		sum_amount = 0
