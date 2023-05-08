@@ -196,7 +196,7 @@ def play_versions(loads, amount_games, starts=0, verbose=False):
 
 
 def main():
-	# play_versions([["main_nn"], [None]], config.GAME_AMOUNT_PLAY_VERSIONS)
+	# play_versions([["main_nn"], [None]], config.GAME_AMOUNT_PLAY_VERSIONS, verbose=True)
 	# play_test([["main_nn"], ["you"], [None]], config.GAME_AMOUNT_PLAY_TEST)
 
 	load = False

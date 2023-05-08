@@ -5,11 +5,11 @@ from copy import deepcopy
 import config
 from funcs import increment_var, print_state, print_action, calculate_legal_moves, score_row, format_game_state
 
-DECK_LENGTH = 8
+DECK_LENGTH = 16
 SUIT_AMOUNT = 2
 SUIT_LENGTH = DECK_LENGTH / SUIT_AMOUNT
 
-GAME_DIMENSIONS = (2, 2)
+GAME_DIMENSIONS = (4, 4)
 NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (config.DEPTH, DECK_LENGTH), (config.DEPTH, DECK_LENGTH), (config.DEPTH, DECK_LENGTH)]
 MOVE_AMOUNT = np.prod(GAME_DIMENSIONS)
 
