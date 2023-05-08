@@ -5,7 +5,7 @@ from copy import deepcopy
 import config
 from funcs import increment_var, print_state, print_action, calculate_legal_moves, score_row, format_game_state
 
-DECK_LENGTH = 16
+DECK_LENGTH = 18
 SUIT_AMOUNT = 2
 SUIT_LENGTH = DECK_LENGTH / SUIT_AMOUNT
 
@@ -13,8 +13,8 @@ GAME_DIMENSIONS = (4, 4)
 NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (config.DEPTH, DECK_LENGTH), (config.DEPTH, DECK_LENGTH), (config.DEPTH, DECK_LENGTH)]
 MOVE_AMOUNT = np.prod(GAME_DIMENSIONS)
 
-REWARD_FACTOR = 0.25
-INTERMEDIATE_REWARD_FACTOR = 0.15
+REWARD_FACTOR = 0.15
+INTERMEDIATE_REWARD_FACTOR = 0.075
 
 def reward_transform(reward):
 	return reward * REWARD_FACTOR
