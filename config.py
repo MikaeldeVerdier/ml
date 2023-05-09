@@ -15,7 +15,7 @@ DENSE_DRAWN_CARD = [64, 128, 128, 128]
 DENSE_POLICY_HEAD = [768, 1024, 1024, 1024, 512, 512, 512, 256, 128, 64, 32, 32]
 
 # Self-play
-GAME_AMOUNT_SELF_PLAY = 190
+GAME_AMOUNT_SELF_PLAY = 48
 BUFFER_REQUIREMENT = 12000  # Minimum requirement of new positions generated during training
 BUFFER_SIZE = 90000  # Replay buffer size
 DEPTH = 1  # Amount of previous state observations used as information for the neural network
