@@ -57,8 +57,8 @@ class Environment:
 
 		self.starts = increment_var(self.starts, 1, len(self.current_players))
 
-		if self.players_turn == 0:
-			random.shuffle(self.deck)
+		# if self.players_turn == 0:
+		# 	random.shuffle(self.deck)
 
 		deck = self.deck.copy()
 		drawn_card = deck.pop()
