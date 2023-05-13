@@ -10,7 +10,7 @@ SUIT_AMOUNT = 2
 SUIT_LENGTH = DECK_LENGTH / SUIT_AMOUNT
 
 GAME_DIMENSIONS = (4, 4)
-NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (config.DEPTH, DECK_LENGTH), (config.DEPTH, DECK_LENGTH), (config.DEPTH, DECK_LENGTH)]
+NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (config.DEPTH, DECK_LENGTH), (config.DEPTH, DECK_LENGTH), (config.DEPTH, DECK_LENGTH), (config.DEPTH,)]
 MOVE_AMOUNT = np.prod(GAME_DIMENSIONS)
 
 REWARD_FACTOR = 0.15
@@ -100,7 +100,7 @@ class GameState():
 		self.done = self.check_game_over()
 		self.legal_moves = self.get_legal_moves()
 		self.amount_pairs = self.get_pairs()
-		self.reward = self.get_reward()
+		self.reward, self.input_reward = self.get_reward()
 
 	def __hash__(self):
 		return hash(self.history[:-1] + tuple(self.s) + tuple(self.deck) + (self.drawn_card,))
@@ -116,7 +116,7 @@ class GameState():
 	def get_legal_moves(self):
 		if self.first_card:
 			return list(range(np.prod(GAME_DIMENSIONS)))
-		
+
 		if self.done:
 			return []
 
@@ -137,12 +137,12 @@ class GameState():
 				sum_amount += score_row(tuple(row))
 
 		return sum_amount
-	
+
 	def get_reward(self):
 		if self.done:
-			return reward_transform(self.amount_pairs)
+			return (reward_transform(self.amount_pairs),) * 2
 		else:
-			return intermediate_reward_transform(self.amount_pairs - self.prev_pairs)
+			return (intermediate_reward_transform(self.amount_pairs - self.prev_pairs), intermediate_reward_transform(self.amount_pairs))
 
 	def generate_nn_pass(self, modify=False):
 		if modify:

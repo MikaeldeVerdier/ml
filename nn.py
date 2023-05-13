@@ -37,11 +37,14 @@ class NeuralNetwork:
 		drawn_card_input = Input(shape=environment.NN_INPUT_DIMENSIONS[2], name="drawn_card_input")
 		drawn_card = self.drawn_card_mlp(drawn_card_input)
 
-		x = Concatenate()([position, deck, drawn_card])
+		scores_input = Input(shape=environment.NN_INPUT_DIMENSIONS[3], name="scores_input")
+		scores = self.scores_mlp(scores_input)
+
+		x = Concatenate()([position, deck, drawn_card, scores])
 
 		ph = self.policy_head(x)
 
-		self.model = Model(inputs=[position_input, deck_input, drawn_card_input], outputs=ph)
+		self.model = Model(inputs=[position_input, deck_input, drawn_card_input, scores_input], outputs=ph)
 		self.model.compile(loss=self.mean_absolute_error, optimizer=Adam(learning_rate=config.learning_rate.start))
 		
 		if load:
@@ -130,6 +133,13 @@ class NeuralNetwork:
 	def drawn_card_mlp(self, x):
 		x = Flatten()(x)
 		for neuron_amount in config.DENSE_DRAWN_CARD:
+			x = self.dense_layer(x, neuron_amount)
+
+		return x
+
+	def scores_mlp(self, x):
+		x = Flatten()(x)
+		for neuron_amount in config.DENSE_SCORES:
 			x = self.dense_layer(x, neuron_amount)
 
 		return x
