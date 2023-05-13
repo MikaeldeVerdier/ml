@@ -18,8 +18,8 @@ DENSE_DRAWN_CARD = [32, 32, 64]
 DENSE_POLICY_HEAD = [512, 512, 512, 256, 128, 64, 32, 32]
 
 # Self-play
-GAME_AMOUNT_SELF_PLAY = 14
-BUFFER_REQUIREMENT = 12000  # Minimum requirement of new positions generated during training
+GAME_AMOUNT_SELF_PLAY = 12
+BUFFER_REQUIREMENT = 10500  # Minimum requirement of new positions generated during training
 BUFFER_SIZE = 90000  # Replay buffer size
 DEPTH = 1  # Amount of previous state observations used as information for the neural network
 epsilon = linear_wrapper_func(1, 0.1, VERSION_AMOUNT * 0.8)  # Function for probability of choosing random action, if not specified (like in training)

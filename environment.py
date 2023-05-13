@@ -108,7 +108,9 @@ class GameState():
 		if action != np.prod(GAME_DIMENSIONS):
 			board[action] = self.drawn_card
 
-		return (board, deck, deck.pop())
+		drawn_card = deck.pop() if len(deck) else None
+
+		return (board, deck, drawn_card)
 
 	def get_legal_moves(self):
 		if self.first_card:
@@ -125,7 +127,7 @@ class GameState():
 		return legal_moves
 
 	def check_game_over(self):
-		return len(self.deck) == DECK_LENGTH - np.prod(GAME_DIMENSIONS) - REPLACE_CARDS - 1
+		return len(self.deck) == DECK_LENGTH - np.prod(GAME_DIMENSIONS) - REPLACE_CARDS - 1 or self.drawn_card is None
 
 	def get_reward(self):
 		if not self.done:

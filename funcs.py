@@ -134,7 +134,7 @@ def format_game_state(history, rot, flip):
 		nn_pass[0].append(formatted_state)
 
 		deck = np.zeros(environment.DECK_LENGTH, dtype=np.int32)
-		deck[np.array(game_state.deck)] = 1
+		deck[np.array(game_state.deck, dtype=np.int32)] = 1
 		nn_pass[1].append(deck.tolist())
 
 		drawn_card = np.zeros(environment.DECK_LENGTH, dtype=np.int32)
