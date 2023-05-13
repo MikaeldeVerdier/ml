@@ -36,7 +36,7 @@ def linear_wrapper_func(start, end, duration, max_length=1, use_cache=True):
 
 	def linear_inner_func(x):
 		return func(end, slope * x + intercept)
-	
+
 	if use_cache:
 		linear_inner_func = cache(max_length)(linear_inner_func)
 

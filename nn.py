@@ -108,7 +108,7 @@ class NeuralNetwork:
 
 	@staticmethod
 	def dense_layer(x, neuron_amount):
-		x = Dense(neuron_amount, use_bias=config.USE_BIAS, kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
+		x = Dense(neuron_amount, activation="linear", use_bias=config.USE_BIAS, kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
 		x = BatchNormalization()(x)
 		x = ReLU()(x)
 		x = Dropout(config.DROPOUT_FACTOR)(x)
