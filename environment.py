@@ -116,7 +116,7 @@ class GameState():
 
 		if self.replace_card:
 			return list(range(MOVE_AMOUNT))
-		
+
 		if self.done:
 			return []
 

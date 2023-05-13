@@ -43,7 +43,7 @@ class NeuralNetwork:
 
 		self.model = Model(inputs=[position_input, deck_input, drawn_card_input], outputs=ph)
 		self.model.compile(loss=self.mean_squared_error, optimizer=Adam(learning_rate=config.learning_rate.start))
-		
+
 		if load:
 			self.load_dir(name, from_weights=True)
 			print(f"Weights loaded from model: {name}")
