@@ -6,18 +6,22 @@ import config
 from funcs import increment_var, print_state, print_action, calculate_legal_moves, score_row, format_game_state
 
 SUIT_AMOUNT = 4
-SUIT_LENGTH = 13
+SUIT_LENGTH = 4
 DECK_LENGTH = SUIT_AMOUNT * SUIT_LENGTH
 
-GAME_DIMENSIONS = (5, 5)
-NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (config.DEPTH, DECK_LENGTH), (config.DEPTH, DECK_LENGTH), (config.DEPTH, DECK_LENGTH)]
-MOVE_AMOUNT = np.prod(GAME_DIMENSIONS) + 1
+GAME_DIMENSIONS = (4, 4)
+NN_INPUT_DIMENSIONS = [GAME_DIMENSIONS + (config.DEPTH, DECK_LENGTH), (config.DEPTH, DECK_LENGTH), (config.DEPTH,)]
+MOVE_AMOUNT = np.prod(GAME_DIMENSIONS)
 
-REPLACE_CARDS = 3
-REWARD_FACTOR = 0.02
+REWARD_FACTOR = 0.15
+INTERMEDIATE_REWARD_FACTOR = 0.075
 
 def reward_transform(reward):
 	return reward * REWARD_FACTOR
+
+
+def intermediate_reward_transform(reward):
+	return reward * INTERMEDIATE_REWARD_FACTOR
 
 
 def inverse_reward_transform(transformed_reward):
@@ -70,7 +74,7 @@ class Environment:
 		s, deck, drawn_card = self.game_state.take_action(action)
 		new_turn = increment_var(self.game_state.turn, 1, len(self.current_players))
 
-		self.game_state = GameState(new_turn, deck, drawn_card, old_history=self.game_state.history, s=s)
+		self.game_state = GameState(new_turn, deck, drawn_card, old_history=self.game_state.history, s=s, prev_pairs=self.game_state.amount_pairs)
 
 		if self.verbose:
 			print_action(self, probs, action)
@@ -81,13 +85,16 @@ class Environment:
 class GameState():
 	empty_history = (None,) * config.DEPTH
 	empty_state = np.full(np.prod(GAME_DIMENSIONS), -1)
+	empty_prev_pairs = 0
 
-	def __init__(self, turn, deck, drawn_card, old_history=empty_history, s=empty_state):
+	def __init__(self, turn, deck, drawn_card, old_history=empty_history, s=empty_state, prev_pairs=empty_prev_pairs):
 		self.turn = turn
 		self.deck = deck
 		self.drawn_card = drawn_card
+		self.prev_pairs = prev_pairs
 		self.history = old_history[1:] + (self,)
 		self.s = s
+		self.prev_pairs = prev_pairs
 
 		self.done = self.check_game_over()
 
@@ -96,7 +103,8 @@ class GameState():
 		self.replace_card = not amount_empty and not self.done
 
 		self.legal_moves = self.get_legal_moves()
-		self.reward = self.get_reward()
+		self.amount_pairs = self.get_pairs()
+		self.reward, self.input_reward = self.get_reward()
 
 	def __hash__(self):
 		return hash(self.history[:-1] + tuple(self.s) + tuple(self.deck) + (self.drawn_card,))
@@ -127,9 +135,9 @@ class GameState():
 		return legal_moves
 
 	def check_game_over(self):
-		return len(self.deck) == DECK_LENGTH - np.prod(GAME_DIMENSIONS) - REPLACE_CARDS - 1 or self.drawn_card is None
+		return len(self.deck) == DECK_LENGTH - np.prod(GAME_DIMENSIONS) - 1 or self.drawn_card is None
 
-	def get_reward(self):
+	def get_pairs(self):
 		if not self.done:
 			return 0
 
@@ -138,9 +146,16 @@ class GameState():
 		board = self.s.reshape(GAME_DIMENSIONS)
 		for rowcol in [board, board.T]:
 			for row in rowcol:
+				row = row[np.where(row != -1)].tolist()
 				sum_score += score_row(tuple(row))
 
 		return reward_transform(sum_score)
+	
+	def get_reward(self):
+		if self.done:
+			return (reward_transform(self.amount_pairs),) * 2
+		else:
+			return (intermediate_reward_transform(self.amount_pairs - self.prev_pairs), intermediate_reward_transform(self.amount_pairs))
 
 	def generate_nn_pass(self, modify=False):
 		if modify:

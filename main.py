@@ -210,6 +210,8 @@ def main():
 		if not agent.main_nn.version % config.SAVING_FREQUENCY:
 			agent.save_progress()
 
+	play_versions([["main_nn"], [None]], config.GAME_AMOUNT_PLAY_VERSIONS)
+
 
 if __name__ == "__main__":
 	main()

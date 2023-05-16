@@ -31,17 +31,17 @@ class NeuralNetwork:
 		position_input = Input(shape=environment.NN_INPUT_DIMENSIONS[0], name="position_input")
 		position = self.position_cnn(position_input)
 
-		deck_input = Input(shape=environment.NN_INPUT_DIMENSIONS[1], name="deck_input")
-		deck = self.deck_mlp(deck_input)
-
-		drawn_card_input = Input(shape=environment.NN_INPUT_DIMENSIONS[2], name="drawn_card_input")
+		drawn_card_input = Input(shape=environment.NN_INPUT_DIMENSIONS[1], name="drawn_card_input")
 		drawn_card = self.drawn_card_mlp(drawn_card_input)
 
-		x = Concatenate()([position, deck, drawn_card])
+		scores_input = Input(shape=environment.NN_INPUT_DIMENSIONS[2], name="scores_input")
+		scores = self.scores_mlp(scores_input)
+
+		x = Concatenate()([position, drawn_card, scores])
 
 		ph = self.policy_head(x)
 
-		self.model = Model(inputs=[position_input, deck_input, drawn_card_input], outputs=ph)
+		self.model = Model(inputs=[position_input, drawn_card_input, scores_input], outputs=ph)
 		self.model.compile(loss=self.mean_squared_error, optimizer=Adam(learning_rate=config.learning_rate.start))
 
 		if load:
@@ -98,15 +98,6 @@ class NeuralNetwork:
 		return loss
 
 	@staticmethod
-	def convolutional_layer_3D(x, filters, kernel_size):
-		x = Conv3D(filters=filters, kernel_size=kernel_size, padding="same", data_format="channels_last", use_bias=config.USE_BIAS, kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
-		x = BatchNormalization()(x)
-		x = ReLU()(x)
-		x = Dropout(config.DROPOUT_FACTOR)(x)
-
-		return x
-
-	@staticmethod
 	def dense_layer(x, neuron_amount):
 		x = Dense(neuron_amount, activation="linear", use_bias=config.USE_BIAS, kernel_regularizer=regularizers.l2(config.REG_CONST))(x)
 		x = BatchNormalization()(x)
@@ -116,18 +107,8 @@ class NeuralNetwork:
 		return x
 
 	def position_cnn(self, x):
-		for filter_amount in config.CONVOLUTIONAL_LAYERS_POSITION:
-			x = self.convolutional_layer_3D(x, filter_amount, config.CONVOLUTIOANL_SHAPE_POSITION)
-
 		x = Flatten()(x)
 		for neuron_amount in config.DENSE_POSITION:
-			x = self.dense_layer(x, neuron_amount)
-
-		return x
-
-	def deck_mlp(self, x):
-		x = Flatten()(x)
-		for neuron_amount in config.DENSE_DECK:
 			x = self.dense_layer(x, neuron_amount)
 
 		return x
@@ -135,6 +116,13 @@ class NeuralNetwork:
 	def drawn_card_mlp(self, x):
 		x = Flatten()(x)
 		for neuron_amount in config.DENSE_DRAWN_CARD:
+			x = self.dense_layer(x, neuron_amount)
+
+		return x
+	
+	def scores_mlp(self, x):
+		x = Flatten()(x)
+		for neuron_amount in config.DENSE_SCORES:
 			x = self.dense_layer(x, neuron_amount)
 
 		return x
