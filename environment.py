@@ -138,9 +138,6 @@ class GameState():
 		return len(self.deck) == DECK_LENGTH - np.prod(GAME_DIMENSIONS) - 1 or self.drawn_card is None
 
 	def get_pairs(self):
-		if not self.done:
-			return 0
-
 		sum_score = 0
 
 		board = self.s.reshape(GAME_DIMENSIONS)
@@ -149,7 +146,7 @@ class GameState():
 				row = row[np.where(row != -1)].tolist()
 				sum_score += score_row(tuple(row))
 
-		return reward_transform(sum_score)
+		return sum_score
 	
 	def get_reward(self):
 		if self.done:

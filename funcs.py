@@ -177,7 +177,7 @@ def print_state(state):
 
 def print_action(env, probs, action):
 	if probs is not None:
-		print(f"Action values are: {[probs[-1]]}\n{np.round(probs[:-1], 8).reshape(environment.GAME_DIMENSIONS)}")
+		print(f"Action values are:\n{np.round(probs, 8).reshape(environment.GAME_DIMENSIONS)}")
 
 	print(f"Action taken by {env.player.full_name} is: {action}")
 	print_state(env.game_state)

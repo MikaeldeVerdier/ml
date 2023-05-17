@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import os
 from tensorflow.keras import regularizers
 from tensorflow.keras.models import Model, load_model, clone_model
-from tensorflow.keras.layers import Input, Conv3D, Flatten, Dense, Dropout, BatchNormalization, ReLU, Concatenate
+from tensorflow.keras.layers import Input, Flatten, Dense, Dropout, BatchNormalization, ReLU, Concatenate
 from tensorflow.keras.optimizers import Adam
 from keras.utils.vis_utils import plot_model
 
@@ -29,7 +29,7 @@ class NeuralNetwork:
 				return
 
 		position_input = Input(shape=environment.NN_INPUT_DIMENSIONS[0], name="position_input")
-		position = self.position_cnn(position_input)
+		position = self.position_mlp(position_input)
 
 		drawn_card_input = Input(shape=environment.NN_INPUT_DIMENSIONS[1], name="drawn_card_input")
 		drawn_card = self.drawn_card_mlp(drawn_card_input)
@@ -106,7 +106,7 @@ class NeuralNetwork:
 
 		return x
 
-	def position_cnn(self, x):
+	def position_mlp(self, x):
 		x = Flatten()(x)
 		for neuron_amount in config.DENSE_POSITION:
 			x = self.dense_layer(x, neuron_amount)
