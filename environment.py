@@ -5,8 +5,8 @@ from copy import deepcopy
 import config
 from funcs import increment_var, print_state, print_action, calculate_legal_moves, score_row, format_game_state
 
-SUIT_AMOUNT = 4
-SUIT_LENGTH = 4
+SUIT_AMOUNT = 2
+SUIT_LENGTH = 8
 DECK_LENGTH = SUIT_AMOUNT * SUIT_LENGTH
 
 GAME_DIMENSIONS = (4, 4)
